@@ -69,7 +69,7 @@ const Banner = () => {
 
               <div className={`transition-all duration-1000 delay-500 ${animate ? 'opacity-100' : 'opacity-0 translate-y-5'}`}>
                 <button className="relative inline-flex items-center justify-center px-8 py-3 md:px-10 md:py-3 bg-white text-blue-700 font-bold rounded-full hover:bg-blue-100 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white/50 overflow-hidden group">
-                  <span className="relative z-10">Learn for free</span>
+                  <span className="relative z-10">Let's AZStay!</span>
                   <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:animate-shimmer" />
                   </div>
