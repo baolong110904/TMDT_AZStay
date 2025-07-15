@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
 import { fetchAirbnbListings } from './crawler';
-
-const prisma = new PrismaClient();
+import prisma from '../prisma/client';
 
 export async function seed(city: string) {
   const listings = await fetchAirbnbListings(city);
@@ -38,6 +36,15 @@ export async function seed(city: string) {
       }
     });
 
+    // 🔧 Ensure HostProfile exists
+    const hostProfile = await prisma.hostProfile.upsert({
+      where: { userId: hostUser.id },
+      update: {},
+      create: {
+        userId: hostUser.id
+      }
+    });
+
     const listing = await prisma.listing.create({
       data: {
         title: item.title,
@@ -47,7 +54,7 @@ export async function seed(city: string) {
         link: item.link,
         checkInDate: item.checkInDate ? new Date(item.checkInDate) : undefined,
         checkOutDate: item.checkOutDate ? new Date(item.checkOutDate) : undefined,
-        hostId: hostUser.id,
+        hostId: hostProfile.id,
         createdAt: new Date()
       }
     });

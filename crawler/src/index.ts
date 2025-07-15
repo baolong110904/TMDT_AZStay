@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/users', userRoutes);
+app.use('/users', userRoutes);
 app.use('/listings', listingsRoutes);
 app.use('/bids', bidsRoutes);
 app.use('/api', seedRoutes);

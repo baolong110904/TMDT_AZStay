@@ -37,11 +37,11 @@ model Listing {
   price       Int
   currency    String
   link        String   @unique
-  imageUrl    String?
   checkInDate DateTime?
   checkOutDate DateTime?
   host        HostProfile @relation(fields: [hostId], references: [id])
   hostId      String   @db.ObjectId
+  image       Image?   @relation("ListingImage")
   bids        Bid[]
   reviewStat  ReviewStat?
   isActive    Boolean  @default(true)
@@ -49,11 +49,10 @@ model Listing {
   updatedAt   DateTime @updatedAt
 }
 
-
 model Image {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   url       String
-  listing   Listing  @relation(fields: [listingId], references: [id])
+  listing   Listing  @relation("ListingImage", fields: [listingId], references: [id])
   listingId String   @unique @db.ObjectId
 }
 

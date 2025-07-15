@@ -8,7 +8,6 @@ const router = express.Router();
 // 📌 Manual trigger: POST /api/seed/manual { city: 'London' }
 router.post('/seed/manual', manualSeedHandler);
 
-// 🕒 Cronjob: Chạy mỗi Chủ nhật 2h sáng
 const cities = [
   'New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix',
   'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose',
@@ -37,7 +36,7 @@ function pickRandomCities(count = 5) {
   return shuffled.slice(0, count);
 }
 
-cron.schedule('0 2 * * 0', async () => {
+cron.schedule('* */7 * * *', async () => {
   const selectedCities = pickRandomCities(5);
   console.log('🕒 Weekly auto-seed starting...');
   for (const city of selectedCities) {
