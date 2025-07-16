@@ -15,28 +15,19 @@ pg.on('connect', () => {
 
 dotenv.config();
 
-export async function migrateToPostgres({ listing, hostUser, imageUrl }: {
+export async function migrateToPostgres({ listing, imageUrl }: {
   listing: any,
-  hostUser: any,
   imageUrl?: string
 }) {
   try {
-    const userId = uuidv4();
     const propertyId = uuidv4();
-
-    // Insert user if not exists
-    await pg.query(`
-      INSERT INTO "user" (user_id, name, email, hashed_password)
-      VALUES ($1, $2, $3, $4)
-      ON CONFLICT (email) DO NOTHING
-    `, [userId, hostUser.name, hostUser.email, hostUser.password]);
 
     // Insert property
     await pg.query(`
-      INSERT INTO property (property_id, owner_id, title, description, min_price, is_available)
+      INSERT INTO property (property_id, title, description, min_price, is_available)
       VALUES ($1, $2, $3, $4, $5, TRUE)
       ON CONFLICT (title) DO NOTHING
-    `, [propertyId, userId, listing.title, listing.description, listing.price]);
+    `, [propertyId, listing.title, listing.description, listing.price]);
 
     // Insert image if exists
     if (imageUrl) {

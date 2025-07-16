@@ -20,7 +20,6 @@ export async function fetchAirbnbListings(location: string = 'New York') {
       title: string;
       price: number;
       currency: string;
-      host: string;
       description: string;
       rating: number;
       reviewCount: number;
@@ -74,19 +73,6 @@ export async function fetchAirbnbListings(location: string = 'New York') {
         return !uri.includes('/user/') && !style.includes('border-radius: 50%');
       });
       const imageUrl = (imageEl as HTMLImageElement)?.src ?? '';
-  
-      let host = '';
-      const subtitle = card.querySelector('[data-testid="listing-card-subtitle"] span')?.textContent?.trim() ?? '';
-      if (subtitle.startsWith('Stay with')) {
-        if (
-          subtitle.length % 2 === 0 &&
-          subtitle.slice(0, subtitle.length / 2) === subtitle.slice(subtitle.length / 2)
-        ) {
-          host = subtitle.slice(0, subtitle.length / 2);
-        } else {
-          host = subtitle;
-        }
-      }
   
       const description = card.querySelector('[data-testid="listing-card-name"]')?.textContent?.trim() ?? '';
   
@@ -142,7 +128,6 @@ export async function fetchAirbnbListings(location: string = 'New York') {
         title,
         price,
         currency,
-        host,
         description,
         rating,
         reviewCount,
