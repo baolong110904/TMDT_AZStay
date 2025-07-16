@@ -8,16 +8,6 @@ export const getListings = async (req: Request, res: Response) => {
   try {
     const listings = await prisma.listing.findMany({
       include: {
-        host: {
-          include: {
-            user: true, // host.user.name, host.user.email
-          }
-        },
-        bids: {
-          include: {
-            bidder: true
-          }
-        },
         reviewStat: true,
         image: true
       },
@@ -45,7 +35,6 @@ export const createListing = async (req: Request, res: Response) => {
       imageUrl,
       checkInDate,
       checkOutDate,
-      hostId, // hostProfileId
       rating,
       reviewCount
     } = req.body;
@@ -59,7 +48,6 @@ export const createListing = async (req: Request, res: Response) => {
         link,
         checkInDate: checkInDate ? new Date(checkInDate) : undefined,
         checkOutDate: checkOutDate ? new Date(checkOutDate) : undefined,
-        hostId,
         image: imageUrl ? {
           create: { url: imageUrl }
         } : undefined,
