@@ -1,11 +1,19 @@
-import { Client } from 'pg';
+import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 
-const pg = new Client({ connectionString: process.env.POSTGRES_URL });
-pg.connect();
+const pg = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+});
+    
+pg.on('connect', () => {
+  console.log('Connected to PostgreSQL');
+});
+
+dotenv.config();
 
 export async function migrateToPostgres({ listing, hostUser, imageUrl }: {
   listing: any,
