@@ -36,9 +36,9 @@ function pickRandomCities(count = 5) {
   return shuffled.slice(0, count);
 }
 
-cron.schedule('* */7 * * *', async () => {
+cron.schedule('0 2 * * *', async () => {
   const selectedCities = pickRandomCities(5);
-  console.log('🕒 Weekly auto-seed starting...');
+  console.log('🕒 Daily auto-seed starting...');
   for (const city of selectedCities) {
     try {
       await seed(city);
@@ -46,7 +46,7 @@ cron.schedule('* */7 * * *', async () => {
       console.error(`❌ Failed to seed ${city}`, err);
     }
   }
-  console.log('✅ Weekly auto-seed completed.');
+  console.log('✅ Daily auto-seed completed.');
 });
 
 export default router;
