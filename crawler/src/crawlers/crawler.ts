@@ -1,13 +1,7 @@
-import puppeteer, { Page } from 'puppeteer-core';
-import chromium from 'chrome-aws-lambda';
+import puppeteer, { Page } from 'puppeteer';
 
 export async function fetchAirbnbListings(location: string = 'New York') {
-  const browser = await puppeteer.launch({
-    args: chromium.args,
-    executablePath: require('puppeteer').executablePath(),
-    headless: true,
-    defaultViewport: chromium.defaultViewport,
-  });
+  const browser = await puppeteer.launch({ headless: true });
 
   const page = await browser.newPage();
 
