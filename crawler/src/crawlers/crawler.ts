@@ -1,12 +1,11 @@
-import puppeteer, { Page } from 'puppeteer-core';
+import puppeteer, { Page } from 'puppeteer';
 
 export async function fetchAirbnbListings(location: string = 'New York') {
   console.log('Chrome exec path:', require('puppeteer').executablePath());
   const browser = await puppeteer.launch({
-    executablePath:require('puppeteer').executablePath(),
-    headless: true
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
-
   const page = await browser.newPage();
 
   const url = `https://www.airbnb.com/s/${location.replace(/ /g, '-')}/homes`;
