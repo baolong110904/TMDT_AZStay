@@ -14,35 +14,35 @@ datasource db {
 }
 
 model Listing {
-  id          String   @id @default (auto()) @map("_id") @db.ObjectId
-  title       String
-  description String
-  price       Int
-  currency    String
-  link        String   @unique
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  title        String
+  description  String
+  price        Int
+  currency     String
+  link         String      @unique
   address      String?
   latitude     Float?
   longitude    Float?
-  checkInDate DateTime?
+  checkInDate  DateTime?
   checkOutDate DateTime?
-  image       Image?   @relation("ListingImage")
-  reviewStat  ReviewStat?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  image        Image?      @relation("ListingImage")
+  reviewStat   ReviewStat?
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model Image {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
   url       String
-  listing   Listing  @relation("ListingImage", fields: [listingId], references: [id])
-  listingId String   @unique @db.ObjectId
+  listing   Listing @relation("ListingImage", fields: [listingId], references: [id])
+  listingId String  @unique @db.ObjectId
 }
 
 model ReviewStat {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
   rating    Float
   count     Int
-  listing   Listing  @relation(fields: [listingId], references: [id])
-  listingId String   @unique @db.ObjectId
+  listing   Listing @relation(fields: [listingId], references: [id])
+  listingId String  @unique @db.ObjectId
 }
