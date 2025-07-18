@@ -5,7 +5,7 @@ export async function fetchAirbnbListings(location: string = 'New York') {
   const browser = await puppeteer.launch({
     executablePath: process.env.IS_RENDER
       ? require('puppeteer').executablePath() // dùng puppeteer local
-      : '/opt/render/project/.cache/puppeteer/chrome/linux-138.0.7204.157/chrome-linux64/chrome',
+      : '/opt/render/.cache/puppeteer/chrome/linux-138.0.7204.157/chrome-linux64/chrome',
     headless: true
   });
 
