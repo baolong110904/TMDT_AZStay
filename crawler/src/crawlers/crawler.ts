@@ -1,7 +1,12 @@
-import puppeteer, { Page } from 'puppeteer';
+import puppeteer, { Page } from 'puppeteer-core';
 
 export async function fetchAirbnbListings(location: string = 'New York') {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({
+    executablePath: process.env.IS_RENDER
+      ? require('puppeteer').executablePath() // dùng puppeteer local
+      : '/opt/render/project/.cache/puppeteer/chrome/linux-138.0.7204.157/chrome-linux64/chrome',
+    headless: true
+  });
 
   const page = await browser.newPage();
 
