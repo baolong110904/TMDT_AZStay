@@ -1,6 +1,7 @@
 import puppeteer, { Page } from 'puppeteer-core';
 
 export async function fetchAirbnbListings(location: string = 'New York') {
+  console.log('Chrome exec path:', require('puppeteer').executablePath());
   const browser = await puppeteer.launch({
     executablePath: process.env.IS_RENDER
       ? require('puppeteer').executablePath() // dùng puppeteer local
