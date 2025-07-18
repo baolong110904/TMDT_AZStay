@@ -1,7 +1,7 @@
 import { fetchAirbnbListings } from './crawler';
 import { PrismaClient } from '@prisma/client';
 import { migrateToPostgres } from './migrate';
-import { geocodeAddress } from '../../../backend/src/services/geocoding.service';
+import { geocodeAddress } from '../services/geocoding.service';
 
 const prisma = new PrismaClient();
 
