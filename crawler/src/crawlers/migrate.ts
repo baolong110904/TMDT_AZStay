@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 dotenv.config();
 
 const pg = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.POSTGRES_URL,
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
 });
     
@@ -25,9 +25,9 @@ export async function migrateToPostgres({ listing, imageUrl }: {
     // Insert property
     await pg.query(`
       INSERT INTO property (property_id, title, description, min_price, is_available)
-      VALUES ($1, $2, $3, $4, $5, TRUE)
-      ON CONFLICT (title) DO NOTHING
-    `, [propertyId, listing.title, listing.description, listing.price]);
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT DO NOTHING
+    `, [propertyId, listing.title, listing.description, listing.price, true]);
 
     // Insert image if exists
     if (imageUrl) {

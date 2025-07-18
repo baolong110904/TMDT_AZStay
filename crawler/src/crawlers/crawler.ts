@@ -1,7 +1,19 @@
-import puppeteer, { Page } from 'puppeteer';
+import puppeteer, { Page } from 'puppeteer-core';
+import chromium from 'chrome-aws-lambda';
+import os from 'os';
 
 export async function fetchAirbnbListings(location: string = 'New York') {
-  const browser = await puppeteer.launch({ headless: false });
+  const isLocal = !process.env.AWS_REGION && os.platform() !== 'linux';
+
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    executablePath: isLocal
+      ? require('puppeteer').executablePath() // dùng puppeteer local
+      : await chromium.executablePath,       // dùng chrome-aws-lambda khi deploy
+    headless: true,
+    defaultViewport: chromium.defaultViewport,
+  });
+
   const page = await browser.newPage();
 
   const url = `https://www.airbnb.com/s/${location.replace(/ /g, '-')}/homes`;
@@ -13,7 +25,6 @@ export async function fetchAirbnbListings(location: string = 'New York') {
   // Đợi các listing render
   await page.waitForSelector('[data-testid="card-container"]', { timeout: 20000 });
 
-  // Lấy thông tin chi tiết
   const listings = await page.evaluate(() => {
     const cards = document.querySelectorAll('[data-testid="card-container"]');
     const data: {
@@ -28,11 +39,10 @@ export async function fetchAirbnbListings(location: string = 'New York') {
       checkInDate: string | null;
       checkOutDate: string | null;
     }[] = [];
-  
+
     cards.forEach(card => {
       const title = card.querySelector('[data-testid="listing-card-title"]')?.textContent?.trim() ?? '';
-  
-      // 👉 Lấy giá tiền và tách đơn vị tiền tệ
+
       let rawPrice = '';
       let currency = '';
       let price = 0;
@@ -49,12 +59,10 @@ export async function fetchAirbnbListings(location: string = 'New York') {
           break;
         }
       }
-  
-      // 👉 Lấy rating và số lượt đánh giá
+
       const ratingElements = Array.from(card.querySelectorAll('span[aria-hidden="true"]'));
       let rating = 0;
       let reviewCount = 0;
-  
       for (const el of ratingElements) {
         const text = el.textContent?.trim() ?? '';
         const match = text.match(/^([\d.]+)\s*\((\d+)\)$/);
@@ -64,7 +72,7 @@ export async function fetchAirbnbListings(location: string = 'New York') {
           break;
         }
       }
-  
+
       const linkElement = card.querySelector('a');
       const link = linkElement ? 'https://www.airbnb.com' + linkElement.getAttribute('href') : '';
       const imageEl = Array.from(card.querySelectorAll('img.i1ezuexe')).find(img => {
@@ -73,23 +81,22 @@ export async function fetchAirbnbListings(location: string = 'New York') {
         return !uri.includes('/user/') && !style.includes('border-radius: 50%');
       });
       const imageUrl = (imageEl as HTMLImageElement)?.src ?? '';
-  
       const description = card.querySelector('[data-testid="listing-card-name"]')?.textContent?.trim() ?? '';
-  
+
       const now = new Date();
       const currentYear = now.getFullYear();
-  
+
       const monthMap: Record<string, number> = {
         Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
         Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
       };
-  
+
       let checkInDate: string | null = null;
       let checkOutDate: string | null = null;
-  
+
       const allSubtitleSpans = Array.from(card.querySelectorAll('[data-testid="listing-card-subtitle"] span'));
       const dateRegex = /^[A-Za-z]{3} \d{1,2}\s*–\s*(?:[A-Za-z]{3} )?\d{1,2}$/;
-  
+
       let dateText = '';
       for (const span of allSubtitleSpans) {
         const text = span.textContent?.trim() ?? '';
@@ -98,7 +105,7 @@ export async function fetchAirbnbListings(location: string = 'New York') {
           break;
         }
       }
-  
+
       if (dateText) {
         const rangeMatch = dateText.match(/^([A-Za-z]{3}) (\d{1,2})\s*–\s*(?:(\w{3}) )?(\d{1,2})$/);
         if (rangeMatch) {
@@ -106,24 +113,24 @@ export async function fetchAirbnbListings(location: string = 'New York') {
           const startDay = parseInt(rangeMatch[2]);
           const endMonthStr = rangeMatch[3] || startMonthStr;
           const endDay = parseInt(rangeMatch[4]);
-  
+
           const startMonth = monthMap[startMonthStr];
           const endMonth = monthMap[endMonthStr];
-  
+
           let startYear = currentYear;
           let endYear = currentYear;
-  
+
           const startTemp = new Date(currentYear, startMonth, startDay);
           const endTemp = new Date(currentYear, endMonth, endDay);
-  
+
           if (startTemp < now) startYear++;
           if (endTemp < now) endYear++;
-  
+
           checkInDate = new Date(startYear, startMonth, startDay).toISOString();
           checkOutDate = new Date(endYear, endMonth, endDay).toISOString();
         }
       }
-  
+
       data.push({
         title,
         price,
@@ -134,12 +141,12 @@ export async function fetchAirbnbListings(location: string = 'New York') {
         link,
         imageUrl,
         checkInDate,
-        checkOutDate
+        checkOutDate,
       });
     });
-  
+
     return data;
-  });  
+  });
 
   await browser.close();
   return listings;

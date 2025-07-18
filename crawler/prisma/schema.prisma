@@ -20,6 +20,9 @@ model Listing {
   price       Int
   currency    String
   link        String   @unique
+  address      String?
+  latitude     Float?
+  longitude    Float?
   checkInDate DateTime?
   checkOutDate DateTime?
   image       Image?   @relation("ListingImage")

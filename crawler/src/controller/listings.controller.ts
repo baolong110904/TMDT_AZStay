@@ -8,8 +8,11 @@ export const getListings = async (req: Request, res: Response) => {
   try {
     const listings = await prisma.listing.findMany({
       include: {
-        reviewStat: true,
-        image: true
+        image: true,
+        reviewStat: true
+      },
+      where: {
+        isActive: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -32,6 +35,9 @@ export const createListing = async (req: Request, res: Response) => {
       price,
       currency,
       link,
+      address,
+      latitude,
+      longitude,
       imageUrl,
       checkInDate,
       checkOutDate,
@@ -46,17 +52,27 @@ export const createListing = async (req: Request, res: Response) => {
         price,
         currency,
         link,
+        address,
+        latitude,
+        longitude,
         checkInDate: checkInDate ? new Date(checkInDate) : undefined,
         checkOutDate: checkOutDate ? new Date(checkOutDate) : undefined,
-        image: imageUrl ? {
-          create: { url: imageUrl }
-        } : undefined,
-        reviewStat: (rating && reviewCount) ? {
-          create: {
-            rating,
-            count: reviewCount
-          }
-        } : undefined
+        image: imageUrl
+          ? {
+              create: {
+                url: imageUrl
+              }
+            }
+          : undefined,
+        reviewStat:
+          rating && reviewCount
+            ? {
+                create: {
+                  rating,
+                  count: reviewCount
+                }
+              }
+            : undefined
       },
       include: {
         image: true,
