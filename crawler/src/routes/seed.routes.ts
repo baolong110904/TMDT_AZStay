@@ -36,7 +36,7 @@ function pickRandomCities(count = 5) {
   return shuffled.slice(0, count);
 }
 
-cron.schedule('16 12 * * *', async () => {
+cron.schedule('53 21 * * *', async () => {
   const selectedCities = pickRandomCities(5);
   console.log('🕒 Daily auto-seed starting...');
   for (const city of selectedCities) {

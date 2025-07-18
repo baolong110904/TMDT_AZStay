@@ -8,33 +8,62 @@ const pg = new Pool({
   connectionString: process.env.POSTGRES_URL,
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
 });
-    
+
 pg.on('connect', () => {
-  console.log('Connected to PostgreSQL');
+  console.log('✅ Connected to PostgreSQL');
 });
 
-dotenv.config();
-
-export async function migrateToPostgres({ listing, imageUrl }: {
-  listing: any,
-  imageUrl?: string
+export async function migrateToPostgres({
+  listing,
+  imageUrl,
+}: {
+  listing: any;
+  imageUrl?: string;
 }) {
   try {
     const propertyId = uuidv4();
 
-    // Insert property
-    await pg.query(`
-      INSERT INTO property (property_id, title, description, min_price, is_available)
-      VALUES ($1, $2, $3, $4, $5)
+    await pg.query(
+      `
+      INSERT INTO property (
+        property_id,
+        title,
+        description,
+        address,
+        longitude,
+        latitude,
+        min_price,
+        is_available
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, TRUE
+      )
       ON CONFLICT DO NOTHING
-    `, [propertyId, listing.title, listing.description, listing.price, true]);
+      `,
+      [
+        propertyId,
+        listing.title,
+        listing.description,
+        listing.address ?? null,
+        listing.longitude ?? null,
+        listing.latitude ?? null,
+        listing.price,
+      ]
+    );
 
-    // Insert image if exists
     if (imageUrl) {
-      await pg.query(`
-        INSERT INTO propertyimage (image_id, property_id, image_url, is_cover)
-        VALUES ($1, $2, $3, TRUE)
-      `, [uuidv4(), propertyId, imageUrl]);
+      await pg.query(
+        `
+        INSERT INTO propertyimage (
+          image_id,
+          property_id,
+          image_url,
+          is_cover
+        ) VALUES (
+          $1, $2, $3, TRUE
+        )
+        `,
+        [uuidv4(), propertyId, imageUrl]
+      );
     }
 
     console.log(`🔁 Migrated to PostgreSQL: ${listing.title}`);
