@@ -1,7 +1,7 @@
 import puppeteer, { Page } from 'puppeteer';
 
 export async function fetchAirbnbListings(location: string = 'New York') {
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({ headless: false });
 
   const page = await browser.newPage();
 
