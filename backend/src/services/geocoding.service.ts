@@ -5,7 +5,7 @@ export async function geocodeAddress(address: string) {
 
   const res = await axios.get(url, {
     headers: {
-      'User-Agent': 'YourAppName/1.0 (your@email.com)'
+      'User-Agent': 'AZStay/1.0 (2425.ec03.22httt1@gmail.com)'
     }
   });
 
