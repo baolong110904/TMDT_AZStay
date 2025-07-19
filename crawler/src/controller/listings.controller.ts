@@ -15,7 +15,7 @@ export const getListings = async (req: Request, res: Response) => {
         createdAt: 'desc'
       }
     });
-
+      
     res.json(listings);
   } catch (err) {
     console.error('❌ Error getting listings:', err);

@@ -9,6 +9,48 @@ export async function seed(city: string) {
   console.log(`🌆 Seeding for city: ${city} (${listings.length} listings)`);
 
   for (const item of listings) {
+<<<<<<< ours
+    const hostName = item.host.replace(/^Stay with\s+/i, '') || 'Unknown Host';
+    const hostEmail = hostName.toLowerCase().replace(/ /g, '') + '@host.local';
+
+    const hostUser = await prisma.user.upsert({
+      where: { email: hostEmail },
+      update: {},
+      create: {
+        name: hostName,
+        email: hostEmail,
+        password: 'secret'
+      }
+    });
+    
+    const hostProfile = await prisma.hostProfile.upsert({
+      where: { userId: hostUser.id },
+      update: {},
+      create: { userId: hostUser.id }
+    });
+
+||||||| ancestor
+    const hostName = item.host.replace(/^Stay with\s+/i, '') || 'Unknown Host';
+    const hostEmail = hostName.toLowerCase().replace(/ /g, '') + '@host.local';
+
+    const hostUser = await prisma.user.upsert({
+      where: { email: hostEmail },
+      update: {},
+      create: {
+        name: hostName,
+        email: hostEmail,
+        password: 'secret'
+      }
+    });
+
+    const hostProfile = await prisma.hostProfile.upsert({
+      where: { userId: hostUser.id },
+      update: {},
+      create: { userId: hostUser.id }
+    });
+
+=======
+>>>>>>> theirs
     const existingListing = await prisma.listing.findUnique({
       where: { link: item.link }
     });
