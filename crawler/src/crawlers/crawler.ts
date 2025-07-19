@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer-core';
+import puppeteer, { Page } from 'puppeteer-core';
 import chromium from 'chrome-aws-lambda';
 
 export async function fetchAirbnbListings(location: string = 'New York') {
