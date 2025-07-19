@@ -7,6 +7,7 @@ export async function fetchAirbnbListings(location: string = 'New York') {
   try {
     // Cấu hình cho Render
     const isRender = process.env.IS_RENDER === 'true';
+    console.log('path: ', chromium.executablePath());
     
     if (isRender) {
       browser = await puppeteer.launch({
