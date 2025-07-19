@@ -1,7 +1,4 @@
 import { Request, Response } from "express";
-import pool from '../config/db.config'
 import dotenv from 'dotenv';
-
-dotenv.config();
-
-export const L
+import pool from "../config/db.config";
+import {generation}
