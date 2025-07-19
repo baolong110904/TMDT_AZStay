@@ -7,9 +7,10 @@ const PORT = process.env.PORT || 5000;
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // form-urlencoded
 
 // api routes that related to users
-app.use('/', userRoutes);
+app.use('/user', userRoutes);
 
 
 app.listen(PORT, () => {

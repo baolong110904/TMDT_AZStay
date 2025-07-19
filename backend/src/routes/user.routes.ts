@@ -1,12 +1,8 @@
 import express from 'express';
-import { getAllUsers } from '../controllers/user.controllers';
-const user = express();
+import { signUp } from '../controllers/user.controllers';
 
-user.use(express.json());
-user.use('/api/users', getAllUsers);
+const router = express.Router();
 
-user.get("/", (req, res) => {
-    res.send("Test");
-});
+router.post('/signup', signUp);
 
-export default user;
+export default router;
