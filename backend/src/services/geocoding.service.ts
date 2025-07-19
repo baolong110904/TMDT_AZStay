@@ -14,7 +14,7 @@ export async function geocodeAddress(address: string) {
       'User-Agent': 'AZStay/1.0 (2425.ec03.22httt1@gmail.com)'
     }
   });
-
+  
   const results = res.data;
 
   if (!results || results.length === 0) {

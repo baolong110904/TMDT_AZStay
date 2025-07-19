@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model auction {
+  auction_id  String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  property_id String?   @db.Uuid
+  winner_id   String?   @db.Uuid
+  status      String?   @db.VarChar(50)
+  start_time  DateTime? @db.Timestamp(6)
+  end_time    DateTime? @db.Timestamp(6)
+  final_price Decimal?  @db.Decimal(12, 2)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  property    property? @relation(fields: [property_id], references: [property_id], onDelete: NoAction, onUpdate: NoAction)
+  user        user?     @relation(fields: [winner_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  userbid     userbid[]
+}
+
+model booking {
+  booking_id  String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  property_id String?   @db.Uuid
+  renter_id   String?   @db.Uuid
+  payment_id  String?   @db.Uuid
+  start_date  DateTime? @db.Date
+  end_date    DateTime? @db.Date
+  total_price Decimal?  @db.Decimal(12, 2)
+  status      String?   @db.VarChar(50)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
+  payment     payment?  @relation(fields: [payment_id], references: [payment_id], onDelete: NoAction, onUpdate: NoAction)
+  property    property? @relation(fields: [property_id], references: [property_id], onDelete: NoAction, onUpdate: NoAction)
+  user        user?     @relation(fields: [renter_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model category {
+  category_id     Int        @id @default(autoincrement())
+  sub_category_id Int?
+  category_name   String     @db.VarChar(100)
+  image_url       String?
+  category        category?  @relation("categoryTocategory", fields: [sub_category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction)
+  other_category  category[] @relation("categoryTocategory")
+  property        property[]
+}
+
+model externalservice {
+  external_service_id   String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  property_id           String?   @db.Uuid
+  external_service_name String    @db.VarChar(100)
+  price                 Decimal?  @db.Decimal(12, 2)
+  uploaded_at           DateTime? @default(now()) @db.Timestamp(6)
+  property              property? @relation(fields: [property_id], references: [property_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model method {
+  method_id      Int       @id @default(autoincrement())
+  method_name    String?   @db.VarChar(100)
+  transaction_to String?   @db.VarChar(100)
+  bank_code      String?   @db.VarChar(50)
+  order_info     String?
+  response_code  String?   @db.VarChar(20)
+  secure_hash    String?
+  pay_date       DateTime? @db.Timestamp(6)
+  card_type      String?   @db.VarChar(50)
+  payment        payment[]
+}
+
+model payment {
+  payment_id String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String?   @db.Uuid
+  booking_id String?   @db.Uuid
+  method_id  Int?
+  amount     Decimal?  @db.Decimal(12, 2)
+  status     String?   @db.VarChar(50)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @db.Timestamp(6)
+  booking    booking[]
+  method     method?   @relation(fields: [method_id], references: [method_id], onDelete: NoAction, onUpdate: NoAction)
+  user       user?     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model property {
+  property_id     String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  owner_id        String?           @db.Uuid
+  category_id     Int?
+  title           String            @db.VarChar(255)
+  description     String?
+  address         String?
+  ward            String?           @db.VarChar(100)
+  city_province   String?           @db.VarChar(100)
+  country         String?           @db.VarChar(100)
+  longitude       Decimal?          @db.Decimal(9, 6)
+  latitude        Decimal?          @db.Decimal(9, 6)
+  min_price       Decimal?          @db.Decimal(12, 2)
+  is_available    Boolean?          @default(true)
+  created_at      DateTime?         @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?         @default(now()) @db.Timestamp(6)
+  auction         auction[]
+  booking         booking[]
+  externalservice externalservice[]
+  category        category?         @relation(fields: [category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction)
+  user            user?             @relation(fields: [owner_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  propertyimage   propertyimage[]
+  userfavorite    userfavorite[]
+}
+
+model propertyimage {
+  image_id    String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  property_id String?   @db.Uuid
+  image_url   String
+  is_cover    Boolean?  @default(false)
+  uploaded_at DateTime? @default(now()) @db.Timestamp(6)
+  property    property? @relation(fields: [property_id], references: [property_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model role {
+  role_id     Int     @id @default(autoincrement())
+  role_name   String  @unique @db.VarChar(50)
+  description String?
+  user        user[]
+}
+
+model tax {
+  tax_id      Int       @id @default(autoincrement())
+  tax_name    String    @db.VarChar(100)
+  percentage  Decimal?  @db.Decimal(5, 2)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  uploaded_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model user {
+  user_id         String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  role_id         Int?
+  name            String         @db.VarChar(100)
+  gender          String?        @db.VarChar(10)
+  dob             DateTime?      @db.Date
+  email           String         @unique @db.VarChar(100)
+  phone           String?        @db.VarChar(20)
+  hashed_password String?
+  created_at      DateTime?      @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?      @default(now()) @db.Timestamp(6)
+  oauth_provider  String?        @db.VarChar(50)
+  oauth_id        String?        @db.VarChar(100)
+  auction         auction[]
+  booking         booking[]
+  payment         payment[]
+  property        property[]
+  role            role?          @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction)
+  userbid         userbid[]
+  userfavorite    userfavorite[]
+  userimage       userimage[]
+}
+
+model userbid {
+  bid_id     String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  auction_id String?   @db.Uuid
+  bidder_id  String?   @db.Uuid
+  bid_time   DateTime? @db.Timestamp(6)
+  bid_amount Decimal?  @db.Decimal(12, 2)
+  status     String?   @db.VarChar(50)
+  auction    auction?  @relation(fields: [auction_id], references: [auction_id], onDelete: NoAction, onUpdate: NoAction)
+  user       user?     @relation(fields: [bidder_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model userfavorite {
+  user_id     String    @db.Uuid
+  property_id String    @db.Uuid
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
+  property    property  @relation(fields: [property_id], references: [property_id], onDelete: NoAction, onUpdate: NoAction)
+  user        user      @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([user_id, property_id])
+}
+
+model userimage {
+  image_id    String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id     String?   @db.Uuid
+  image_url   String
+  uploaded_at DateTime? @default(now()) @db.Timestamp(6)
+  user        user?     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
