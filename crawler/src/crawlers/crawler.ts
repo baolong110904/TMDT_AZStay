@@ -1,10 +1,17 @@
-import puppeteer, { Page } from 'puppeteer';
+import puppeteer, { Page } from 'puppeteer-core';
+import chromium from 'chrome-aws-lambda';
+import os from 'os';
 
 export async function fetchAirbnbListings(location: string = 'New York') {
-  console.log('Chrome exec path:', require('puppeteer').executablePath());
+  const isLocal = !process.env.AWS_REGION && os.platform() !== 'linux';
+
   const browser = await puppeteer.launch({
+    args: chromium.args,
+    executablePath: isLocal
+      ? require('puppeteer').executablePath() // dùng puppeteer local
+      : await chromium.executablePath,       // dùng chrome-aws-lambda khi deploy
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    defaultViewport: chromium.defaultViewport,
   });
   const page = await browser.newPage();
 
