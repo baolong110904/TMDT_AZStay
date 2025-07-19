@@ -25,7 +25,7 @@ export async function fetchAirbnbListings(location: string = 'New York') {
     const page = await context.newPage();
     
     const url = `https://www.airbnb.com/s/${location.replace(/ /g, '-')}/homes`;
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 120000 });
 
     // Scroll để load thêm kết quả
     await autoScrollPlaywright(page);
