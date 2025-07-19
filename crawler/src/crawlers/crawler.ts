@@ -5,18 +5,24 @@ import os from 'os';
 export async function fetchAirbnbListings(location: string = 'New York') {
   const isLocal = !process.env.AWS_REGION && os.platform() !== 'linux';
 
-  console.log('🌍 ENV AWS_REGION:', process.env.AWS_REGION);
-  console.log('🖥️ OS Platform:', os.platform());
-  console.log('🔍 Running Locally:', isLocal);
+  const resolvedExecutablePath = isLocal
+    ? require('puppeteer').executablePath()
+    : await chromium.executablePath;
+
+  console.log('🔍 isLocal:', isLocal);
+  console.log('🔍 resolvedExecutablePath:', resolvedExecutablePath);
+
+  if (!resolvedExecutablePath) {
+    throw new Error('Could not resolve executablePath for Puppeteer.');
+  }
 
   const browser = await puppeteer.launch({
     args: chromium.args,
-    executablePath: isLocal
-      ? require('puppeteer').executablePath()
-      : await chromium.executablePath,
+    executablePath: resolvedExecutablePath,
     headless: true,
     defaultViewport: chromium.defaultViewport,
   });
+  
   const page = await browser.newPage();
 
   const url = `https://www.airbnb.com/s/${location.replace(/ /g, '-')}/homes`;
