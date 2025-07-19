@@ -5,11 +5,15 @@ import os from 'os';
 export async function fetchAirbnbListings(location: string = 'New York') {
   const isLocal = !process.env.AWS_REGION && os.platform() !== 'linux';
 
+  console.log('🌍 ENV AWS_REGION:', process.env.AWS_REGION);
+  console.log('🖥️ OS Platform:', os.platform());
+  console.log('🔍 Running Locally:', isLocal);
+
   const browser = await puppeteer.launch({
     args: chromium.args,
     executablePath: isLocal
-      ? require('puppeteer').executablePath() // dùng puppeteer local
-      : await chromium.executablePath,       // dùng chrome-aws-lambda khi deploy
+      ? require('puppeteer').executablePath()
+      : await chromium.executablePath,
     headless: true,
     defaultViewport: chromium.defaultViewport,
   });
