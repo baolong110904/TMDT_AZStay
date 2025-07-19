@@ -1,56 +1,61 @@
-# Base image with Node.js
+# Sử dụng Node.js 20 và có thể thêm Chromium
 FROM node:20-slim
 
-# Install dependencies for Chromium
+# Cài đặt các dependencies bắt buộc để Chromium hoạt động
 RUN apt-get update && apt-get install -y \
     wget \
     ca-certificates \
     fonts-liberation \
-    libappindicator3-1 \
     libasound2 \
     libatk-bridge2.0-0 \
     libatk1.0-0 \
+    libc6 \
+    libcairo2 \
     libcups2 \
     libdbus-1-3 \
-    libgdk-pixbuf2.0-0 \
+    libexpat1 \
+    libfontconfig1 \
+    libgbm1 \
+    libgcc1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
     libnspr4 \
     libnss3 \
+    libpango-1.0-0 \
+    libx11-6 \
     libx11-xcb1 \
+    libxcb1 \
     libxcomposite1 \
+    libxcursor1 \
     libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
     libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
     xdg-utils \
-    libu2f-udev \
-    libvulkan1 \
-    libgl1 \
-    unzip \
     --no-install-recommends && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Set environment variable for Puppeteer
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Tải Chromium đúng phiên bản Puppeteer yêu cầu
+RUN npm install -g puppeteer@21.3.8 \
+ && node -e "require('puppeteer').createBrowserFetcher().download('138.0.7204.157')"
 
-# Install Chromium manually (v138 stable)
-RUN mkdir -p /usr/src/chromium && \
-    cd /usr/src/chromium && \
-    wget https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.157/linux64/chrome-linux64.zip && \
-    unzip chrome-linux64.zip && \
-    mv chrome-linux64 /opt/chromium && \
-    ln -s /opt/chromium/chrome /usr/bin/chromium-browser
-
-# Create app directory
+# Tạo thư mục app
 WORKDIR /app
 
-# Copy package.json and install
+# Copy package.json, lock và cài đặt deps
 COPY package*.json ./
 RUN npm install
 
-# Copy app source
+# Copy toàn bộ code
 COPY . .
 
-# Expose port (if needed)
-EXPOSE 3000
+# Thiết lập biến môi trường để Puppeteer-core tìm được Chromium
+ENV PUPPETEER_EXECUTABLE_PATH="/node_modules/puppeteer/.local-chromium/linux-138.0.7204.157/chrome-linux/chrome"
 
-# Run app
-CMD ["npm", "start"]
+# Lệnh khởi chạy app
+CMD ["npm", "run", "start"]
