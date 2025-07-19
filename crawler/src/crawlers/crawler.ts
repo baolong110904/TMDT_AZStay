@@ -3,7 +3,8 @@ import puppeteer, { Page } from 'puppeteer';
 export async function fetchAirbnbListings(location: string = 'New York') {
   console.log('Chrome exec path:', require('puppeteer').executablePath());
   const browser = await puppeteer.launch({
-    headless: true
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
   const page = await browser.newPage();
 
