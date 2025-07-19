@@ -1,28 +1,18 @@
-import puppeteer, { Page } from 'puppeteer-core';
+import puppeteer from 'puppeteer-core';
 import chromium from 'chrome-aws-lambda';
-import os from 'os';
 
 export async function fetchAirbnbListings(location: string = 'New York') {
-  const isLocal = !process.env.AWS_REGION && os.platform() !== 'linux';
-
-  const resolvedExecutablePath = isLocal
-    ? require('puppeteer').executablePath()
-    : await chromium.executablePath;
-
-  console.log('🔍 isLocal:', isLocal);
-  console.log('🔍 resolvedExecutablePath:', resolvedExecutablePath);
-
-  if (!resolvedExecutablePath) {
-    throw new Error('Could not resolve executablePath for Puppeteer.');
-  }
+  const executablePath = process.env.IS_RENDER
+    ? await chromium.executablePath
+    : (await import('puppeteer')).default.executablePath();
 
   const browser = await puppeteer.launch({
     args: chromium.args,
-    executablePath: resolvedExecutablePath,
-    headless: true,
     defaultViewport: chromium.defaultViewport,
+    headless: chromium.headless,
+    executablePath, // sử dụng path chính xác
   });
-  
+
   const page = await browser.newPage();
 
   const url = `https://www.airbnb.com/s/${location.replace(/ /g, '-')}/homes`;
