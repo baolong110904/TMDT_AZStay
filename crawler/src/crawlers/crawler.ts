@@ -1,4 +1,4 @@
-import puppeteer, { Page } from 'puppeteer';
+import puppeteer, { Page } from 'puppeteer-core';
 
 export async function fetchAirbnbListings(location: string = 'New York') {
   console.log('Chrome exec path:', require('puppeteer').executablePath());
