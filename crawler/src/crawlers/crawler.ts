@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer-core';
+import puppeteer, { Page } from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
 export async function fetchAirbnbListings(location: string = 'New York') {
@@ -7,15 +7,29 @@ export async function fetchAirbnbListings(location: string = 'New York') {
   try {
     // Cấu hình cho Render
     const isRender = process.env.IS_RENDER === 'true';
-    console.log('path: ', chromium.executablePath());
     
     if (isRender) {
+      console.log('Running on Render...');
+      
+      // Lấy executable path trước
+      const executablePath = await chromium.executablePath();
+      console.log('Chromium executable path:', executablePath);
+      
+      // Sử dụng @sparticuz/chromium cho môi trường production
       browser = await puppeteer.launch({
-        args: chromium.args,
-        executablePath: await chromium.executablePath(),
+        args: [
+          ...chromium.args,
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor'
+        ],
+        executablePath,
         headless: true
       });
     } else {
+      console.log('Running locally...');
       // Sử dụng puppeteer thường cho môi trường local
       const puppeteerRegular = await import('puppeteer');
       browser = await puppeteerRegular.default.launch({
