@@ -23,7 +23,17 @@ export async function migrateToPostgres({
   try {
     const propertyId = uuidv4();
 
-    await pg.query(
+    console.log('📦 Migrating listing:', {
+      title: listing?.title,
+      description: listing?.description,
+      address: listing?.address,
+      longitude: listing?.longitude,
+      latitude: listing?.latitude,
+      price: listing?.price,
+      imageUrl,
+    });
+
+    const res1 = await pg.query(
       `
       INSERT INTO property (
         property_id,
@@ -33,11 +43,13 @@ export async function migrateToPostgres({
         longitude,
         latitude,
         min_price,
-        is_available
+        is_available,
+        owner_id
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, TRUE
+        $1, $2, $3, $4, $5, $6, $7, TRUE, null
       )
       ON CONFLICT DO NOTHING
+      RETURNING *
       `,
       [
         propertyId,
@@ -50,8 +62,15 @@ export async function migrateToPostgres({
       ]
     );
 
+    console.log(`🏠 Property inserted: ${res1.rowCount} row(s)`);
+
+    if (res1.rowCount === 0) {
+      console.warn('⚠️ Property already exists, skipping insert.');
+    }
+
     if (imageUrl) {
-      await pg.query(
+      const imageId = uuidv4();
+      const res2 = await pg.query(
         `
         INSERT INTO propertyimage (
           image_id,
@@ -61,13 +80,17 @@ export async function migrateToPostgres({
         ) VALUES (
           $1, $2, $3, TRUE
         )
+        RETURNING *
         `,
-        [uuidv4(), propertyId, imageUrl]
+        [imageId, propertyId, imageUrl]
       );
+
+      console.log(`🖼️ Image inserted: ${res2.rowCount} row(s)`);
     }
 
-    console.log(`🔁 Migrated to PostgreSQL: ${listing.title}`);
-  } catch (err) {
-    console.error(`❌ PostgreSQL migration failed for: ${listing.title}`, err);
+    console.log(`✅ Migrated listing to PostgreSQL: ${listing.title}`);
+  } catch (err: any) {
+    console.error(`❌ PostgreSQL migration failed for: ${listing?.title ?? '[NO TITLE]'}`);
+    console.error(err.stack || err);
   }
 }
