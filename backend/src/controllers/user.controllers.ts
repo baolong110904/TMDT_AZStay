@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, {SignOptions} from 'jsonwebtoken';
 import Bcrypt from "bcrypt";
 
 // written function
@@ -7,13 +7,20 @@ import { ENV } from '../config/environtment.config';
 import { 
   checkEmailExists,
   createUser,
-  createOAuthProvider
+  createOAuthProvider,
+  createOTP,
+  verifyOTP,
+  deleteOTP,
+  updateNewPassword,
+  getUserById,
+
 } from '../dao/user.dao';
 import * as constraints from '../utils/constraint.utils';
 import { sendEmail } from '../utils/sendEmail.utils';
 
 const JWT_SECRET = ENV.JWT_SECRET;
 
+// signing up
 export const signUp = async (req: Request, res: Response) => {
   const {
     email,
@@ -72,7 +79,10 @@ export const signUp = async (req: Request, res: Response) => {
     await sendEmail(
       email,
       'Welcome to AZStay!',
-      `<h3>Hi ${email},</h3><p>Your account has been created successfully.</p>`
+      `<h3>Hi ${name},</h3>
+      <p>Your account has been created successfully.</p>
+      <p>Enjoying our bidding services ❤️</p>
+      `
     );
 
     return res.status(201).json({ message: 'Signup successful. Email sent.' });  
@@ -82,7 +92,8 @@ export const signUp = async (req: Request, res: Response) => {
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+// login (token last for 1 hour)
+export const login = async (req: Request, res: Response) => { // login 
   const { email, password } = req.body;
 
   try {
@@ -95,12 +106,102 @@ export const login = async (req: Request, res: Response) => {
     if (!match) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+    
+    const payload = {
+      userId: user.user_id,
+      role: user.role_id,
+      email: user.email,
+      type: 'access', // login access 
+    };
 
-    const token = jwt.sign({ userId: user.user_id }, JWT_SECRET, { expiresIn: '1d' });
+    const signOptions: SignOptions = {
+      expiresIn: '1h',
+    };
+    
+    const token = jwt.sign(payload, JWT_SECRET, signOptions);
 
     res.json({ token, userId: user.user_id });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login failed' });
+  }
+};
+
+// send otp code to user email
+export const sendOtpToUser = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  try {
+    const user = await checkEmailExists(email);
+    if (!user) {
+      return res.status(404).json({ message: 'Email not found' });
+    }
+    const otp = await createOTP(user.user_id);
+
+    await sendEmail(
+      email,
+      'Reset Password OTP',
+      `<p>Your OTP is <strong>${otp}</strong>. It will expire in 15 minutes.</p>`
+    );
+
+    return res.json({ message: 'OTP sent to email' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Send otp to user failed' });
+  }
+
+};
+
+// verify otp and gen token (valid for 15 mins)
+export const verifyOtpAndGenerateToken = async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+  try {      
+    const user = await getUserById(email);
+    if (!user) {
+      return res.status(404).json({ message: 'Email not found' });
+    }
+
+    const otpRecord = await verifyOTP(user.user_id, otp);
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    await deleteOTP(otpRecord.otp_id);
+
+    const payload = {
+      user_id: user.user_id,
+      type: 'password_reset' // password reset token
+    }
+
+    const signOptions: SignOptions = {
+      expiresIn: '15m'
+    }
+    const token = jwt.sign( payload, JWT_SECRET, signOptions);
+    
+    return res.json({ token, message: 'OTP verified, token generated' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Verify otp and generate token' });
+  }
+};
+
+export const changePassword = async (req: Request, res: Response) => {
+  const userId = (req as any).user.user_id;
+  const { newPassword } = req.body;
+
+  try {
+    const user = await getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const hashed = await Bcrypt.hash(newPassword, 10);
+    await updateNewPassword(userId, hashed);
+    
+    return res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    return res.status(500).json({ message: 'Error while trying to change user password'});
   }
 };

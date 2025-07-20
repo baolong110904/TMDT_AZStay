@@ -1,7 +1,6 @@
 import nodemailer from 'nodemailer';
-import { ENV
-  
- } from '../config/environtment.config';
+import { ENV } from '../config/environtment.config';
+
 export const sendEmail = async (to: string, subject: string, html: string) => {
   const transporter = nodemailer.createTransport({
     host: ENV.SMTP_HOST,
@@ -14,7 +13,7 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
   });
 
   const mailOptions = {
-    from: `"AZStay Support" <${ENV.SMTP_USER}>`,
+    from: `"AZStay Service" <${ENV.SMTP_USER}>`,
     to,
     subject,
     html,
