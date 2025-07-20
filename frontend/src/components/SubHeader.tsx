@@ -6,6 +6,7 @@ import { GlobeAltIcon, Bars3Icon, UserCircleIcon } from "@heroicons/react/24/out
 import { usePathname, useRouter } from "next/navigation";
 import NavigationTabs from "./NavigationTabs";
 import MobileSearchDrawer from "./MobileSearchDrawer";
+import DropdownMenu from "./DropdownMenu";
 
 export default function Header() {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -14,6 +15,9 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<string>("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
 
   // Throttle function to limit scroll event frequency
   const throttle = (callback: () => void, limit: number) => {
@@ -68,6 +72,25 @@ export default function Header() {
     }
   }, [activeTab, router]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm transition-all duration-500 ease-in-out">
       <div className="max-w-7xl mx-auto flex items-center justify-between p-2 md:px-8">
@@ -78,9 +101,22 @@ export default function Header() {
         <div className="hidden md:flex items-center gap-4">
           <button className="text-sm text-gray-600 hover:text-blue-700 transition">Become a host</button>
           <GlobeAltIcon className="h-5 text-gray-500 hover:text-blue-700 cursor-pointer transition" aria-label="Change language" />
-          <div className="flex items-center border border-gray-300 p-2 rounded-full hover:shadow-md transition cursor-pointer">
-            <Bars3Icon className="h-5 text-gray-500" aria-hidden="true" />
-            <UserCircleIcon className="h-8 text-gray-500 ml-2" aria-label="User menu" />
+          <div className="relative" ref={dropdownRef}>
+            <button
+              className="flex items-center border border-gray-300 p-2 rounded-full hover:shadow-md transition cursor-pointer"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              aria-label="User menu"
+            >
+              <Bars3Icon className="h-5 w-5 text-gray-500" />
+              <UserCircleIcon className="h-8 w-8 text-gray-500 ml-2" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-2">
+                <DropdownMenu isOpen={isDropdownOpen} setIsOpen={setIsDropdownOpen} />
+              </div>
+            )}
           </div>
         </div>
         <div className="md:hidden flex items-center gap-3">
