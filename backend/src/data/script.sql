@@ -17,8 +17,6 @@ CREATE TABLE "user" (
     email VARCHAR(100) UNIQUE NOT NULL,
     phone VARCHAR(20),
     hashed_password TEXT,
-    oauth_provider VARCHAR(50),
-    oauth_id VARCHAR(100),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -48,7 +46,6 @@ CREATE TABLE property (
     description TEXT,
     address TEXT,
     ward VARCHAR(100),
-    city VARCHAR(100),
     province VARCHAR(100),
     country VARCHAR(100),
     longitude DECIMAL(9,6),
@@ -154,4 +151,12 @@ CREATE TABLE tax (
     percentage DECIMAL(5,2),
     created_at TIMESTAMP DEFAULT NOW(),
     uploaded_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 15. forgot password otp
+create table otp_verifications (
+	otp_id UUID primary key default uuid_generate_v4(),
+	user_id UUID references "user"(user_id) on delete cascade,
+	token text not null,
+	expires_at timestamp not null
 );

@@ -14,9 +14,10 @@ export const ENV = {
   // NODE_ENV: process.env.NODE_ENV || 'development',
   DATABASE_URL: requireEnv('DATABASE_URL'),
   DB_SSL: process.env.DB_SSL === 'true',
-  JWT_SECRET: requireEnv('JWT_SECRET'),
   PORT: parseInt(process.env.PORT || '5000', 10),
-
+  JWT_SECRET: requireEnv('JWT_SECRET') as string,
+  JWT_EXPIRED_TIME: requireEnv('JWT_EXPIRED_TIME'),
+  
   // SMTP configs
   SMTP_HOST: 'smtp.gmail.com',
   SMTP_PORT: 465, // cổng đúng cho SMTP Gmail SSL
