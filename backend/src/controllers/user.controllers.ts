@@ -85,7 +85,30 @@ export const signUp = async (req: Request, res: Response) => {
       `
     );
 
-    return res.status(201).json({ message: 'Signup successful. Email sent.' });  
+    // Generate JWT token
+    const payload = {
+      userId: user.user_id, 
+      role: user.role_id,   
+    };
+    const signOptions: SignOptions = {
+      expiresIn: '1h',
+    };
+    const token = jwt.sign(payload, JWT_SECRET, signOptions);
+
+    return res.status(201).json({
+      message: 'Signup successful. Email sent.',
+      userId: user.user_id, 
+      token,
+      user: {
+        id: user.user_id,   
+        name: user.name,
+        email: user.email,
+        gender: user.gender,
+        phone: user.phone,
+        role: user.role_id, 
+        dob: user.dob,
+      },
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Signup failed' });
@@ -93,7 +116,7 @@ export const signUp = async (req: Request, res: Response) => {
 };
 
 // login (token last for 1 hour)
-export const login = async (req: Request, res: Response) => { // login 
+export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   try {
@@ -111,7 +134,7 @@ export const login = async (req: Request, res: Response) => { // login
       userId: user.user_id,
       role: user.role_id,
       email: user.email,
-      type: 'access', // login access 
+      type: 'access',
     };
 
     const signOptions: SignOptions = {
@@ -120,7 +143,20 @@ export const login = async (req: Request, res: Response) => { // login
     
     const token = jwt.sign(payload, JWT_SECRET, signOptions);
 
-    res.json({ token, userId: user.user_id });
+    // Return full user data
+    res.json({
+      token,
+      userId: user.user_id,
+      user: {
+        id: user.user_id,
+        name: user.name,
+        email: user.email,
+        gender: user.gender,
+        phone: user.phone,
+        role: user.role_id,
+        dob: user.dob,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login failed' });

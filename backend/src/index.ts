@@ -1,18 +1,27 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import userRoutes from './routes/user.routes';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import userRoutes from "./routes/user.routes";
 
 dotenv.config();
-const PORT = process.env.PORT || 5000;
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+// CORS setup to allow frontend (http://localhost:3000) to access backend
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true,
+}));
+
+// Parse incoming JSON and form-urlencoded data
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // form-urlencoded
+app.use(express.urlencoded({ extended: true }));
 
-// api routes that related to users
-app.use('/user', userRoutes);
+// Routes
+app.use("/user", userRoutes); // Example: /user/signup, /user/login
 
-
+// Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`✅ Backend running at http://localhost:${PORT}`);
 });
