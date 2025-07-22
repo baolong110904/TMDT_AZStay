@@ -83,112 +83,60 @@ export default function Listings({
 }: Props) {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
   const [resolvedLocation, setResolvedLocation] = useState<string>(city);
-  const [error, setError] = useState<string | null>(null); // Added error state
-
-  useEffect(() => setMounted(true), []);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!mounted) return;
-
-    // Placeholder for API call - will replace with fetch logic later
-    const fetchListings = () => {
+    const fetchListings = async () => {
       setLoading(true);
+      setError(null);
+
       try {
-        setError(null);
+        const response = await fetch(
+          `http://localhost:4000/listings?lat=${latitude}&lng=${longitude}&checkin=${checkin}&checkout=${checkout}`
+        );
 
-        // Mock latitude and longitude if not provided
-        const lat = latitude || 10.7769; // Default to Ho Chi Minh City
-        const lng = longitude || 106.7009;
+        if (!response.ok) {
+          throw new Error("Failed to fetch listings");
+        }
 
-        // Mock data - replace with API response later
-        const mockListings: Listing[] = [
-          {
-            title: "Cozy Apartment in Downtown",
-            price: "75",
-            image: "/placeholder-image1.jpg",
-            url: "https://airbnb.com/listing1",
-            rating: "4.9",
-            reviews: "120",
-            locationHint: "Ho Chi Minh City",
-          },
-          {
-            title: "Modern Villa with Pool",
-            price: "150",
-            image: "/placeholder-image2.jpg",
-            url: "https://airbnb.com/listing2",
-            rating: "4.7",
-            reviews: "85",
-            locationHint: "Da Nang",
-          },
-          {
-            title: "Beachfront Bungalow",
-            price: "120",
-            image: "/placeholder-image3.jpg",
-            url: "https://airbnb.com/listing3",
-            rating: "4.8",
-            reviews: "200",
-            locationHint: "Nha Trang",
-          },
-          {
-            title: "City Loft near Market",
-            price: "90",
-            image: "/placeholder-image4.jpg",
-            url: "https://airbnb.com/listing4",
-            rating: "4.6",
-            reviews: "60",
-            locationHint: "Ho Chi Minh City",
-          },
-          {
-            title: "Mountain Retreat",
-            price: "110",
-            image: "/placeholder-image5.jpg",
-            url: "https://airbnb.com/listing5",
-            rating: "4.9",
-            reviews: "150",
-            locationHint: "Da Lat",
-          },
-        ];
+        const data: Listing[] = await response.json();
+        setListings(data);
 
-        // Simulate location resolution based on mock data
+        // Attempt to determine most frequent locationHint from listings
         const locationCounts: Record<string, number> = {};
-        mockListings.forEach((listing: Listing) => {
-          let hint = listing.locationHint?.trim();
-          if (!hint && listing.title) {
-            const match = listing.title.match(/in\s+(.+)/i);
-            if (match && match[1]) {
-              hint = match[1].trim();
-            }
-          }
+        data.forEach((listing) => {
+          const hint = listing.locationHint?.trim();
           if (hint) {
             locationCounts[hint] = (locationCounts[hint] || 0) + 1;
           }
         });
 
-        const sortedLocations = Object.entries(locationCounts)
-          .filter(([loc]) => loc.toLowerCase() !== "shanghai")
-          .sort((a, b) => b[1] - a[1]);
+        const mostFrequentLocation = Object.entries(locationCounts)
+          .sort((a, b) => b[1] - a[1])
+          .at(0)?.[0];
 
-        const mostFrequentLocation = sortedLocations?.[0]?.[0];
-        setResolvedLocation(mostFrequentLocation || city);
-
-        // Set mock listings
-        setListings(mockListings);
+        if (mostFrequentLocation) {
+          setResolvedLocation(mostFrequentLocation);
+        }
       } catch (err) {
         console.error("Error fetching listings:", err);
-        setError("Failed to load listings"); // Set error state on failure
+        setError("Failed to load listings");
       } finally {
         setLoading(false);
       }
     };
 
     fetchListings();
-  }, [city, checkin, checkout, guests, latitude, longitude, mounted]);
+  }, [city, checkin, checkout, guests, latitude, longitude]);
 
-  if (!mounted) return null;
-  if (loading) return <p className="text-center my-8">Loading listings...</p>;
-  if (error) return <p className="text-center text-red-500 my-8">{error}</p>; // Render error if present
+  if (loading) {
+    return <p className="text-center my-8">Loading listings...</p>;
+  }
+
+  if (error) {
+    return <p className="text-center text-red-500 my-8">{error}</p>;
+  }
 
   return (
     <div className="my-8 px-4">
@@ -197,6 +145,7 @@ export default function Listings({
           Available Rentals in {resolvedLocation}
         </h2>
       </div>
+
       <style>{`
         .slick-track {
           display: flex !important;
@@ -240,7 +189,9 @@ export default function Listings({
                     )}
                   </p>
                   <p className="text-base font-semibold text-red-600 mb-2">
-                    {item.price ? `$${item.price} / night` : <span className="text-gray-400">No price</span>}
+                    {item.price
+                      ? `$${item.price} / night`
+                      : <span className="text-gray-400">No price</span>}
                   </p>
                 </div>
                 {item.url && (

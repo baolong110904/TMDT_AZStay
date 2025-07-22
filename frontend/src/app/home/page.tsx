@@ -29,8 +29,8 @@ export default function Home() {
         const { latitude, longitude } = position.coords;
         setCoords({ latitude, longitude });
 
-        const url = `https://secure.geonames.org/searchJSON?lat=${latitude}&lng=${longitude}&radius=${CITY_RADIUS}&featureClass=P&minPopulation=100000&orderby=population&maxRows=1&username=${GEONAMES_USER}`;
-        const response = await fetch(`http://localhost:4000/listings?lat=${coords.lat}&lng=${coords.lng}&checkin=${checkin}&checkout=${checkout}`);
+        
+        const response = await fetch(`http://localhost:4000/listings?lat=${latitude}&lng=${longitude}&checkin=${checkin}&checkout=${checkout}`);
         if (!response.ok) throw new Error(`GeoNames error: ${response.status}`);
         const data = await response.json();
         setCity(data.geonames?.[0]?.name || 'Ho Chi Minh City');

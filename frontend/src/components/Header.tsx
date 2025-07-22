@@ -28,6 +28,7 @@ export default function Header({ placeholder }: HeaderProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<any>(null);
 
   // Throttle scroll
   const throttle = (callback: () => void, limit: number) => {
@@ -76,6 +77,25 @@ export default function Header({ placeholder }: HeaderProps) {
     else if (activeTab === "Services") router.push("/services");
   }, [activeTab, router]);
 
+  // Check for logged-in user on client mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser && typeof parsedUser === "object" && Object.keys(parsedUser).length > 0) {
+          setUser(parsedUser);
+        } else {
+          console.warn("Invalid user data format, clearing:", storedUser);
+          localStorage.removeItem("user");
+        }
+      } catch (e) {
+        console.error("Failed to parse user data:", e);
+        localStorage.removeItem("user");
+      }
+    }
+  }, []);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -95,6 +115,21 @@ export default function Header({ placeholder }: HeaderProps) {
     };
   }, [isDropdownOpen]);
 
+  // Handle avatar/profile click
+  const handleProfileClick = () => {
+    if (user?.id) {
+      router.push(`/user/profile?id=${user.id}`);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    router.push("/login");
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm transition-all duration-500 ease-in-out">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-2 md:px-8">
@@ -111,7 +146,32 @@ export default function Header({ placeholder }: HeaderProps) {
           <button className="text-sm hidden md:inline text-gray-600 hover:text-blue-700 transition">
             Become a host
           </button>
-          <GlobeAltIcon className="h-5 w-5 text-gray-500 hover:text-blue-700 cursor-pointer transition" aria-label="Change language" />
+          {user ? (
+            <div className="relative" onClick={handleProfileClick}>
+              <div
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  backgroundColor: "black",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                {user.name?.charAt(0) || "U"}
+              </div>
+            </div>
+          ) : (
+            <GlobeAltIcon
+              className="h-5 w-5 text-gray-500 hover:text-blue-700 cursor-pointer transition"
+              aria-label="Change language"
+            />
+          )}
 
           {/* Dropdown Trigger */}
           <div className="relative" ref={dropdownRef}>
@@ -127,7 +187,12 @@ export default function Header({ placeholder }: HeaderProps) {
             {/* Dropdown Menu */}
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-2">
-                <DropdownMenu isOpen={isDropdownOpen} setIsOpen={setIsDropdownOpen} />
+                <DropdownMenu
+                  isOpen={isDropdownOpen}
+                  setIsOpen={setIsDropdownOpen}
+                  user={user}
+                  onLogout={handleLogout}
+                />
               </div>
             )}
           </div>
