@@ -129,32 +129,33 @@ export const login = async (req: Request, res: Response) => {
     if (!match) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    
+
     const payload = {
-      userId: user.user_id,
-      role: user.role_id,
+      sub: user.user_id,
       email: user.email,
+      role: user.role_id,
+      name: user.name,
       type: 'access',
     };
+
 
     const signOptions: SignOptions = {
       expiresIn: '1h',
     };
-    
+
     const token = jwt.sign(payload, JWT_SECRET, signOptions);
 
-    // Return full user data
     res.json({
       token,
-      userId: user.user_id,
       user: {
-        id: user.user_id,
+        user_id: user.user_id,
         name: user.name,
         email: user.email,
-        gender: user.gender,
         phone: user.phone,
-        role: user.role_id,
+        gender: user.gender,
         dob: user.dob,
+        role_id: user.role_id,
+        oauth_provider: user.oauth_provider,
       },
     });
   } catch (err) {
