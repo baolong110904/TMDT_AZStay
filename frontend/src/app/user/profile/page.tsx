@@ -2,9 +2,36 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import api from "@/lib/axios";
+import Sidebar from "@/components/SidebarProfile";
+import AboutMeSection from "@/components/AboutMeSection";
+import EditProfileSection from "@/components/EditProfileSection";
+import Header from "@/components/SubHeader"; 
+
+const PROFILE_EDIT_FIELDS = [
+  { key: "work", label: "My work", icon: "💼" },
+  { key: "funFact", label: "My fun fact", icon: "💡" },
+  { key: "decadeBorn", label: "Decade I was born", icon: "🎂" },
+  { key: "uselessSkill", label: "My most useless skill", icon: "✏️" },
+  { key: "favSong", label: "My favorite song in high school", icon: "🎵" },
+  { key: "bioTitle", label: "My biography title would be", icon: "📖" },
+  { key: "whereGo", label: "Where I've always wanted to go", icon: "🌍" },
+  { key: "pets", label: "Pets", icon: "🐾" },
+  { key: "school", label: "Where I went to school", icon: "🎓" },
+  { key: "tooMuchTime", label: "I spend too much time", icon: "⏰" },
+  { key: "languages", label: "Languages I speak", icon: "🌐" },
+  { key: "obsessed", label: "I'm obsessed with", icon: "❤️" },
+];
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [avatar, setAvatar] = useState<File | null>(null);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [profileFields, setProfileFields] = useState<any>({});
+  const [activeTab, setActiveTab] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
@@ -28,40 +55,82 @@ export default function ProfilePage() {
     }
   }, [id, router]);
 
+  const handleEdit = () => setEditMode(true);
+  const handleCancel = () => setEditMode(false);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAvatar(e.target.files[0]);
+    }
+  };
+
+  const handleFieldChange = (key: string, value: string) => {
+    setProfileFields((prev: any) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = async () => {
+    setError(null);
+    setSuccess(null);
+
+    const formData = new FormData();
+    if (avatar) formData.append("avatar", avatar);
+    if (password) formData.append("password", password);
+    Object.keys(profileFields).forEach((key) => {
+      formData.append(key, profileFields[key]);
+    });
+
+    try {
+      const response = await api.put(`/user/update/${user.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setSuccess("Profile updated successfully!");
+      setEditMode(false);
+      if (response.data.user) {
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...user,
+            ...response.data.user,
+            avatar: response.data.user.avatar || user.avatar,
+          })
+        );
+        setUser((prev: any) => ({ ...prev, ...response.data.user }));
+      }
+    } catch (err: any) {
+      console.error("Update error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Failed to update profile.");
+    }
+  };
+
   if (!user) return <p>Loading...</p>;
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Profile</h1>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Name</label>
-          <p className="mt-1 text-gray-900">{user.name || "Not specified"}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
-          <p className="mt-1 text-gray-900">{user.email || "Not specified"}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Password</label>
-          <p className="mt-1 text-gray-900">********</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Select Gender</label>
-          <p className="mt-1 text-gray-900">{user.gender || "Not specified"}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Phone</label>
-          <p className="mt-1 text-gray-900">{user.phone || "Not specified"}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Select Role</label>
-          <p className="mt-1 text-gray-900">{user.role || "Not specified"}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">DOB</label>
-          <p className="mt-1 text-gray-900">{user.dob || "Not specified"}</p>
-        </div>
+    <div className="min-h-screen bg-white">
+      <Header />
+      <div className="flex border-r">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
+
+        <main className="flex-1 px-12 pt-8"> {/* Add top padding if needed */}
+          {!editMode ? (
+            <AboutMeSection user={user} onEdit={() => setEditMode(true)} />
+          ) : (
+            <EditProfileSection
+              user={user}
+              avatar={avatar}
+              password={password}
+              error={error}
+              success={success}
+              profileFields={profileFields}
+              handleAvatarChange={handleAvatarChange}
+              handleFieldChange={handleFieldChange}
+              handleSave={handleSave}
+              handleCancel={handleCancel}
+              setUser={setUser}
+              setPassword={setPassword}
+              PROFILE_EDIT_FIELDS={PROFILE_EDIT_FIELDS}
+            />
+          )}
+        </main>
       </div>
     </div>
   );

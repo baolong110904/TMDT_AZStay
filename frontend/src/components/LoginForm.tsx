@@ -18,21 +18,23 @@ export default function LoginForm() {
 
     try {
       const response = await api.post("/user/login", { email, password });
-      console.log("Login response:", response.data); // Debug log
-      const { token, userId } = response.data;
+      console.log("Login response:", response.data);
+      const { token, user } = response.data;
 
-      if (userId && token) {
-        // Create a minimal user object with available data
-        const user = { id: userId, avatar: "/default-avatar.png", name: email.split("@")[0] || "User" };
+      if (token && user) {
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("user", JSON.stringify({
+          ...user,
+          id: user.user_id,
+          avatar: "/default-avatar.png",
+        }));
         router.push("/home");
       } else {
-        throw new Error("Invalid login response: Missing token or userId");
+        throw new Error("Invalid login response");
       }
     } catch (err: any) {
       console.error("Login error:", err.response?.data || err.message);
-      setError(err.response?.data?.message || "Login failed. Please check your credentials or contact support.");
+      setError(err.response?.data?.message || "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
