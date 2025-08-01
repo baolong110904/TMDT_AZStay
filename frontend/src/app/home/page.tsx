@@ -5,8 +5,8 @@ import Header from '@/components/Header';
 import Banner from '@/components/Banner';
 import ExploreNearby from '@/components/ExploreNearby';
 import Listings from '@/components/Listings';
-import MediumCard from '@/components/MediumCard';
-import LargeCard from '@/components/LargeCard';
+import MediumCard from '@/components/home/MediumCard';
+import LargeCard from '@/components/home/LargeCard';
 import Footer from '@/components/Footer';
 
 export default function Home() {
@@ -26,10 +26,17 @@ export default function Home() {
         );
         const { latitude, longitude } = position.coords;
         setCoords({ latitude, longitude });
-        setCity('Ho Chi Minh City'); 
+
+        // dùng API để lấy tên thành phố, dùng đoạn bên dưới thay vì setCity tĩnh
+        // const response = await fetch(`http://localhost:4000/listings?lat=${latitude}&lng=${longitude}&checkin=${checkin}&checkout=${checkout}`);
+        // if (!response.ok) throw new Error(`GeoNames error: ${response.status}`);
+        // const data = await response.json();
+        // setCity(data.geonames?.[0]?.name || 'Ho Chi Minh City');
+
+        setCity('Ho Chi Minh City'); // hoặc giữ mặc định này nếu không dùng API
       } catch (error) {
         console.error('Location error:', error);
-        setCoords({ latitude: 10.7769, longitude: 106.7009 }); // Ho Chi Minh City fallback
+        setCoords({ latitude: 10.7769, longitude: 106.7009 }); // fallback HCM
         setCity('Ho Chi Minh City');
       } finally {
         setLoadingCity(false);
@@ -39,9 +46,11 @@ export default function Home() {
   }, []);
 
   return (
-    <>
+    <div>
       <Header />
       <Banner />
+
+      {/* Loading nearby locations */}
       <section className="max-w-7xl mx-auto my-8">
         {coords ? (
           <ExploreNearby latitude={coords.latitude} longitude={coords.longitude} />
@@ -50,6 +59,7 @@ export default function Home() {
         )}
       </section>
 
+      {/* listing location for customer */}
       <section className="max-w-7xl mx-auto my-8">
         {loadingCity || !city || !coords ? (
           <p className="text-center">Determining your city…</p>
@@ -64,15 +74,19 @@ export default function Home() {
           />
         )}
       </section>
+
+      {/* medium card */}
       <section className="max-w-7xl mx-auto my-8">
         <h2 className="text-4xl font-bold mb-4">Inspiration for future getaways</h2>
         <MediumCard />
       </section>
+
+      {/* large card */}
       <section className="max-w-7xl mx-auto my-8">
         <LargeCard />
       </section>
 
       <Footer />
-    </>
+    </div>
   );
 }

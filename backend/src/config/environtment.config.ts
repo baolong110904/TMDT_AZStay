@@ -23,4 +23,8 @@ export const ENV = {
   SMTP_PORT: 465, // cổng đúng cho SMTP Gmail SSL
   SMTP_USER: requireEnv('SMTP_USER'),
   SMTP_PASS: requireEnv('SMTP_PASS'),
+
+  // supabse
+  SUPABASE_KEY: requireEnv('SUPABASE_KEY'),
+  SUPABASE_URL: requireEnv('SUPABASE_URL')
 };
