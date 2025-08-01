@@ -16,7 +16,6 @@ export const authenticateJWT = (expectedType: string) => {
 
     try {
       const decoded = jwt.verify(token, ENV.JWT_SECRET) as JwtPayload;
-
       if (decoded.type !== expectedType) {
         return res.status(403).json({ error: `Expected token type '${expectedType}'` });
       }
