@@ -51,7 +51,7 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
   const calendarRef = useRef<HTMLDivElement>(null);
   const whereRef = useRef<HTMLDivElement>(null);
   const whoRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null); // Add ref for the input field
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -71,9 +71,9 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
         return;
       }
       try {
-        const res = await fetch(`/api/search?query=${encodeURIComponent(searchInput)}`);
-        const data = await res.json();
-        setSuggestions(data);
+        // const res = await fetch(`/api/search?query=${encodeURIComponent(searchInput)}`);
+        // const data = await res.json();
+        // setSuggestions(data);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
       }
@@ -113,18 +113,18 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
             setIsWhereOpen(!isWhereOpen);
             setShowCalendar(false);
             setIsWhoOpen(false);
-            if (inputRef.current) inputRef.current.focus(); // Focus the input field when clicked
+            if (inputRef.current) inputRef.current.focus();
           }}
         >
           <p className="text-xs font-medium text-gray-700">Where</p>
           <input
-            ref={inputRef} // Assign the ref to the input
+            ref={inputRef}
             type="text"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)} // Update searchInput as user types
+            onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                handleSearch(); // Trigger search on Enter key press
+                handleSearch();
               }
             }}
             placeholder={placeholder || "Search destinations"}
@@ -150,8 +150,8 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
                     key={loc}
                     className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer"
                     onClick={() => {
-                      setSearchInput(loc); // Set the selected suggestion as the input value
-                      setIsWhereOpen(false); // Close the dropdown
+                      setSearchInput(loc);
+                      setIsWhereOpen(false);
                     }}
                   >
                     {loc}

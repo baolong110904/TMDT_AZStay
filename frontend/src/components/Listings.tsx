@@ -25,6 +25,54 @@ interface Props {
   longitude: number;
 }
 
+const mockListings: Listing[] = [
+  {
+    title: "Cozy Apartment in Downtown",
+    price: "75",
+    image: "https://via.placeholder.com/300x200?text=Apartment+1",
+    url: "https://www.airbnb.com/rooms/123",
+    rating: "4.8",
+    reviews: "120",
+    locationHint: "Ho Chi Minh City",
+  },
+  {
+    title: "Modern Loft with City View",
+    price: "95",
+    image: "https://via.placeholder.com/300x200?text=Apartment+2",
+    url: "https://www.airbnb.com/rooms/124",
+    rating: "4.9",
+    reviews: "85",
+    locationHint: "Ho Chi Minh City",
+  },
+  {
+    title: "Charming Studio near Market",
+    price: "60",
+    image: "https://via.placeholder.com/300x200?text=Apartment+3",
+    url: "https://www.airbnb.com/rooms/125",
+    rating: "4.7",
+    reviews: "95",
+    locationHint: "Ho Chi Minh City",
+  },
+  {
+    title: "Luxury Condo with Pool",
+    price: "120",
+    image: "https://via.placeholder.com/300x200?text=Apartment+4",
+    url: "https://www.airbnb.com/rooms/126",
+    rating: "4.95",
+    reviews: "150",
+    locationHint: "Ho Chi Minh City",
+  },
+  {
+    title: "Traditional Vietnamese House",
+    price: "80",
+    image: "https://via.placeholder.com/300x200?text=Apartment+5",
+    url: "https://www.airbnb.com/rooms/127",
+    rating: "4.6",
+    reviews: "70",
+    locationHint: "Ho Chi Minh City",
+  },
+];
+
 const NextArrow = (props: any) => {
   const { className, style, onClick } = props;
   return (
@@ -92,20 +140,13 @@ export default function Listings({
       setError(null);
 
       try {
-        const response = await fetch(
-          `http://localhost:4000/listings?lat=${latitude}&lng=${longitude}&checkin=${checkin}&checkout=${checkout}`
-        );
+        // Simulate API delay
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        setListings(mockListings);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch listings");
-        }
-
-        const data: Listing[] = await response.json();
-        setListings(data);
-
-        // Attempt to determine most frequent locationHint from listings
+        // Determine most frequent locationHint from mock listings
         const locationCounts: Record<string, number> = {};
-        data.forEach((listing) => {
+        mockListings.forEach((listing) => {
           const hint = listing.locationHint?.trim();
           if (hint) {
             locationCounts[hint] = (locationCounts[hint] || 0) + 1;
@@ -120,7 +161,7 @@ export default function Listings({
           setResolvedLocation(mostFrequentLocation);
         }
       } catch (err) {
-        console.error("Error fetching listings:", err);
+        console.error("Error processing listings:", err);
         setError("Failed to load listings");
       } finally {
         setLoading(false);

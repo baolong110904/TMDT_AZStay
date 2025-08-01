@@ -22,7 +22,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "1",
       title: "Top Rated Street Food Tour by Motorbike",
-      image: "/images/food-tour.jpg",
+      image: "/assets/experience.png",
       time: "1PM",
       price: "₫680,000",
       rating: "4.87",
@@ -30,7 +30,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "2",
       title: "Ben Duoc: Less-Crowded CuChi Tunnel Half-Day Tour",
-      image: "/images/tunnel-tour.jpg",
+      image: "/assets/experience.png",
       time: "7AM",
       price: "₫799,000",
       rating: "4.87",
@@ -38,7 +38,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "3",
       title: "Female Rider - Street Food & Sightseeing by scooter",
-      image: "/images/scooter-tour.jpg",
+      image: "/assets/experience.png",
       time: "11AM",
       price: "₫570,000",
       rating: "4.95",
@@ -46,7 +46,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "4",
       title: "Saigon Eleven Tastings Food Tour by Scooter",
-      image: "/images/food-tour-2.jpg",
+      image: "/assets/experience.png",
       time: "7:30PM",
       price: "₫680,000",
       rating: "4.98",
@@ -54,7 +54,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "5",
       title: "Private Saigon History, Hidden Gems Motorbike Tour",
-      image: "/images/history-tour.jpg",
+      image: "/assets/experience.png",
       time: "7AM",
       price: "₫750,000",
       rating: "4.97",
@@ -64,7 +64,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "6",
       title: "Cu Chi Tunnels & Mekong Delta - Small Group Tour",
-      image: "/images/mekong-tour.jpg",
+      image: "/assets/experience.png",
       time: "7:30AM",
       price: "₫990,000",
       rating: "4.85",
@@ -72,7 +72,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "7",
       title: "Authentic 'Less-Touristy' Mekong BenTre 1-Day Tour",
-      image: "/images/bentre-tour.jpg",
+      image: "/assets/experience.png",
       time: "8AM",
       price: "₫1,518,000",
       rating: "4.85",
@@ -80,7 +80,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "8",
       title: "Discover Authentic Flavors While Local Food Tour",
-      image: "/images/local-food-tour.jpg",
+      image: "/assets/experience.png",
       time: "4:30PM",
       price: "₫650,000",
       rating: "4.99",
@@ -88,7 +88,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "9",
       title: "Private Walking Food Tour with 13 Tastings By Car",
-      image: "/images/walking-tour.jpg",
+      image: "/assets/experience.png",
       time: "9AM",
       price: "₫695,000",
       rating: "4.99",
@@ -96,7 +96,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "10",
       title: "Vietnam coffee journey - The unknown giant",
-      image: "/images/coffee-tour.jpg",
+      image: "/assets/experience.png",
       time: "7AM",
       price: "₫680,000",
       rating: "4.99",
@@ -106,7 +106,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "11",
       title: "Grandma Noodles, Coffee, Exotic Fruits & History",
-      image: "/images/noodles-tour.jpg",
+      image: "/assets/experience.png",
       time: "7AM",
       price: "₫750,000",
       rating: "4.98",
@@ -114,7 +114,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "12",
       title: "Authentic 'Less-Touristy' Mekong BenTre 1-Day Tour",
-      image: "/images/bentre-tour-2.jpg",
+      image: "/assets/experience.png",
       time: "5:30PM",
       price: "₫1,518,000",
       rating: "4.85",
@@ -122,7 +122,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "13",
       title: "Local Lesser-Known Mekong Delta MyTho 1-Day Tour",
-      image: "/images/mytho-tour.jpg",
+      image: "/assets/experience.png",
       time: "7AM",
       price: "₫1,088,000",
       rating: "4.88",
@@ -130,7 +130,7 @@ const experiences: Record<string, Experience[]> = {
     {
       id: "14",
       title: "Saigon Craft Beer and Local Food Tour By Scooter",
-      image: "/images/beer-tour.jpg",
+      image: "/assets/experience.png",
       time: "7PM",
       price: "₫1,100,000",
       rating: "4.84",

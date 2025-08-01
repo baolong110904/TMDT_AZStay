@@ -13,8 +13,6 @@ export default function Home() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [city, setCity] = useState<string | null>(null);
   const [loadingCity, setLoadingCity] = useState(true);
-  const GEONAMES_USER = 'baolong110904';
-  const CITY_RADIUS = 50; // km
 
   const checkin = '2025-07-15';
   const checkout = '2025-07-20';
@@ -28,12 +26,7 @@ export default function Home() {
         );
         const { latitude, longitude } = position.coords;
         setCoords({ latitude, longitude });
-
-        
-        const response = await fetch(`http://localhost:4000/listings?lat=${latitude}&lng=${longitude}&checkin=${checkin}&checkout=${checkout}`);
-        if (!response.ok) throw new Error(`GeoNames error: ${response.status}`);
-        const data = await response.json();
-        setCity(data.geonames?.[0]?.name || 'Ho Chi Minh City');
+        setCity('Ho Chi Minh City'); 
       } catch (error) {
         console.error('Location error:', error);
         setCoords({ latitude: 10.7769, longitude: 106.7009 }); // Ho Chi Minh City fallback
