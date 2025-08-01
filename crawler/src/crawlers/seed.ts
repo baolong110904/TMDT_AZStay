@@ -16,7 +16,6 @@ function randomOffset(lat: number, lng: number) {
 export async function seed(city: string) {
   const listings = await fetchAirbnbListings(city);
   console.log(`🌆 Seeding for city: ${city} (${listings.length} listings)`);
-
   // 📍 Dùng hàm geocodeAddress để lấy tọa độ thành phố
   const center = await geocodeAddress(city);
 

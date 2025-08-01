@@ -1,5 +1,4 @@
 import prisma from "../prisma/client.prisma";
-import { Decimal } from "@prisma/client/runtime/library";
 
 type UserBid = Awaited<ReturnType<typeof prisma.userbid.create>>;
 
@@ -96,12 +95,46 @@ export class UserBidDAO {
 
   static toJSON(bid: UserBid) {
     return {
-      id: bid.bid_id,
+      bid_id: bid.bid_id,
       auction_id: bid.auction_id,
       bidder_id: bid.bidder_id,
       bid_amount: bid.bid_amount,
       bid_time: bid.bid_time,
       status: bid.status,
     };
+  }
+
+  static async placeBid({
+    auction_id,
+    bidder_id,
+    bid_amount,
+  }: {
+    auction_id: string;
+    bidder_id: string;
+    bid_amount: number;
+  }) {
+    // Kiểm tra xem auction có tồn tại không
+    const auction = await prisma.auction.findUnique({
+      where: { auction_id },
+    });
+  
+    if (!auction) {
+      throw new Error("Auction not found");
+    }
+  
+    // Kiểm tra thời gian hợp lệ
+    const now = new Date();
+    if (!auction.start_time || !auction.end_time) {
+      throw new Error("Auction time not properly set");
+    }
+  
+    if (auction.start_time > now || auction.end_time < now) {
+      throw new Error("Auction not active");
+    }
+  
+    // Tạo đối tượng DAO instance và lưu
+    const bidDAO = new UserBidDAO({ auction_id, bidder_id, bid_amount });
+    const savedBid = await bidDAO.save();
+    return this.toJSON(savedBid);
   }
 }

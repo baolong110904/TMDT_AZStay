@@ -2,28 +2,25 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { createServer } from "http";
-import { Server } from "socket.io";
 import userRoutes from "./routes/user.routes";
 import auctionRoutes from "./routes/auction.routes";
 import socketHandler from "./utils/socket.utils";
+import { initSocket } from "./utils/socket.utils";
 
 dotenv.config();
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" },
-});
+const io = initSocket(server);
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/user", userRoutes);     // <-- fixed missing slash
-app.use("/auction", auctionRoutes); // <-- fixed missing slash
+app.use("/user", userRoutes);
+app.use("/auction", auctionRoutes); 
 
-// 👇 Socket logic in separate file
 socketHandler(io);
 
 /*
