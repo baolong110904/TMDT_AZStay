@@ -38,3 +38,7 @@ export const authorizeRoles = (...allowedRoles: string[]) => {
     next();
   };
 };
+
+export const verifyToken = authenticateJWT('access');
+
+export type { AuthRequest };
