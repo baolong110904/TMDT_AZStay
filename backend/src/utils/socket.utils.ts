@@ -1,6 +1,26 @@
 // src/socketHandler.ts
 import { Server, Socket } from "socket.io";
 import { UserBidDAO } from "../dao/userbid.dao";
+import { Server as HTTPServer } from "http";
+
+let io: Server;
+
+export const initSocket = (server: HTTPServer): Server => {
+  io = new Server(server, {
+    cors: {
+      origin: "http://localhost:3000",
+      credentials: true
+    },
+  });
+  return io;
+};
+
+export const getIO = (): Server => {
+  if (!io) {
+    throw new Error("❌ Socket.io not initialized!");
+  }
+  return io;
+};
 
 export default function socketHandler(io: Server) {
   io.on("connection", (socket: Socket) => {

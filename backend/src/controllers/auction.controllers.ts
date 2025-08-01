@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middlewares';
 import { AuctionDAO } from '../dao/auction.dao'
-import { AuctionService } from '../services/auction.service'
+import { UserBidDAO } from '../dao/userbid.dao'
 import prisma from "../prisma/client.prisma";
+import { getIO } from "../utils/socket.utils"
 
 export const createAuction = async (req: Request, res: Response) => {
     const { property_id, start_time, end_time } = req.body;
@@ -18,10 +19,29 @@ export const getActiveAuctions = async (_req: Request, res: Response) => {
 export const placeBid = async (req: AuthRequest, res: Response) => {
   const { auctionId } = req.params;
   const { bid_amount } = req.body;
-  const bidder_id = req.user.user_id; // from auth middleware
+  const bidder_id = req.user.sub;
 
-  const bid = await AuctionService.placeBid(auctionId, bidder_id, bid_amount);
-  res.status(201).json(bid);
+  try {
+    const bid = await UserBidDAO.placeBid({
+      auction_id: auctionId,
+      bidder_id,
+      bid_amount,
+    });
+
+    const io = getIO();
+    io.to(auctionId).emit("new-bid", {
+      auctionId,
+      bidder_id,
+      bid_amount,
+      bid_id: bid.bid_id, // nếu có
+      timestamp: bid.bid_time || new Date().toISOString(),
+    });
+
+    res.status(201).json(bid);
+  } catch (err) {
+    const error = err as Error;
+    res.status(400).json({ message: "Failed to place bid", error: error.message });
+  }
 };
 
 export const getBids = async (req: Request, res: Response) => {

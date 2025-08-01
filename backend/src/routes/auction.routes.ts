@@ -8,5 +8,6 @@ router.post("/", verifyToken, AuctionController.createAuction);
 router.get("/active", AuctionController.getActiveAuctions);
 router.post("/:auctionId/bid", verifyToken, AuctionController.placeBid);
 router.get("/:auctionId/bids", AuctionController.getBids);
+router.patch("/:auctionId/end", verifyToken, AuctionController.endAuction);
 
 export default router;
