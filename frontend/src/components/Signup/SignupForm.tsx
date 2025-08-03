@@ -123,7 +123,7 @@ export default function SignupForm() {
       </select>
       <input
         type="tel"
-        placeholder="Phone (e.g., 0703444781)"
+        placeholder="Phone (valid Vietnam phone number)"
         className="w-full px-4 py-2 border rounded text-black"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}

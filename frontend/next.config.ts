@@ -1,8 +1,20 @@
-import type { NextConfig } from "next";
+import { hostname } from "os";
 
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // no custom "appDir" override!
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "fastly.picsum.photos", // cho phép lấy ảnh từ nơi host
+      },
+      {
+        protocol: "https",
+        hostname: "picsum.photos" // test
+      }
+    ],
+  },
 };
 
 export default nextConfig;

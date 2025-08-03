@@ -15,7 +15,7 @@ export class AuctionDAO {
       },
     });
   }
-
+  
   static async getActiveAuctions() {
     const now = new Date();
     return prisma.auction.findMany({
