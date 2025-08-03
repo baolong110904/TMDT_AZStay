@@ -11,71 +11,59 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import NavigationTabs from "./NavigationTabs";
 import DesktopSearchBar from "./DesktopSearchBar";
-import MobileSearchDrawer from "./MobileSearchDrawer";
+import MobileSearchDrawer from "./Search/MobileSearchDrawer";
 import DropdownMenu from "./DropdownMenu";
 
 interface HeaderProps {
   placeholder?: string;
 }
 
+interface User {
+  name: string;
+  
+}
+
+
 export default function Header({ placeholder }: HeaderProps) {
   const [showSearchBar, setShowSearchBar] = useState(true);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const lastScrollTop = useRef(0);
-  const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const pathname = usePathname();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [user, setUser] = useState<any>(null);
 
-  // Throttle scroll
-  const throttle = (callback: () => void, limit: number) => {
-    let inThrottle: boolean;
-    return () => {
-      if (!inThrottle) {
-        callback();
-        inThrottle = true;
-        setTimeout(() => (inThrottle = false), limit);
-      }
-    };
-  };
-
+  // rendering navbar only at top position
+  const lastVisible = useRef(true); // nav bar display status
   useEffect(() => {
     const handleScroll = () => {
-      const currentScroll = window.scrollY;
-      const shouldShow = currentScroll <= 100 || currentScroll < lastScrollTop.current;
-
-      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-      scrollTimeout.current = setTimeout(() => {
-        requestAnimationFrame(() => {
-          setShowSearchBar(shouldShow);
-          lastScrollTop.current = currentScroll;
-        });
-      }, 50);
+      const currentY = window.scrollY;
+      
+      if (currentY > 120 && lastVisible.current) {
+        setShowSearchBar(false);
+        lastVisible.current = false;
+      } else if (currentY < 60 && !lastVisible.current) {
+        setShowSearchBar(true);
+        lastVisible.current = true;
+      }
     };
 
-    const throttledScroll = throttle(handleScroll, 100);
-    window.addEventListener("scroll", throttledScroll);
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
     return () => {
-      window.removeEventListener("scroll", throttledScroll);
-      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
   useEffect(() => {
     if (!pathname) return;
     if (pathname.startsWith("/home")) setActiveTab("Homes");
-    else if (pathname.startsWith("/experience")) setActiveTab("Experiences");
-    else if (pathname.startsWith("/services")) setActiveTab("Services");
+    else if (pathname.startsWith("/experience")) setActiveTab("For you");
+    else if (pathname.startsWith("/services")) setActiveTab("Favorites");
   }, [pathname]);
-
-  useEffect(() => {
-    if (activeTab === "Homes") router.push("/home");
-    else if (activeTab === "Experiences") router.push("/experience");
-    else if (activeTab === "Services") router.push("/services");
-  }, [activeTab, router]);
 
   // Check for logged-in user on client mount
   useEffect(() => {
@@ -129,7 +117,7 @@ export default function Header({ placeholder }: HeaderProps) {
     setUser(null);
     router.push("/login");
   };
-
+  
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm transition-all duration-500 ease-in-out">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-2 md:px-8">
@@ -200,7 +188,9 @@ export default function Header({ placeholder }: HeaderProps) {
       </div>
 
       {/* Desktop Search Bar */}
-      <DesktopSearchBar showSearchBar={showSearchBar} placeholder={placeholder} />
+      <div className="hidden md:block">
+        <DesktopSearchBar showSearchBar={showSearchBar} placeholder={placeholder} />
+      </div>
 
       {/* Mobile Search Button */}
       <div className="md:hidden flex justify-center px-4 py-2">
@@ -215,7 +205,9 @@ export default function Header({ placeholder }: HeaderProps) {
         </button>
       </div>
 
+
       <MobileSearchDrawer isOpen={isMobileSearchOpen} setIsOpen={setIsMobileSearchOpen} />
+
     </header>
   );
 }

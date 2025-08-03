@@ -22,7 +22,7 @@ const Banner = () => {
   }, []);
 
   return (
-    <div className="p-4 max-w-screen-2xl mx-auto dark:bg-darkBg">
+    <div className="p-4 max-w-screen-3xl mx-auto dark:bg-darkBg">
       <div className="relative rounded-xl rounded-br-[80px] md:p-9 px-4 py-8 bg-gradient-to-r from-blue-700 to-purple-800 overflow-hidden">
         {/* Background elements with movement */}
         <div className="absolute inset-0 overflow-hidden">

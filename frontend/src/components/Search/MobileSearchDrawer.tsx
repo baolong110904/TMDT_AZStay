@@ -5,6 +5,7 @@ import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { DateRangePicker } from 'react-date-range';
+import { RangeKeyDict } from 'react-date-range'; // 
 import GuestCounter from "./GuestCounter";
 
 interface DateRange {
@@ -25,6 +26,7 @@ interface MobileSearchDrawerProps {
   setIsOpen: (isOpen: boolean) => void;
 }
 
+
 export default function MobileSearchDrawer({ isOpen, setIsOpen }: MobileSearchDrawerProps) {
   const [searchInput, setSearchInput] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -37,10 +39,10 @@ export default function MobileSearchDrawer({ isOpen, setIsOpen }: MobileSearchDr
   const [guestCounts, setGuestCounts] = useState<GuestCounts>({ adults: 0, children: 0, infants: 0, pets: 0 });
   const calendarRef = useRef<HTMLDivElement>(null);
 
-  const handleSelect = (ranges: any) => {
+  const handleSelect = (ranges: RangeKeyDict) => {
     setDateRange({
-      startDate: ranges.selection.startDate,
-      endDate: ranges.selection.endDate,
+      startDate: ranges.selection.startDate ?? new Date(),
+      endDate: ranges.selection.endDate ?? new Date(),
       key: 'selection',
     });
   };

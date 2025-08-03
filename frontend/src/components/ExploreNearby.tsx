@@ -65,7 +65,7 @@ export default function ExploreNearby({ latitude, longitude }: ExploreNearbyProp
 
         setCity("Ho Chi Minh City"); // Mock city name
         setDestinations(nearby);
-      } catch (err: any) {
+      } catch (err) {
         console.error("Nearby fetch error:", err);
         setError("Failed to load nearby destinations");
       } finally {

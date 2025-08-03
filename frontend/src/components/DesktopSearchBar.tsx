@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { DateRangePicker } from "react-date-range";
-import GuestCounter from "./GuestCounter";
+import { RangeKeyDict } from 'react-date-range';
+import GuestCounter from "./Search/GuestCounter";
 
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
@@ -81,9 +82,17 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
     return () => clearTimeout(debounce);
   }, [searchInput]);
 
-  const handleSelect = (ranges: any) => {
-    setDateRange(ranges.selection);
+  const handleSelect = (ranges: RangeKeyDict) => {
+    const selectedRange = ranges.selection;
+    if (!selectedRange.startDate || !selectedRange.endDate) return;
+    
+    setDateRange({
+      startDate: selectedRange.startDate,
+      endDate: selectedRange.endDate,
+      key: "selection",
+    });
   };
+
 
   const totalGuests = Object.values(guestCounts).reduce((a, b) => a + b, 0);
 
@@ -100,9 +109,8 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
 
   return (
     <div
-      className={`hidden md:flex justify-center px-4 py-5 transition-all duration-500 ease-in-out transform ${
-        showSearchBar ? "opacity-100 translate-y-0 max-h-24" : "opacity-0 -translate-y-4 max-h-0 overflow-hidden"
-      }`}
+      className={`hidden md:flex justify-center px-4 py-5 transition-all duration-500 ease-in-out transform ${showSearchBar ? "opacity-100 translate-y-0 max-h-24" : "opacity-0 -translate-y-4 max-h-0 overflow-hidden"
+        }`}
     >
       <div className="flex items-center bg-white border border-gray-300/50 rounded-full shadow-[0_8px_20px_rgba(59,130,246,0.3)] p-0.5 max-w-3xl w-full relative">
         {/* WHERE SECTION */}
@@ -137,14 +145,14 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
                 {(suggestions.length > 0
                   ? suggestions
                   : [
-                      "Nearby",
-                      "Bangkok, Thailand",
-                      "Hanoi, Vietnam",
-                      "Paris, France",
-                      "Melbourne, Australia",
-                      "Vũng Tàu, Vietnam",
-                      "Dalat, Vietnam",
-                    ]
+                    "Nearby",
+                    "Bangkok, Thailand",
+                    "Hanoi, Vietnam",
+                    "Paris, France",
+                    "Melbourne, Australia",
+                    "Vũng Tàu, Vietnam",
+                    "Dalat, Vietnam",
+                  ]
                 ).map((loc) => (
                   <li
                     key={loc}

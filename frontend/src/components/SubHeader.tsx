@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { usePathname, useRouter } from "next/navigation";
 import NavigationTabs from "./NavigationTabs";
-import MobileSearchDrawer from "./MobileSearchDrawer";
+import MobileSearchDrawer from "./Search/MobileSearchDrawer";
 import DropdownMenu from "./DropdownMenu";
 
 export default function Header() {
