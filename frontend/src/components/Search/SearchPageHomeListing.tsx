@@ -1,10 +1,11 @@
+// components này dùng để hiển thị các kết quả có được sau khi search
 "use client";
 
 import { useState } from "react";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 import clsx from "clsx";
-import { Listing } from "../type/SearchPageListingProps";
+import { Listing } from "../Type/SearchPageListingProps";
 
 const PAGE_SIZE = 20; // 1 page toi da co 20 nha, 5 dong x 4 cots
 
@@ -99,7 +100,7 @@ export default function SearchHomeListings({ list }: { list: Listing[] }) {
       </div>
 
       {/* Pagination controls */}
-      <div className="mt-6 flex justify-center gap-3 items-center">
+      <div className="mt-9 flex justify-center gap-3 items-center">
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}

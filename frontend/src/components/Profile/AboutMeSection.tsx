@@ -2,7 +2,7 @@ import React from "react";
 import Avatar from "../Avatar";
 import { getRoleName } from "../../utils/role";
 import comment from "@/assets/comment.png";
-import { UserProfile } from "../type/UserProfileProps";
+import { UserProfile } from "../Type/UserProfileProps";
 
 export default function AboutMeSection({
   user,

@@ -1,5 +1,5 @@
 import React from "react";
-import { AvatarProps } from "./type/AvatarProps";
+import { AvatarProps } from "./Type/AvatarProps";
 
 export default function Avatar({
   name,

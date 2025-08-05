@@ -7,7 +7,7 @@ import Sidebar from "@/components/SidebarProfile";
 import AboutMeSection from "@/components/Profile/AboutMeSection";
 import EditProfileSection from "@/components/EditProfileSection";
 import Header from "@/components/SubHeader"; 
-import { UserProfile } from "@/components/type/UserProfileProps";
+import { UserProfile } from "@/components/Type/UserProfileProps";
 
 const PROFILE_EDIT_FIELDS = [
   { key: "work", label: "My work", icon: "💼" },
