@@ -9,18 +9,19 @@ import {
   GiftIcon,
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
+import { UserProfile } from "./type/UserProfileProps";
 
 interface DropdownMenuProps {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  user?: any; // Optional user object
+  user?: UserProfile | null;
   onLogout?: () => void; // Optional logout function
 }
 
 export default function DropdownMenu({ isOpen, setIsOpen, user, onLogout }: DropdownMenuProps) {
   const router = useRouter();
 
-  const handleNavigation = (path: string) => {
+  const   handleNavigation = (path: string) => {
     setIsOpen(false);
     if (path) router.push(path);
   };

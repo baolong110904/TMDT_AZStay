@@ -25,9 +25,9 @@ export default function NavigationTabs({ activeTab, setActiveTab }: NavigationTa
 
   const tabs: Tab[] = [
     { name: "Homes", icon: <IoHomeOutline size={20} />, href: "/home" },
-    { name: "For you", icon: <MdRecommend size={20} />, href: "/experience" },
-    { name: "Favorites", icon: <MdFavorite size={20} />, href: "/services" },
-    { name: "Upcoming", icon: <TbBalloon size={20} />, href: "/services" },
+    { name: "For you", icon: <MdRecommend size={20} />, href: "/foryou" },
+    { name: "Favorites", icon: <MdFavorite size={20} />, href: "/favorites" },
+    { name: "Upcoming", icon: <TbBalloon size={20} />, href: "/upcoming" },
   ];
   
   useEffect(() => {
@@ -37,6 +37,7 @@ export default function NavigationTabs({ activeTab, setActiveTab }: NavigationTa
       underline.style.left = `${activeEl.offsetLeft}px`;
       underline.style.width = `${activeEl.offsetWidth}px`;
     }
+    console.log(activeTab);
   }, [activeTab]);
 
   const handleTabClick = (tab: Tab) => {

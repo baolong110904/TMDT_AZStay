@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 import clsx from "clsx";
-import { Listing } from "../type/SearchListingInterface";
+import { Listing } from "../type/SearchPageListingProps";
 
 const PAGE_SIZE = 20; // 1 page toi da co 20 nha, 5 dong x 4 cots
 

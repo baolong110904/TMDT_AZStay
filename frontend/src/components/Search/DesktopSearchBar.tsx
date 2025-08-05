@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { DateRangePicker } from "react-date-range";
 import { RangeKeyDict } from 'react-date-range';
-import GuestCounter from "./Search/GuestCounter";
+import GuestCounter from "./GuestCounter";
 
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";

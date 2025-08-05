@@ -10,19 +10,14 @@ import {
 } from "@heroicons/react/24/outline";
 import { usePathname, useRouter } from "next/navigation";
 import NavigationTabs from "./NavigationTabs";
-import DesktopSearchBar from "./DesktopSearchBar";
+import DesktopSearchBar from "./Search/DesktopSearchBar";
 import MobileSearchDrawer from "./Search/MobileSearchDrawer";
 import DropdownMenu from "./DropdownMenu";
+import { UserProfile } from "./type/UserProfileProps";
 
 interface HeaderProps {
   placeholder?: string;
 }
-
-interface User {
-  name: string;
-  
-}
-
 
 export default function Header({ placeholder }: HeaderProps) {
   const [showSearchBar, setShowSearchBar] = useState(true);
@@ -33,8 +28,8 @@ export default function Header({ placeholder }: HeaderProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [user, setUser] = useState<any>(null);
-
+  const [user, setUser] = useState<UserProfile | null>(null);
+  
   // rendering navbar only at top position
   const lastVisible = useRef(true); // nav bar display status
   useEffect(() => {
@@ -61,8 +56,9 @@ export default function Header({ placeholder }: HeaderProps) {
   useEffect(() => {
     if (!pathname) return;
     if (pathname.startsWith("/home")) setActiveTab("Homes");
-    else if (pathname.startsWith("/experience")) setActiveTab("For you");
-    else if (pathname.startsWith("/services")) setActiveTab("Favorites");
+    else if (pathname.startsWith("/foryou")) setActiveTab("For you");
+    else if (pathname.startsWith("/favorites")) setActiveTab("Favorites");
+    else if (pathname.startsWith("/upcoming")) setActiveTab("Favorites");
   }, [pathname]);
 
   // Check for logged-in user on client mount
