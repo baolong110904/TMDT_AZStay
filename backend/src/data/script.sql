@@ -51,6 +51,7 @@ CREATE TABLE property (
     longitude DECIMAL(9,6),
     latitude DECIMAL(9,6),
     min_price DECIMAL(12,2),
+    max_guest SMALLINT
     is_available BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
