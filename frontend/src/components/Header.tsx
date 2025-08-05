@@ -13,7 +13,7 @@ import NavigationTabs from "./NavigationTabs";
 import DesktopSearchBar from "./Search/DesktopSearchBar";
 import MobileSearchDrawer from "./Search/MobileSearchDrawer";
 import DropdownMenu from "./DropdownMenu";
-import { UserProfile } from "./type/UserProfileProps";
+import { UserProfile } from "./Type/UserProfileProps";
 
 interface HeaderProps {
   placeholder?: string;
@@ -115,7 +115,7 @@ export default function Header({ placeholder }: HeaderProps) {
   };
   
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm transition-all duration-500 ease-in-out">
+    <header className="sticky top-0 z-50 bg-white shadow-sm transition-all duration-500 ease-in-out mb-5">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-2 md:px-8">
         {/* Logo */}
         <div className="relative h-12 w-32 md:w-40 flex-shrink-0">

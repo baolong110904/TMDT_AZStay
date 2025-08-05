@@ -7,7 +7,7 @@ import "slick-carousel/slick/slick-theme.css";
 import { Heart } from "lucide-react";
 import Image from "next/image";
 import clsx from "clsx";
-import { Listing } from "../type/MainPageListingProps";
+import { Listing } from "../Type/MainPageListingProps";
 
 const mockListings: Listing[] = [
   {
