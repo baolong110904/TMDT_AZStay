@@ -3,7 +3,7 @@ import Avatar from "./Avatar";
 
 export default function EditProfileSection({
   user,
-  avatar,
+  imgUrl,
   password,
   error,
   success,
