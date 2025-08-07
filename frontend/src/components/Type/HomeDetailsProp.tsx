@@ -7,6 +7,7 @@ export interface HomeDetailsProps{
   imgUrl: string[];
 
   ownerName: string;
+  ownerImgUrl: string;
   categoryName: string;
 
   address: string;
@@ -15,6 +16,7 @@ export interface HomeDetailsProps{
   latitude?: number;
   longitude?: number;
 
+  roomNumber: number;
   isAvailable: boolean;
   availableDate?: Date[];
 

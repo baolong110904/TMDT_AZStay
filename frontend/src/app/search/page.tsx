@@ -9,7 +9,7 @@ import { mockListings } from "@/components/Search/mockListing"; // dữ liệu g
 export default function SearchPage() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 999999999]); // Min - Max Price
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc"); // Giá tăng hoặc giảm
-
+  
   const filterAndSortListings = () => {
     return mockListings
       .filter(
