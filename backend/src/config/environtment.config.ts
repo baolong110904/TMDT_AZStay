@@ -26,5 +26,9 @@ export const ENV = {
 
   // supabse
   SUPABASE_KEY: requireEnv('SUPABASE_KEY'),
-  SUPABASE_URL: requireEnv('SUPABASE_URL')
+  SUPABASE_URL: requireEnv('SUPABASE_URL'),
+
+  // cloudinary
+  CLOUDINARY_API_SECRET: requireEnv('CLOUDINARY_API_SECRET'),
+  CLOUDINARY_API_KEY: requireEnv('CLOUDINARY_API_KEY'),
 };
