@@ -51,6 +51,7 @@ CREATE TABLE property (
     longitude DECIMAL(9,6),
     latitude DECIMAL(9,6),
     min_price DECIMAL(12,2),
+    max_guest SMALLINT
     is_available BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -159,4 +160,17 @@ create table otp_verifications (
 	user_id UUID references "user"(user_id) on delete cascade,
 	token text not null,
 	expires_at timestamp not null
+);
+
+-- 16. recommender system
+CREATE TABLE user_click (
+    click_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES "user"(user_id),
+    property_id UUID REFERENCES property(property_id),
+    event_type VARCHAR(50), --'click', 'view_detail', 'favorite', 'book', 'search', 'scroll'
+    event_value TEXT,        -- eg: search keyword, scroll %, ...
+    user_agent TEXT,
+    ip_address TEXT,
+    location TEXT,
+    clicked_at TIMESTAMP DEFAULT NOW()
 );

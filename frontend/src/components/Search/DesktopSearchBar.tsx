@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { DateRangePicker } from "react-date-range";
+import { RangeKeyDict } from 'react-date-range';
 import GuestCounter from "./GuestCounter";
 
 import "react-date-range/dist/styles.css";
@@ -51,7 +52,7 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
   const calendarRef = useRef<HTMLDivElement>(null);
   const whereRef = useRef<HTMLDivElement>(null);
   const whoRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null); // Add ref for the input field
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -71,9 +72,9 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
         return;
       }
       try {
-        const res = await fetch(`/api/search?query=${encodeURIComponent(searchInput)}`);
-        const data = await res.json();
-        setSuggestions(data);
+        // const res = await fetch(`/api/search?query=${encodeURIComponent(searchInput)}`);
+        // const data = await res.json();
+        // setSuggestions(data);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
       }
@@ -81,9 +82,17 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
     return () => clearTimeout(debounce);
   }, [searchInput]);
 
-  const handleSelect = (ranges: any) => {
-    setDateRange(ranges.selection);
+  const handleSelect = (ranges: RangeKeyDict) => {
+    const selectedRange = ranges.selection;
+    if (!selectedRange.startDate || !selectedRange.endDate) return;
+    
+    setDateRange({
+      startDate: selectedRange.startDate,
+      endDate: selectedRange.endDate,
+      key: "selection",
+    });
   };
+
 
   const totalGuests = Object.values(guestCounts).reduce((a, b) => a + b, 0);
 
@@ -100,9 +109,8 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
 
   return (
     <div
-      className={`hidden md:flex justify-center px-4 py-5 transition-all duration-500 ease-in-out transform ${
-        showSearchBar ? "opacity-100 translate-y-0 max-h-24" : "opacity-0 -translate-y-4 max-h-0 overflow-hidden"
-      }`}
+      className={`hidden md:flex justify-center px-4 py-5 transition-all duration-500 ease-in-out transform ${showSearchBar ? "opacity-100 translate-y-0 max-h-24" : "opacity-0 -translate-y-4 max-h-0 overflow-hidden"
+        }`}
     >
       <div className="flex items-center bg-white border border-gray-300/50 rounded-full shadow-[0_8px_20px_rgba(59,130,246,0.3)] p-0.5 max-w-3xl w-full relative">
         {/* WHERE SECTION */}
@@ -113,18 +121,18 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
             setIsWhereOpen(!isWhereOpen);
             setShowCalendar(false);
             setIsWhoOpen(false);
-            if (inputRef.current) inputRef.current.focus(); // Focus the input field when clicked
+            if (inputRef.current) inputRef.current.focus();
           }}
         >
           <p className="text-xs font-medium text-gray-700">Where</p>
           <input
-            ref={inputRef} // Assign the ref to the input
+            ref={inputRef}
             type="text"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)} // Update searchInput as user types
+            onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                handleSearch(); // Trigger search on Enter key press
+                handleSearch();
               }
             }}
             placeholder={placeholder || "Search destinations"}
@@ -137,21 +145,21 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
                 {(suggestions.length > 0
                   ? suggestions
                   : [
-                      "Nearby",
-                      "Bangkok, Thailand",
-                      "Hanoi, Vietnam",
-                      "Paris, France",
-                      "Melbourne, Australia",
-                      "Vũng Tàu, Vietnam",
-                      "Dalat, Vietnam",
-                    ]
+                    "Nearby",
+                    "Bangkok, Thailand",
+                    "Hanoi, Vietnam",
+                    "Paris, France",
+                    "Melbourne, Australia",
+                    "Vũng Tàu, Vietnam",
+                    "Dalat, Vietnam",
+                  ]
                 ).map((loc) => (
                   <li
                     key={loc}
                     className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer"
                     onClick={() => {
-                      setSearchInput(loc); // Set the selected suggestion as the input value
-                      setIsWhereOpen(false); // Close the dropdown
+                      setSearchInput(loc);
+                      setIsWhereOpen(false);
                     }}
                   >
                     {loc}

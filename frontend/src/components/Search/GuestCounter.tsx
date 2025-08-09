@@ -64,7 +64,7 @@ export default function GuestCounter({
           onClick={() => handleChange(1)}
           aria-label={`Increase ${label} count`}
         >
-          +
+        
         </button>
       </div>
     </div>

@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/axios";
 import Sidebar from "@/components/SidebarProfile";
-import AboutMeSection from "@/components/AboutMeSection";
+import AboutMeSection from "@/components/Profile/AboutMeSection";
 import EditProfileSection from "@/components/EditProfileSection";
 import Header from "@/components/SubHeader"; 
+import { UserProfile } from "@/components/Type/UserProfileProps";
 
 const PROFILE_EDIT_FIELDS = [
   { key: "work", label: "My work", icon: "💼" },
@@ -24,18 +25,18 @@ const PROFILE_EDIT_FIELDS = [
 ];
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserProfile | null>();
   const [editMode, setEditMode] = useState(false);
   const [avatar, setAvatar] = useState<File | null>(null);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [profileFields, setProfileFields] = useState<any>({});
+  const [profileFields, setProfileFields] = useState<UserProfile | null>();
   const [activeTab, setActiveTab] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-
+  
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {

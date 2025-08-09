@@ -1,13 +1,14 @@
 import React from "react";
-import Avatar from "./Avatar";
-import { getRoleName } from "../utils/role";
+import Avatar from "../Avatar";
+import { getRoleName } from "../../utils/role";
 import comment from "@/assets/comment.png";
+import { UserProfile } from "../Type/UserProfileProps";
 
 export default function AboutMeSection({
   user,
   onEdit,
 }: {
-  user: any;
+  user: UserProfile;
   onEdit: () => void;
 }) {
   return (
@@ -25,7 +26,7 @@ export default function AboutMeSection({
         <div className="shadow-lg rounded-2xl bg-white px-12 py-8 flex flex-col items-center min-w-[320px]">
           <Avatar name={user.name} size={96} />
           <h3 className="mt-6 text-2xl font-bold">{user.name || "admin"}</h3>
-          <p className="text-lg text-gray-500 mt-2">{getRoleName(user.role_id)}</p>
+          <p className="text-lg text-gray-500 mt-2">{getRoleName(user.roleId)}</p>
         </div>
         <div className="ml-8 w-full max-w-[340px]">
           <h4 className="text-xl font-bold mb-2">Complete your profile</h4>

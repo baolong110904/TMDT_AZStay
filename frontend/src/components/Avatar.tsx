@@ -1,14 +1,11 @@
 import React from "react";
+import { AvatarProps } from "./Type/AvatarProps";
 
 export default function Avatar({
   name,
   size = 96,
-  src,
-}: {
-  name?: string;
-  size?: number;
-  src?: string;
-}) {
+  imgUrl,
+}: AvatarProps) {
   const style: React.CSSProperties = {
     width: size,
     height: size,
@@ -23,10 +20,10 @@ export default function Avatar({
     overflow: "hidden",
     position: "relative",
   };
-  if (src) {
+  if (imgUrl) {
     return (
       <img
-        src={src}
+        src={imgUrl}
         alt="Avatar"
         className="w-full h-full object-cover rounded-full"
         style={{ width: size, height: size }}
