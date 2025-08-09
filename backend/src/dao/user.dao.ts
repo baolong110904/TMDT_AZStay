@@ -67,9 +67,10 @@ export const verifyOTP = async (userId: string, token: string) => {
 
   return otpRecord;
 };
+
 // delete after used
 export const deleteOTP = async (otpId: string) => {
-  await prisma.otp_verifications.delete({
+  return await prisma.otp_verifications.delete({
     where: { otp_id: otpId },
   });
 };
@@ -82,7 +83,7 @@ export const getUserById = async (userId: string) => {
 };
 
 export const updateNewPassword = async(user_id: string, newHashedPassword: string) => {
-  await prisma.user.update({
+  return await prisma.user.update({
     where: { user_id: user_id},
     data: { hashed_password: newHashedPassword}
   });

@@ -1,42 +1,29 @@
-import { v2 as cloudinary } from 'cloudinary';
+import { Request, Response } from 'express';
+import fs from 'fs';
+import { uploadAvatar } from '../dao/images.dao';
 
-(async function () {
-
-  // Configuration
-  cloudinary.config({
-    cloud_name: 'dkxvinprh',
-    api_key: '952564567898485',
-    api_secret: '<your_api_secret>' // Click 'View API Keys' above to copy your API secret
-  });
-
-  // Upload an image
-  const uploadResult = await cloudinary.uploader
-    .upload(
-      'https://res.cloudinary.com/demo/image/upload/getting-started/shoes.jpg', {
-      public_id: 'shoes',
+export const uploadAvatarController = async (req: Request, res: Response) => {
+  try {
+    const user_id = req.body.user_id; // hoặc req.user.user_id nếu dùng auth
+    const file = req.file;
+    
+    if (!file) {
+      return res.status(400).json({ message: 'No file uploaded' });
     }
-    )
-    .catch((error) => {
-      console.log(error);
+
+    // Upload ảnh và lưu DB
+    const newAvatar = await uploadAvatar(user_id, file.path);
+
+    // Xóa file tạm sau khi upload xong
+    fs.unlinkSync(file.path);
+
+    return res.status(200).json({
+      message: 'Avatar uploaded successfully',
+      data: newAvatar
     });
 
-  console.log(uploadResult);
-
-  // Optimize delivery by resizing and applying auto-format and auto-quality
-  const optimizeUrl = cloudinary.url('shoes', {
-    fetch_format: 'auto',
-    quality: 'auto'
-  });
-
-  console.log(optimizeUrl);
-
-  // Transform the image: auto-crop to square aspect_ratio
-  const autoCropUrl = cloudinary.url('shoes', {
-    crop: 'auto',
-    gravity: 'auto',
-    width: 500,
-    height: 500,
-  });
-
-  console.log(autoCropUrl);
-})();
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
