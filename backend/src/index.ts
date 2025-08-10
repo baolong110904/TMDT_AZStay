@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import { createServer } from "http";
 import userRoutes from "./routes/user.routes";
 import auctionRoutes from "./routes/auction.routes";
-import uploadImageRoutes from "./routes/uploadImages.routes";
 import socketHandler from "./utils/socket.utils";
 import { initSocket } from "./utils/socket.utils";
 
@@ -20,7 +19,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/user", userRoutes);
-app.use("/user", uploadImageRoutes);
 app.use("/auction", auctionRoutes); 
 
 socketHandler(io);
