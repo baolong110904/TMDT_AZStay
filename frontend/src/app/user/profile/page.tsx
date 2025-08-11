@@ -31,11 +31,11 @@ export default function ProfilePage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [profileFields, setProfileFields] = useState<UserProfile | null>();
+  const [profileFields, setProfileFields] = useState<UserProfile>({} as UserProfile);
   const [activeTab, setActiveTab] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const id = searchParams.get("id");
+  const id = searchParams?.get("id") ?? "";
   
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -77,10 +77,11 @@ export default function ProfilePage() {
     if (avatar) formData.append("avatar", avatar);
     if (password) formData.append("password", password);
     Object.keys(profileFields).forEach((key) => {
-      formData.append(key, profileFields[key]);
+      formData.append(key, (profileFields as any)[key]);
     });
 
     try {
+      if (!user) return;
       const response = await api.put(`/user/update/${user.id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -92,7 +93,7 @@ export default function ProfilePage() {
           JSON.stringify({
             ...user,
             ...response.data.user,
-            avatar: response.data.user.avatar || user.avatar,
+            avatar: response.data.user.avatar || user.imageId,
           })
         );
         setUser((prev: any) => ({ ...prev, ...response.data.user }));

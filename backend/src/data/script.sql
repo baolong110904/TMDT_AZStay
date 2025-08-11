@@ -54,7 +54,9 @@ CREATE TABLE property (
     longitude DECIMAL(9,6),
     latitude DECIMAL(9,6),
     min_price DECIMAL(12,2),
-    max_guest SMALLINT
+    max_guest SMALLINT,
+    checkin_date DATE,
+    checkout_date DATE, 
     is_available BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -176,6 +178,16 @@ CREATE TABLE user_click (
     ip_address TEXT,
     location TEXT,
     clicked_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 17. Review
+CREATE TABLE review (
+    review_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    property_id UUID REFERENCES property(property_id) ON DELETE CASCADE,
+    rating DECIMAL(3,2) CHECK (rating >= 0 AND rating <= 5),
+    count INT CHECK (count >= 0),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 INSERT INTO "role" (role_name, description) 
