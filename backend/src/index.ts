@@ -6,10 +6,12 @@ import userRoutes from "./routes/user.routes";
 import auctionRoutes from "./routes/auction.routes";
 import socketHandler from "./utils/socket.utils";
 import { initSocket } from "./utils/socket.utils";
+import { setupSwagger } from "./swagger"; // api testing
 
 dotenv.config();
 
 const app = express();
+setupSwagger(app);
 const server = createServer(app);
 const io = initSocket(server);
 const PORT = process.env.PORT || 5000;
@@ -20,6 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/user", userRoutes);
 app.use("/auction", auctionRoutes); 
+
 
 socketHandler(io);
 
@@ -38,4 +41,11 @@ socket.on("new-bid", (data) => {
 
 server.listen(PORT, () => {
   console.log(`✅ Backend running at http://localhost:${PORT}`);
+  console.log(`🔥 API Testing here: http://localhost:${PORT}/docs`);
+});
+
+app.use((req, res, next) => {
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  next();
 });

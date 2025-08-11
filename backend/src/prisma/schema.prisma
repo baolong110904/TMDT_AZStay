@@ -107,6 +107,7 @@ model property {
   is_available    Boolean?          @default(true)
   created_at      DateTime?         @default(now()) @db.Timestamp(6)
   updated_at      DateTime?         @default(now()) @db.Timestamp(6)
+  max_guest       Int?              @db.SmallInt
   auction         auction[]
   booking         booking[]
   externalservice externalservice[]

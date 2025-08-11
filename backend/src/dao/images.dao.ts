@@ -1,26 +1,24 @@
-import { v2 as cloudinary } from 'cloudinary';
-import { ENV } from '../config/environtment.config';
-import prisma from '../prisma/client.prisma';
+import { v2 as cloudinary } from "cloudinary";
+import { ENV } from "../config/environtment.config";
+import prisma from "../prisma/client.prisma";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 cloudinary.config({
-  cloud_name: 'dkxvinprh',
+  cloud_name: "dkxvinprh",
   api_key: ENV.CLOUDINARY_API_KEY,
-  api_secret: ENV.CLOUDINARY_API_SECRET
-})
+  api_secret: ENV.CLOUDINARY_API_SECRET,
+});
 
 // upload/update profile images
-export const uploadAvatar = async (
-  user_id: string,
-  filePath: string
-) => {
+export const uploadAvatar = async (user_id: string, filePath: string) => {
   // delete old images
   await prisma.userimage.deleteMany({ where: { user_id } });
 
   // upload images to cloudinary
   const uploadResult = await cloudinary.uploader.upload(filePath, {
-    folder: 'avatars',
+    folder: "avatars",
     public_id: user_id,
-    overwrite: true
+    overwrite: true,
   });
 
   // saving avatar url to db
@@ -30,4 +28,31 @@ export const uploadAvatar = async (
       image_url: uploadResult.secure_url,
     },
   });
+};
+
+export const uploadPropertyImages = async (
+  property_id: string,
+  filePaths: string[],
+  prismaClient: PrismaClient | Prisma.TransactionClient
+) => {
+  const uploadResults = await Promise.all(
+    filePaths.map(filePath =>
+      cloudinary.uploader.upload(filePath, {
+        folder: "property_images",
+        overwrite: false
+      })
+    )
+  );
+
+  const imagesData = uploadResults.map((result, index) => ({
+    property_id,
+    image_url: result.secure_url,
+    is_cover: index === 0 // cover is the first image
+  }));
+
+  const savedImages = await prisma.propertyimage.createMany({
+    data: imagesData
+  });
+
+  return savedImages;
 };
