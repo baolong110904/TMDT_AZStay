@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
 import fs from 'fs';
 import { uploadAvatar } from '../dao/images.dao';
-import { responseEncoding } from 'axios';
 
 export const uploadAvatarController = async (req: Request, res: Response) => {
   try {
     const user_id = req.body.user_id; // hoặc req.user.user_id nếu dùng auth
-    const file = req.file;
+    const file = req.file as Express.Multer.File;
     
     if (!file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -28,17 +27,3 @@ export const uploadAvatarController = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
-
-// export const uploadHomeImages = async(req: Request, res: Response) => {
-//   try {
-//     const user_id = req.body.user_id;
-//     const property_id = req.body.property_id;
-//     const file = req.body.file;
-    
-//     if (!file) {
-//       return res.status(400).json({messages: 'No file uploaded'});
-//     }
-
-//     const  
-//   }
-// }

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-interface NominatimResult {
+export interface NominatimResult {
   lat: string;
   lon: string;
   [key: string]: any; // thêm nếu muốn linh hoạt hơn
