@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { PropertyDAO } from "../dao/property.dao";
+import prisma from "../prisma/client.prisma";
+import { uploadPropertyImages } from "../dao/images.dao";
 
 // Lấy tất cả property
 export const getAllProperties = async (req: Request, res: Response) => {
@@ -69,10 +71,6 @@ export const deleteProperty = async (req: Request, res: Response) => {
   }
 };
 
-import prisma from "../prisma/client.prisma";
-import { createProperty } from "../dao/property.dao";
-import { uploadPropertyImages } from "../dao/images.dao";
-
 export const createPropertyController = async (req: Request, res: Response) => {
   const {
     user_id,
@@ -93,7 +91,7 @@ export const createPropertyController = async (req: Request, res: Response) => {
   try {
     const property = await prisma.$transaction(async (tx) => {
       // 1. create property
-      const createdProperty = await createProperty(
+      const createdProperty = await PropertyDAO.createProperty(
         user_id,
         category_id,
         title,
