@@ -24,7 +24,7 @@ export default function AboutMeSection({
       </div>
       <div className="flex gap-12 items-center mb-8">
         <div className="shadow-lg rounded-2xl bg-white px-12 py-8 flex flex-col items-center min-w-[320px]">
-          <Avatar name={user.name} size={96} />
+          <Avatar name={user.name} size={96} imgUrl={user.avatar || ""} />
           <h3 className="mt-6 text-2xl font-bold">{user.name || "admin"}</h3>
           <p className="text-lg text-gray-500 mt-2">{getRoleName(user.roleId)}</p>
         </div>

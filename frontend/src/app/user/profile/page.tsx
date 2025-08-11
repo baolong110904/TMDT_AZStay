@@ -31,11 +31,11 @@ export default function ProfilePage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [profileFields, setProfileFields] = useState<UserProfile | null>();
+  const [profileFields, setProfileFields] = useState<Record<string, any>>({});
   const [activeTab, setActiveTab] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const id = searchParams.get("id");
+  const id = searchParams ? searchParams.get("id") : null;
   
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -72,13 +72,20 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setError(null);
     setSuccess(null);
+    
+    if (!user) {
+      setError("User not found.");
+      return;
+    }
 
     const formData = new FormData();
     if (avatar) formData.append("avatar", avatar);
     if (password) formData.append("password", password);
-    Object.keys(profileFields).forEach((key) => {
-      formData.append(key, profileFields[key]);
-    });
+    if (profileFields) {
+      Object.keys(profileFields).forEach((key) => {
+        formData.append(key, (profileFields as Record<string, any>)[key]); //allow indexing
+      });
+    }
 
     try {
       const response = await api.put(`/user/update/${user.id}`, formData, {

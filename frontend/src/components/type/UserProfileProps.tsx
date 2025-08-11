@@ -7,4 +7,5 @@ export interface UserProfile{
   email: string;
   phone: string;
   imageId: string;
+  avatar?: string; //avatar URL
 }

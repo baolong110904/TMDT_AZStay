@@ -20,7 +20,7 @@ export default function EditProfileSection({
     <section>
       <div className="flex items-center mb-8 gap-8">
         <div className="flex flex-col items-center">
-          <Avatar name={user.name} size={120} />
+          <Avatar name={user.name} size={120} imgUrl={user.avatar || ""} />
           <label className="mt-4 flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow cursor-pointer">
             <span role="img" aria-label="camera">📷</span>
             <span className="font-medium">Add</span>
@@ -46,7 +46,7 @@ export default function EditProfileSection({
             <input
               type="text"
               placeholder={field.label}
-              value={profileFields[field.key] || ""}
+              value={profileFields?.[field.key] || ""}
               onChange={(e) => handleFieldChange(field.key, e.target.value)}
               className="border-b border-gray-300 px-2 py-1 w-full bg-transparent outline-none text-lg"
             />

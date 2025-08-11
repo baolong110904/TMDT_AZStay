@@ -52,7 +52,7 @@ export default function Sidebar({
             }}
           >
             <span className="mr-3">
-              {idx === 0 ? <Avatar name={user?.name} size={32} /> : tab.icon}
+              {idx === 0 ? <Avatar name={user?.name} size={32} imgUrl={user?.avatar || ""} /> : tab.icon}
             </span>
             {tab.label}
           </button>
