@@ -22,6 +22,7 @@ export async function migrateToPostgres({
 }) {
   try {
     const propertyId = uuidv4();
+    const maxGuests = Math.floor(Math.random() * 4) + 1; // random 1-4
 
     console.log('📦 Migrating listing:', {
       title: listing?.title,
@@ -30,9 +31,14 @@ export async function migrateToPostgres({
       longitude: listing?.longitude,
       latitude: listing?.latitude,
       price: listing?.price,
+      checkInDate: listing?.checkInDate,
+      checkOutDate: listing?.checkOutDate,
+      maxGuests,
+      reviewStat: listing?.reviewStat,
       imageUrl,
     });
 
+    // 1️⃣ Insert property
     const res1 = await pg.query(
       `
       INSERT INTO property (
@@ -44,9 +50,12 @@ export async function migrateToPostgres({
         latitude,
         min_price,
         is_available,
-        owner_id
+        owner_id,
+        max_guest,
+        checkin_date,
+        checkout_date
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, TRUE, null
+        $1, $2, $3, $4, $5, $6, $7, TRUE, null, $8, $9, $10
       )
       ON CONFLICT DO NOTHING
       RETURNING *
@@ -59,6 +68,9 @@ export async function migrateToPostgres({
         listing.longitude ?? null,
         listing.latitude ?? null,
         listing.price,
+        maxGuests,
+        listing.checkInDate ? new Date(listing.checkInDate) : null,
+        listing.checkOutDate ? new Date(listing.checkOutDate) : null,
       ]
     );
 
@@ -66,8 +78,10 @@ export async function migrateToPostgres({
 
     if (res1.rowCount === 0) {
       console.warn('⚠️ Property already exists, skipping insert.');
+      return;
     }
 
+    // 2️⃣ Insert image
     if (imageUrl) {
       const imageId = uuidv4();
       const res2 = await pg.query(
@@ -84,8 +98,32 @@ export async function migrateToPostgres({
         `,
         [imageId, propertyId, imageUrl]
       );
-
       console.log(`🖼️ Image inserted: ${res2.rowCount} row(s)`);
+    }
+
+    // 3️⃣ Insert review
+    if (listing.reviewStat && typeof listing.reviewStat.rating === 'number') {
+      const reviewId = uuidv4();
+      const res3 = await pg.query(
+        `
+        INSERT INTO review (
+          review_id,
+          property_id,
+          rating,
+          count
+        ) VALUES (
+          $1, $2, $3, $4
+        )
+        RETURNING *
+        `,
+        [
+          reviewId,
+          propertyId,
+          listing.reviewStat.rating ?? 0,
+          listing.reviewStat.count ?? 0,
+        ]
+      );
+      console.log(`⭐ Review inserted: ${res3.rowCount} row(s)`);
     }
 
     console.log(`✅ Migrated listing to PostgreSQL: ${listing.title}`);

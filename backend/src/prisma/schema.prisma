@@ -107,6 +107,9 @@ model property {
   is_available    Boolean?          @default(true)
   created_at      DateTime?         @default(now()) @db.Timestamp(6)
   updated_at      DateTime?         @default(now()) @db.Timestamp(6)
+  max_guest       Int?              @db.SmallInt 
+  checkin_date    DateTime?         @db.Date
+  checkout_date   DateTime?         @db.Date  
   auction         auction[]
   booking         booking[]
   externalservice externalservice[]
@@ -115,6 +118,7 @@ model property {
   propertyimage   propertyimage[]
   user_click      user_click[]
   userfavorite    userfavorite[]
+  review          review?
 }
 
 model propertyimage {
@@ -209,4 +213,14 @@ model user_click {
   clicked_at  DateTime? @default(now()) @db.Timestamp(6)
   property    property? @relation(fields: [property_id], references: [property_id], onDelete: NoAction, onUpdate: NoAction)
   user        user?     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model review {
+  review_id   String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  property_id String   @unique @db.Uuid
+  property    property @relation(fields: [property_id], references: [property_id], onDelete: Cascade)
+  rating      Float
+  count       Int
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @updatedAt @db.Timestamp(6)
 }
