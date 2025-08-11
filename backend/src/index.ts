@@ -25,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/user", userRoutes);
 app.use("/auction", auctionRoutes); 
 app.use("/properties", propertyRoutes); 
+app.use("/upload", uploadImageRoutes); 
 
 
 socketHandler(io);

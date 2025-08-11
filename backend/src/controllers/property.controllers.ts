@@ -71,7 +71,7 @@ export const deleteProperty = async (req: Request, res: Response) => {
   }
 };
 
-export const createPropertyController = async (req: Request, res: Response) => {
+export const createProperty = async (req: Request, res: Response) => {
   const {
     user_id,
     category_id,
@@ -90,21 +90,21 @@ export const createPropertyController = async (req: Request, res: Response) => {
 
   try {
     const property = await prisma.$transaction(async (tx) => {
-      // 1. create property
       const createdProperty = await PropertyDAO.createProperty(
-        user_id,
-        category_id,
-        title,
-        description,
-        address,
-        ward,
-        province,
-        country,
-        max_guest,
-        min_price,
+        {
+          owner_id: user_id,
+          category_id,
+          title,
+          description,
+          address,
+          ward,
+          province,
+          country,
+          max_guest,
+          min_price,
+        },
         tx
       );
-
       // 2. upload and save images
       await uploadPropertyImages(createdProperty.property_id, filePaths, tx);
       
