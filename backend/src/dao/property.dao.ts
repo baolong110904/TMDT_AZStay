@@ -41,7 +41,10 @@ export class PropertyDAO {
         category: true,
         user: true, // owner
         propertyimage: true,
-        auction: true,
+        auction: {
+          orderBy: { start_time: 'desc' },
+          take: 1
+        },
         booking: true,
         userfavorite: true,
       },
@@ -98,8 +101,14 @@ export class PropertyDAO {
         take: limit,
         include: {
           category: true,
-          user: true,
+          user: true, // owner
           propertyimage: true,
+          auction: {
+            orderBy: { start_time: 'desc' },
+            take: 1
+          },
+          booking: true,
+          userfavorite: true,
         },
       }),
       prisma.property.count({ where }),
