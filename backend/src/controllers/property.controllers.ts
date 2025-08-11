@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
+import fs from "fs";
 import { PropertyDAO } from "../dao/property.dao";
-import prisma from "../prisma/client.prisma";
 import { uploadPropertyImages } from "../dao/images.dao";
 
 // Lấy tất cả property
@@ -80,47 +80,47 @@ export const createProperty = async (req: Request, res: Response) => {
     address,
     ward,
     province,
-    country,
     max_guest,
     min_price,
   } = req.body;
 
   const files = req.files as Express.Multer.File[];
-  const filePaths = files.map(file => file.path);
+  const filePaths = files.map((file) => file.path);
 
   try {
-    const property = await prisma.$transaction(async (tx) => {
-      const createdProperty = await PropertyDAO.createProperty(
-        {
-          owner_id: user_id,
-          category_id,
-          title,
-          description,
-          address,
-          ward,
-          province,
-          country,
-          max_guest,
-          min_price,
-        },
-        tx
-      );
-      // 2. upload and save images
-      await uploadPropertyImages(createdProperty.property_id, filePaths, tx);
-      
-      return createdProperty;
-    });
+    // 1. create property
+    const createdProperty = await PropertyDAO.createProperty(
+      user_id,
+      Number(category_id),
+      title,
+      description,
+      address,
+      ward,
+      province,
+      Number(max_guest),
+      Number(min_price)
+    );
+    
+    // 2. upload and save images
+    await uploadPropertyImages(createdProperty.property_id, filePaths);
 
+
+    
     res.status(201).json({
       message: "Property created successfully",
-      property,
+      createProperty,
     });
-
   } catch (error) {
     console.error("Error creating property:", error);
     res.status(500).json({
       message: "Failed to create property",
       error: String(error),
     });
+  } finally {
+    for (const file of filePaths) {
+      fs.unlink(file, (err) => {
+        if (err) console.error(`Failed to delete temp file ${file}:`, err);
+      });
+    }
   }
 };

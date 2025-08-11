@@ -3,6 +3,7 @@ import prisma from "../prisma/client.prisma";
 import { geocodeAddress } from "../services/geocoding.service";
 import { PrismaClient, Prisma } from "@prisma/client";
 
+
 export class PropertyDAO {
   // Tạo property mới (có geocoding + max_guest)
   static async createProperty(
@@ -20,8 +21,7 @@ export class PropertyDAO {
       max_guest: number;
       min_price?: number;
       is_available?: boolean;
-    },
-    prismaClient: PrismaClient | Prisma.TransactionClient = prisma
+    }
   ) {
     // Geocode để lấy tọa độ
     const { lat, lng } = await geocodeAddress(data.address);
