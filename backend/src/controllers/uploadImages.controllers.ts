@@ -5,7 +5,7 @@ import { uploadAvatar } from '../dao/images.dao';
 export const uploadAvatarController = async (req: Request, res: Response) => {
   try {
     const user_id = req.body.user_id; // hoặc req.user.user_id nếu dùng auth
-    const file = req.file;
+    const file = req.file as Express.Multer.File;
     
     if (!file) {
       return res.status(400).json({ message: 'No file uploaded' });

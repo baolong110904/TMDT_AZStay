@@ -1,23 +1,38 @@
+import { v2 as cloudinary } from "cloudinary";
 import prisma from "../prisma/client.prisma";
+import { geocodeAddress } from "../services/geocoding.service";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 export class PropertyDAO {
-  // Tạo property mới
-  static async createProperty(data: {
-    owner_id?: string;
-    category_id?: number;
-    title: string;
-    description?: string;
-    address?: string;
-    ward?: string;
-    province?: string;
-    country?: string;
-    longitude?: number;
-    latitude?: number;
-    min_price?: number;
-    is_available?: boolean;
-  }) {
-    return prisma.property.create({
-      data,
+  // Tạo property mới (có geocoding + max_guest)
+  static async createProperty(
+    data: {
+      owner_id: string;
+      category_id: number;
+      title: string;
+      description?: string;
+      address: string;
+      ward?: string;
+      province?: string;
+      country?: string;
+      longitude?: number;
+      latitude?: number;
+      max_guest: number;
+      min_price?: number;
+      is_available?: boolean;
+    },
+    prismaClient: PrismaClient | Prisma.TransactionClient = prisma
+  ) {
+    // Geocode để lấy tọa độ
+    const { lat, lng } = await geocodeAddress(data.address);
+
+    return prismaClient.property.create({
+      data: {
+        ...data,
+        country: data.country || "Viet Nam",
+        latitude: lat,
+        longitude: lng,
+      },
     });
   }
 
@@ -56,21 +71,18 @@ export class PropertyDAO {
       checkout,
       guests,
     } = params;
-  
+
     const skip = (page - 1) * limit;
-  
-    // Tạo điều kiện lọc cơ bản
     const where: any = {};
-  
+
     if (city) where.address = { contains: city, mode: "insensitive" };
     if (province) where.province = { contains: province, mode: "insensitive" };
     if (country) where.country = { contains: country, mode: "insensitive" };
-  
+
     if (guests) {
-      where.max_guest = { gte: guests }; // yêu cầu có trường max_guest trong DB
+      where.max_guest = { gte: guests };
     }
-  
-    // Nếu có checkin & checkout => lọc không trùng booking
+
     if (checkin && checkout) {
       where.booking = {
         none: {
@@ -81,7 +93,7 @@ export class PropertyDAO {
         },
       };
     }
-  
+
     const [items, total] = await Promise.all([
       prisma.property.findMany({
         where,
@@ -95,25 +107,14 @@ export class PropertyDAO {
       }),
       prisma.property.count({ where }),
     ]);
-  
+
     return {
       items,
       total,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
     };
-  }  
-
-  // Lấy tất cả property
-  // static async getAllProperties() {
-  //   return prisma.property.findMany({
-  //     include: {
-  //       category: true,
-  //       user: true, // owner
-  //       propertyimage: true,
-  //     },
-  //   });
-  // }
+  }
 
   // Cập nhật property
   static async updateProperty(
@@ -129,6 +130,7 @@ export class PropertyDAO {
       country: string;
       longitude: number;
       latitude: number;
+      max_guest: number;
       min_price: number;
       is_available: boolean;
     }>

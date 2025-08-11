@@ -13,7 +13,7 @@ import {
   deleteOTP,
   updateNewPassword,
   getUserById,
-
+  getUserByEmail,
 } from '../dao/user.dao'; // orm
 import * as constraints from '../utils/constraint.utils'; // checking info constraints
 import { sendEmail } from '../utils/sendEmail.utils'; // sending email fucntion
@@ -188,14 +188,13 @@ export const sendOtpToUser = async (req: Request, res: Response) => {
     console.log(error);
     res.status(500).json({ error: 'Send otp to user failed' });
   }
-
 };
 
 // verify otp and gen token (valid for 15 mins) 
 export const verifyOtpAndGenerateToken = async (req: Request, res: Response) => {
   const { email, otp } = req.body;
   try {      
-    const user = await getUserById(email);
+    const user = await getUserByEmail(email);
 
     if (!user) {
       return res.status(404).json({ message: 'Email not found' });
@@ -210,7 +209,7 @@ export const verifyOtpAndGenerateToken = async (req: Request, res: Response) => 
     await deleteOTP(otpRecord.otp_id);
 
     const payload = {
-      user_id: user.user_id,
+      email: user.email,
       type: 'password_reset' // token type: password reset
     }
 
@@ -222,23 +221,23 @@ export const verifyOtpAndGenerateToken = async (req: Request, res: Response) => 
     return res.json({ token, message: 'OTP verified, token generated' });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Verify otp and generate token' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 export const changePassword = async (req: Request, res: Response) => {
-  const userId = (req as any).user.user_id;
+  const email = (req as any).user.email;
   const { newPassword } = req.body;
   
   try {
-    const user = await getUserById(userId);
+    const user = await getUserByEmail(email);
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     const hashed = await Bcrypt.hash(newPassword, 10);
-    await updateNewPassword(userId, hashed);
+    await updateNewPassword(email, hashed);
     
     return res.json({ message: 'Password changed successfully' });
   } catch (error) {
