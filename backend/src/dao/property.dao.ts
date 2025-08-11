@@ -1,7 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import prisma from "../prisma/client.prisma";
 import { geocodeAddress } from "../services/geocoding.service";
-import { PrismaClient, Prisma } from "@prisma/client";
 
 
 export class PropertyDAO {
@@ -26,7 +25,7 @@ export class PropertyDAO {
     // Geocode để lấy tọa độ
     const { lat, lng } = await geocodeAddress(data.address);
 
-    return prismaClient.property.create({
+    return prisma.property.create({
       data: {
         ...data,
         country: data.country || "Viet Nam",

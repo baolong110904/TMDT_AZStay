@@ -89,17 +89,17 @@ export const createProperty = async (req: Request, res: Response) => {
 
   try {
     // 1. create property
-    const createdProperty = await PropertyDAO.createProperty(
-      user_id,
-      Number(category_id),
+    const createdProperty = await PropertyDAO.createProperty({
+      owner_id: user_id,
+      category_id: Number(category_id),
       title,
       description,
       address,
       ward,
       province,
-      Number(max_guest),
-      Number(min_price)
-    );
+      max_guest: Number(max_guest),
+      min_price: Number(min_price),
+    });
     
     // 2. upload and save images
     await uploadPropertyImages(createdProperty.property_id, filePaths);
