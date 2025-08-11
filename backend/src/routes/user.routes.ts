@@ -30,6 +30,6 @@ router.post('/change-password', authenticateJWT('password_reset'), /*authorizeRo
 // 6. upload/update avatar
 router.post('/upload-avatar', upload.single('avatar'), ImagesControllers.uploadAvatarController); // user avatar upload
 // 7. create and upload images of property that they want to host
-router.post('/create-property', upload.array('images'), PropertyControllers.createPropertyController);
+router.post('/create-property', upload.array('images'), PropertyControllers.createProperty);
 
 export default router;

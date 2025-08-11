@@ -6,7 +6,8 @@ import { uploadPropertyImages } from "../dao/images.dao";
 // Lấy tất cả property
 export const getAllProperties = async (req: Request, res: Response) => {
   try {
-    const { city, province, country, page, limit, checkin, checkout, guests } = req.query;
+    const { city, province, country, page, limit, checkin, checkout, guests } =
+      req.query;
 
     const data = await PropertyDAO.getFilteredProperties({
       city: city as string,
@@ -43,7 +44,9 @@ export const getPropertyById = async (req: Request, res: Response) => {
     res.status(200).json(property);
   } catch (err) {
     const error = err as Error;
-    res.status(500).json({ message: "Failed to fetch property", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch property", error: error.message });
   }
 };
 
@@ -55,7 +58,9 @@ export const updateProperty = async (req: Request, res: Response) => {
     res.status(200).json(updated);
   } catch (err) {
     const error = err as Error;
-    res.status(400).json({ message: "Failed to update property", error: error.message });
+    res
+      .status(400)
+      .json({ message: "Failed to update property", error: error.message });
   }
 };
 
@@ -67,7 +72,9 @@ export const deleteProperty = async (req: Request, res: Response) => {
     res.status(204).send();
   } catch (err) {
     const error = err as Error;
-    res.status(400).json({ message: "Failed to delete property", error: error.message });
+    res
+      .status(400)
+      .json({ message: "Failed to delete property", error: error.message });
   }
 };
 
@@ -80,6 +87,7 @@ export const createProperty = async (req: Request, res: Response) => {
     address,
     ward,
     province,
+    country,
     max_guest,
     min_price,
   } = req.body;
@@ -89,23 +97,23 @@ export const createProperty = async (req: Request, res: Response) => {
 
   try {
     // 1. create property
-    const createdProperty = await PropertyDAO.createProperty(
-      user_id,
-      Number(category_id),
+    const createdProperty = await PropertyDAO.createProperty({
+      owner_id: user_id,
+      category_id: Number(category_id),
       title,
       description,
       address,
       ward,
       province,
-      Number(max_guest),
-      Number(min_price)
-    );
-    
+      country,
+      max_guest: Number(max_guest),
+      min_price: Number(min_price),
+      is_available: true,
+    });
+
     // 2. upload and save images
     await uploadPropertyImages(createdProperty.property_id, filePaths);
 
-
-    
     res.status(201).json({
       message: "Property created successfully",
       createProperty,
