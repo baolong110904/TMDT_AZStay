@@ -19,8 +19,13 @@ export const uploadAvatar = async (user_id: string, filePath: string) => {
     folder: "avatars",
     public_id: user_id,
     overwrite: true,
+    transformation: [
+      { width: 600, height: 600, crop: "fill" }, // resize to 300x300
+      { quality: "auto" }, // automatic quality optimization
+      { fetch_format: "auto" }, // use modern formats like WebP if possible
+    ],
   });
-
+  
   // saving avatar url to db
   return await prisma.userimage.create({
     data: {
@@ -32,14 +37,13 @@ export const uploadAvatar = async (user_id: string, filePath: string) => {
 
 export const uploadPropertyImages = async (
   property_id: string,
-  filePaths: string[],
-  prismaClient: PrismaClient | Prisma.TransactionClient
+  filePaths: string[]
 ) => {
   const uploadResults = await Promise.all(
-    filePaths.map(filePath =>
+    filePaths.map((filePath) =>
       cloudinary.uploader.upload(filePath, {
         folder: "property_images",
-        overwrite: false
+        overwrite: false,
       })
     )
   );
@@ -47,11 +51,11 @@ export const uploadPropertyImages = async (
   const imagesData = uploadResults.map((result, index) => ({
     property_id,
     image_url: result.secure_url,
-    is_cover: index === 0 // cover is the first image
+    is_cover: index === 0, // cover is the first image
   }));
 
   const savedImages = await prisma.propertyimage.createMany({
-    data: imagesData
+    data: imagesData,
   });
 
   return savedImages;

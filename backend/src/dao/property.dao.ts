@@ -11,10 +11,8 @@ export const createProperty = async (
   address: string,
   ward: string,
   province: string,
-  country: string,
   max_guest: number,
-  min_price: number,
-  prismaClient: PrismaClient | Prisma.TransactionClient // <--- change here
+  min_price: number
 ) => {
   // Get coordinates from geocoding service
   const { lat, lng } = await geocodeAddress(address);
