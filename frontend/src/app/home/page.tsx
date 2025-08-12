@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Banner from "@/components/Banner";
-import Listings from "@/components/Home/MainPageHomeListings";
-import MediumCard from "@/components/Home/MediumCard";
-import LargeCard from "@/components/Home/LargeCard";
+import Listings from "@/components/HomeComponents/MainPageHomeListings";
+import MediumCard from "@/components/HomeComponents/MediumCard";
+import LargeCard from "@/components/HomeComponents/LargeCard";
 import Footer from "@/components/Footer";
 import { geocodeAddress } from "@/utils/geocoding"
 
