@@ -1,24 +1,24 @@
 import prisma from "../prisma/client.prisma";
-import { randomInt } from 'crypto';
+import { randomInt } from "crypto";
 
 // check if an email input is unique?
-export const checkEmailExists = async(email: string) => {
+export const checkEmailExists = async (email: string) => {
   return prisma.user.findUnique({
     where: {
-      email
-    }
+      email,
+    },
   });
-}
+};
 
 // create user
-export const createUser = async(
+export const createUser = async (
   email: string,
   hashedPassword: string,
   name: string,
   gender: string,
   phone: string,
   dob: Date,
-  role_id: number,
+  role_id: number
 ) => {
   return prisma.user.create({
     data: {
@@ -30,17 +30,24 @@ export const createUser = async(
       dob,
       role: {
         connect: {
-          role_id: role_id
-        }
-      }
-    }
+          role_id: role_id,
+        },
+      },
+    },
   });
-}
+};
 
 // create password reset token
 export const createOTP = async (userId: string) => {
   const otp = randomInt(100000, 999999).toString();
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+  // cleanup old otp thats been expired (trick lỏ cleanup otp cũs)
+  await prisma.otp_verifications.deleteMany({
+    where: {
+      expires_at: { lt: new Date() }, // already expired
+    },
+  });
 
   await prisma.otp_verifications.create({
     data: {
@@ -67,9 +74,10 @@ export const verifyOTP = async (userId: string, token: string) => {
 
   return otpRecord;
 };
+
 // delete after used
 export const deleteOTP = async (otpId: string) => {
-  await prisma.otp_verifications.delete({
+  return await prisma.otp_verifications.delete({
     where: { otp_id: otpId },
   });
 };
@@ -80,16 +88,26 @@ export const getUserById = async (userId: string) => {
     where: { user_id: userId },
   });
 };
+// get user data by email
+export const getUserByEmail = async (email: string) => {
+  return await prisma.user.findUnique({
+    where: { email: email },
+  });
+};
 
-export const updateNewPassword = async(user_id: string, newHashedPassword: string) => {
-  await prisma.user.update({
-    where: { user_id: user_id},
-    data: { hashed_password: newHashedPassword}
+// update password
+export const updateNewPassword = async (
+  email: string,
+  newHashedPassword: string
+) => {
+  return await prisma.user.update({
+    where: { email: email },
+    data: { hashed_password: newHashedPassword },
   });
 };
 
 // create oauth provider
-export const createOAuthProvider = async(
+export const createOAuthProvider = async (
   email: string,
   name: string,
   provider: string,

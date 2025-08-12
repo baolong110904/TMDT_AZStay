@@ -1,22 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import Header from '@/components/Header';
-import Banner from '@/components/Banner';
-// import ExploreNearby from '@/components/ExploreNearby';
-import Listings from '@/components/Home/MainPageHomeListings';
-import MediumCard from '@/components/Home/MediumCard';
-import LargeCard from '@/components/Home/LargeCard';
-import Footer from '@/components/Footer';
+import { useState, useEffect } from "react";
+import Header from "@/components/Header";
+import Banner from "@/components/Banner";
+import Listings from "@/components/Home/MainPageHomeListings";
+import MediumCard from "@/components/Home/MediumCard";
+import LargeCard from "@/components/Home/LargeCard";
+import Footer from "@/components/Footer";
+import { geocodeAddress } from "@/utils/geocoding"
 
 export default function Home() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [city, setCity] = useState<string | null>(null);
+  const [city, setCity] = useState<string>("Ho Chi Minh City"); // default
   const [loadingCity, setLoadingCity] = useState(true);
 
-  const checkin = '2025-07-15';
-  const checkout = '2025-07-20';
-  const guests = 2;
+  const checkin = "2025-08-11";
+  const checkout = "2025-12-20";
+  const guests = 1;
 
   useEffect(() => {
     async function determineLocation() {
@@ -27,20 +27,23 @@ export default function Home() {
         const { latitude, longitude } = position.coords;
         setCoords({ latitude, longitude });
 
-        // Gửi tọa độ lên API backend của bạn để lấy city và danh sách
-        const response = await fetch(
-          `/api/listings?lat=${latitude}&lng=${longitude}&checkin=${checkin}&checkout=${checkout}&guests=${guests}`
+        // Gọi API reverse geocoding (Google, OpenStreetMap, backend của bạn) để lấy city
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
         );
-        if (!response.ok) throw new Error(`API error: ${response.status}`);
-        const data = await response.json();
-
-        setCity(data.city || "Unknown city");
-        // bạn có thể lưu thêm danh sách nếu muốn show trực tiếp tại đây
-
+        const data = await res.json();
+        const detectedCity =
+          data.address?.city ||
+          data.address?.town ||
+          data.address?.village ||
+          data.address?.state ||
+          "Unknown";
+        setCity(detectedCity);
       } catch (error) {
-        console.log(error);
-        setCoords({ latitude: 10.7769, longitude: 106.7009 }); // fallback
-        setCity("Ho Chi Minh City"); // default location
+        console.error(error);
+        // fallback nếu không lấy được GPS
+        setCoords({ latitude: 10.7769, longitude: 106.7009 });
+        setCity("Ho Chi Minh City");
       } finally {
         setLoadingCity(false);
       }
@@ -54,9 +57,9 @@ export default function Home() {
       <Header />
       <Banner />
 
-      {/* Listing location for customer */}
-      <section className="max-w-screen-3xl">
-        {loadingCity || !city || !coords ? (
+      {/* Listings section */}
+      <section className="max-w-screen-3xl mx-auto px-4">
+        {loadingCity || !coords ? (
           <p className="text-center">Determining your city…</p>
         ) : (
           <Listings
@@ -68,38 +71,8 @@ export default function Home() {
             longitude={coords.longitude}
           />
         )}
-
       </section>
-      <section className="max-w-screen-3xl">
-        {loadingCity || !city || !coords ? (
-          <p className="text-center">Determining your city…</p>
-        ) : (
-          <Listings
-            city={city}
-            checkin={checkin}
-            checkout={checkout}
-            guests={guests}
-            latitude={coords.latitude}
-            longitude={coords.longitude}
-          />
-        )}
 
-      </section>
-      <section className="max-w-screen-3xl">
-        {loadingCity || !city || !coords ? (
-          <p className="text-center">Determining your city…</p>
-        ) : (
-          <Listings
-            city={city}
-            checkin={checkin}
-            checkout={checkout}
-            guests={guests}
-            latitude={coords.latitude}
-            longitude={coords.longitude}
-          />
-        )}
-
-      </section>
       {/* Medium card */}
       <section className="w-full my-8 px-4">
         <h2 className="text-4xl font-bold mb-4">Inspiration for future getaways</h2>
@@ -114,5 +87,4 @@ export default function Home() {
       <Footer />
     </div>
   );
-
 }

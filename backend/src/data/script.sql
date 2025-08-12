@@ -17,6 +17,9 @@ CREATE TABLE "user" (
     email VARCHAR(100) UNIQUE NOT NULL,
     phone VARCHAR(20),
     hashed_password TEXT,
+    avatar_url TEXT,
+    oauth_provider VARCHAR(50),
+    oauth_id VARCHAR(100),   
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -51,7 +54,9 @@ CREATE TABLE property (
     longitude DECIMAL(9,6),
     latitude DECIMAL(9,6),
     min_price DECIMAL(12,2),
-    max_guest SMALLINT
+    max_guest SMALLINT,
+    checkin_date DATE,
+    checkout_date DATE, 
     is_available BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -174,3 +179,49 @@ CREATE TABLE user_click (
     location TEXT,
     clicked_at TIMESTAMP DEFAULT NOW()
 );
+
+-- 17. Review
+CREATE TABLE review (
+    review_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    property_id UUID REFERENCES property(property_id) ON DELETE CASCADE,
+    rating DECIMAL(3,2) CHECK (rating >= 0 AND rating <= 5),
+    count INT CHECK (count >= 0),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+INSERT INTO "role" (role_name, description) 
+VALUES ('Admin', 'Administrator of the system');
+INSERT INTO "role" (role_name, description) 
+VALUES ('Customer', 'Simply a customer who want to use the services');
+INSERT INTO "role" (role_name, description) 
+VALUES ('Property Owner', 'Property owner who want to publish their property for bidding');
+
+-- subcategory
+-- aparment
+INSERT INTO category(category_name, sub_category_id) VALUES
+('Studio Apartment', 1),
+('Penthouse Apartment', 1),
+('Serviced Apartment', 1);
+-- home
+INSERT INTO category(category_name, sub_category_id) VALUES
+('Townhouse', 2),
+('House In The Alley', 2);
+-- villa
+INSERT INTO category(category_name, sub_category_id) VALUES
+('Beachfront Villa', 3),
+('Luxury Villa', 3),
+('Private Pool Villa', 3),
+('Hillside Villa', 3),
+('Eco Villa', 3);
+-- bungalow
+INSERT INTO category(category_name, sub_category_id) VALUES
+('Traditional Bungalow', 4),
+('Modern Bungalow', 4),
+('Beach Bungalow', 4),
+('Garden Bungalow', 4);
+
+INSERT INTO category(category_name, sub_category_id) VALUES
+('Private Room in Home', 5),
+('Shared Room in Home', 5),
+('Family Homestay', 5);
