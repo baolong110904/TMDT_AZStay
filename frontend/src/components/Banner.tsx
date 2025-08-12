@@ -47,7 +47,7 @@ const Banner = () => {
             {/* Text content */}
             <div className="w-full md:w-1/2 text-center md:text-left">
               <h1 className={`text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight mb-4 transition-all duration-700 ${animate ? 'opacity-100' : 'opacity-0 translate-y-5'}`}>
-                Lets stay in{" "}
+                Let&apos;s stay in{" "}
                 <div className="text-green-300 inline-block h-[1.2em] overflow-hidden align-middle">
                   <ul
                     className="transition-transform duration-500 ease-in-out"
@@ -63,13 +63,13 @@ const Banner = () => {
               </h1>
 
               <p className={`text-white/90 md:text-lg lg:text-xl mt-4 mb-6 transition-all duration-1000 delay-300 ${animate ? 'opacity-100' : 'opacity-0 translate-y-5'}`}>
-                Dont just stay, AZStay! Your journey to the perfect getaway starts here. From cozy corners to sprawling spaces, we offer a complete A to Z selection of unique places to stay. 
+                Don&apos;t just stay, AZStay! Your journey to the perfect getaway starts here. From cozy corners to sprawling spaces, we offer a complete A to Z selection of unique places to stay. 
                 <br/>Find your ideal spot and book your next adventure with ease.
               </p>
 
               <div className={`transition-all duration-1000 delay-500 ${animate ? 'opacity-100' : 'opacity-0 translate-y-5'}`}>
                 <button className="relative inline-flex items-center justify-center px-8 py-3 md:px-10 md:py-3 bg-white text-blue-700 font-bold rounded-full hover:bg-blue-100 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white/50 overflow-hidden group">
-                  <span className="relative z-10">Lets AZStay!</span>
+                  <span className="relative z-10">Let&apos;s AZStay!</span>
                   <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:animate-shimmer" />
                   </div>

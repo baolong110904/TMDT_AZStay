@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { HeartButton } from "@/components/HeartButtons";
 import ImagePreview from "@/components/Room/ImagePreview";
 import BiddingBox from "@/components/Room/BiddingBox";
+import ReviewsSection from "@/components/Room/ReviewsSection";
 import api from "@/lib/axios"; // ✅ dùng api custom thay vì axios
 
 export default function Room() {
@@ -151,6 +152,91 @@ export default function Room() {
             />
           )}
         </div>
+      </div>
+
+      {/* Reviews Section - Full Width */}
+      <div className="px-60 py-6">
+        <ReviewsSection
+          overallRating={5.0}
+          totalReviews={127}
+          reviews={[
+            {
+              id: "1",
+              userName: "Bic",
+              userLocation: "Manalapan Township, New Jersey",
+              rating: 5,
+              date: "June 2025",
+              comment:
+                "This apartment is one of the best Airbnb that we have stayed at anywhere so far. The host is very responsive and nice. The place is beautiful decorated and spacious and at center. We would definitely stay here again! Highly recommended for anyone visiting the area.",
+            },
+            {
+              id: "2",
+              userName: "Van",
+              userLocation: "Colbert, Washington",
+              rating: 5,
+              date: "1 day ago",
+              tripType: "Group trip",
+              comment:
+                "Uyển place was wonderful. Walking distance to city center and night market, it's exactly as described, quite and peaceful. The rooms were comfortable and clean. Uyển is a great host and very helpful.",
+            },
+            {
+              id: "3",
+              userName: "Dayna",
+              userLocation: "Pleasant Hill, California",
+              rating: 5,
+              date: "3 weeks ago",
+              tripType: "Stayed with kids",
+              comment:
+                "We had a wonderful stay at Bao Uyen’s place. It’s a beautifully designed home with top-of-the-line quality throughout. Every detail was thoughtfully considered, from the layout to the amenities. The host was very accommodating and responsive. Highly recommend!",
+            },
+            {
+              id: "4",
+              userName: "Yuen Yung",
+              userLocation: "9 years on Airbnb",
+              rating: 5,
+              date: "April 2025",
+              comment:
+                "Staying at Uyen’s place was extremely comfortable, very clear and easy instructions for check-in and check-out. The penthouse is spotless, amazing interior design. Uyen is also very friendly and helpful. Would love to come back!",
+            },
+            {
+              id: "5",
+              userName: "Park",
+              userLocation: "12 years on Airbnb",
+              rating: 5,
+              date: "1 week ago",
+              comment:
+                "Everything was perfect. The location was nice and the apartment was new and clean. The host was very kind and she was always ready to support us. We had a great time and would recommend this place to anyone.",
+            },
+            {
+              id: "6",
+              userName: "Danielle",
+              userLocation: "6 years on Airbnb",
+              rating: 5,
+              date: "May 2025",
+              tripType: "Group trip",
+              comment:
+                "Great place to stay, everything is exactly as listed. Only thing is that there is only ac in the master bedroom and none in the rest only fans. Would definitely recommend the host was very helpful and responsive.",
+            },
+            {
+              id: "7",
+              userName: "Alex",
+              userLocation: "London, UK",
+              rating: 5,
+              date: "2 months ago",
+              comment:
+                "Fantastic location and beautiful apartment. The check-in process was smooth and the host provided all the information we needed. Would stay again!",
+            },
+            {
+              id: "8",
+              userName: "Maria",
+              userLocation: "Barcelona, Spain",
+              rating: 5,
+              date: "March 2025",
+              comment:
+                "The apartment exceeded our expectations. It was clean, modern, and had everything we needed for a comfortable stay. The host was very welcoming and gave us great tips for exploring the city.",
+            },
+          ]}
+        />
       </div>
 
       <Footer />

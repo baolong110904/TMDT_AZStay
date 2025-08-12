@@ -112,7 +112,7 @@ export default function BiddingBox({
           min={currentPrice + 10000}
         />
         <button
-          className="bg-red-500 text-white w-full p-2 rounded hover:bg-red-600 transition"
+          className="bg-blue-500 text-white w-full p-2 rounded hover:bg-blue-600 transition"
           disabled={bidAmount <= currentPrice}
           onClick={() => {
             if (selectedDates[0] && selectedDates[1]) {
