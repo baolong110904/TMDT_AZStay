@@ -88,6 +88,7 @@ export default function ProfilePage() {
     }
 
     try {
+      if (!user) return;
       const response = await api.put(`/user/update/${user.id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -99,7 +100,7 @@ export default function ProfilePage() {
           JSON.stringify({
             ...user,
             ...response.data.user,
-            avatar: response.data.user.avatar || user.avatar,
+            avatar: response.data.user.avatar || user.imageId,
           })
         );
         setUser((prev: any) => ({ ...prev, ...response.data.user }));
