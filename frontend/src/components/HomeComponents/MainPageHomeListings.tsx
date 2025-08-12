@@ -7,7 +7,7 @@ import { Heart } from "lucide-react";
 import Image from "next/image";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { Listing } from "../Type/MainPageListingProps";
+import { Listing } from "../Props/MainPageListingProps";
 import api from "@/lib/axios";
 
 interface Props {

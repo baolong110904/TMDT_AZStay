@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SearchHomeListings from "@/components/Search/SearchPageHomeListing";
 import api from "@/lib/axios";
-import { Listing } from "@/components/Type/MainPageListingProps";
+import { Listing } from "@/components/Props/MainPageListingProps";
 
 export default function SearchPage() {
   const params = useParams();

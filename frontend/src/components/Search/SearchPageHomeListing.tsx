@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link"; // ✅ Thêm import Link
 import { Heart } from "lucide-react";
 import clsx from "clsx";
-import { Listing } from "@/components/Type/MainPageListingProps";
+import { Listing } from "@/components/Props/MainPageListingProps";
 
 const PAGE_SIZE = 20;
 

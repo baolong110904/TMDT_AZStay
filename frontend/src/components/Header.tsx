@@ -13,7 +13,7 @@ import NavigationTabs from "./NavigationTabs";
 import DesktopSearchBar from "./Search/DesktopSearchBar";
 import MobileSearchDrawer from "./Search/MobileSearchDrawer";
 import DropdownMenu from "./DropdownMenu";
-import { UserProfile } from "./Type/UserProfileProps";
+import { UserProfile } from "./Props/UserProfileProps";
 
 interface HeaderProps {
   placeholder?: string;

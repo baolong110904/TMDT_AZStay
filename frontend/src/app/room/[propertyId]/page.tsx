@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { RoomProps } from "@/components/Type/RoomProp";
+import { RoomProps } from "@/components/Props/RoomProp";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { HeartButton } from "@/components/HeartButtons";
