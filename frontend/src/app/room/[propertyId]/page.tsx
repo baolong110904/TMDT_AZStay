@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { RoomProps } from "@/components/Props/RoomProp";
@@ -9,16 +10,20 @@ import { HeartButton } from "@/components/HeartButtons";
 import ImagePreview from "@/components/Room/ImagePreview";
 import BiddingBox from "@/components/Room/BiddingBox";
 import ReviewsSection from "@/components/Room/ReviewsSection";
-import api from "@/lib/axios"; // ✅ dùng api custom thay vì axios
+import MapDisplay from "@/components/Room/MapDisplay";
+import api from "@/lib/axios";
 
 export default function Room() {
   const params = useParams();
 
   const propertyId = params?.propertyId as string;
 
+
   const [isFavorite, setIsFavorite] = useState(false);
   const [property, setProperty] = useState<RoomProps | null>(null);
   const [loading, setLoading] = useState(true);
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [coordsLoading, setCoordsLoading] = useState(false);
 
   const toggleFavorite = () => {
     setIsFavorite((prev) => {
@@ -26,31 +31,25 @@ export default function Room() {
     });
   };
 
-  useEffect(() => {
-    console.log("🌀 useEffect triggered, propertyId:", propertyId);
 
+  useEffect(() => {
     if (!propertyId) {
-      console.warn("⚠️ No propertyId found, skipping fetch.");
       setLoading(false);
       return;
     }
-
     const fetchProperty = async () => {
-      console.log("🌐 Fetching property data from API...");
-      console.log("🔗 API URL:", `/properties/${propertyId}`);
-
       try {
         const res = await api.get(`/properties/${propertyId}`);
-        console.log("✅ API response:", res.data);
-      
         const mappedProperty: RoomProps = {
           ...res.data,
           imgUrl: res.data.propertyimage?.map((img: any) => img.image_url) || [],
+          latitude: typeof res.data.latitude === "number" ? res.data.latitude : (res.data.latitude ? Number(res.data.latitude) : undefined),
+          longitude: typeof res.data.longitude === "number" ? res.data.longitude : (res.data.longitude ? Number(res.data.longitude) : undefined),
           ownerName: res.data.user?.name || "Unknown host",
           ownerImgUrl: res.data.user?.avatar || "/placeholder.jpg",
           availableDate: res.data.checkin_date && res.data.checkout_date
-          ? [res.data.checkin_date, res.data.checkout_date]
-          : ["2025-08-12", "2025-08-15"],
+            ? [res.data.checkin_date, res.data.checkout_date]
+            : ["2025-08-12", "2025-08-15"],
           minPrice: Number(res.data.min_price ?? 0),
           currentPrice: Number(
             res.data.auction?.[0]?.final_price ?? res.data.min_price ?? 0
@@ -62,7 +61,6 @@ export default function Room() {
             ? new Date(res.data.auction[0].end_time)
             : new Date("2025-08-07T20:00:00"),
         };
-      
         setProperty(mappedProperty);
       } catch (err) {
         console.error("❌ Failed to fetch property:", err);
@@ -70,9 +68,44 @@ export default function Room() {
         setLoading(false);
       }
     };
-
     fetchProperty();
   }, [propertyId]);
+
+  // Nếu property không có latitude/longitude, fallback sang Nominatim 
+  useEffect(() => {
+    const address = property?.address || "";
+    const lat = property?.latitude;
+    const lon = property?.longitude;
+    if (!address) return;
+    if (typeof lat === "number" && typeof lon === "number") {
+      setCoords(null);
+      setCoordsLoading(false);
+      return;
+    }
+    setCoordsLoading(true);
+    const fetchCoords = async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+        );
+        const data = await res.json();
+        if (data && data.length > 0) {
+          setCoords({
+            latitude: parseFloat(data[0].lat),
+            longitude: parseFloat(data[0].lon),
+          });
+        } else {
+          setCoords(null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch coordinates:", err);
+        setCoords(null);
+      } finally {
+        setCoordsLoading(false);
+      }
+    };
+    fetchCoords();
+  }, [property?.address, property?.latitude, property?.longitude]);
 
   if (loading) {
     return (
@@ -237,6 +270,30 @@ export default function Room() {
             },
           ]}
         />
+      </div>
+
+      {/* Divider */}
+      <div className="w-2/3 h-px bg-gray-300 opacity-50 my-10 mx-auto"></div>
+
+      {/* Map */}
+      <div className="px-60 py-0">
+        {property.latitude != null && property.longitude != null && !isNaN(property.latitude) && !isNaN(property.longitude) ? (
+          <MapDisplay
+            latitude={property.latitude}
+            longitude={property.longitude}
+            address={property.address}
+          />
+        ) : coordsLoading ? (
+          <div>Loading map…</div>
+        ) : coords && typeof coords.latitude === "number" && typeof coords.longitude === "number" ? (
+          <MapDisplay
+            latitude={coords.latitude}
+            longitude={coords.longitude}
+            address={property.address}
+          />
+        ) : (
+          <div>Không tìm thấy vị trí trên bản đồ.</div>
+        )}
       </div>
 
       <Footer />

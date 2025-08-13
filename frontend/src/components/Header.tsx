@@ -64,6 +64,7 @@ export default function Header({ placeholder }: HeaderProps) {
   // Check for logged-in user on client mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+    console.log("Stored user data:", storedUser); // Log toàn bộ dữ liệu user để kiểm tra
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
@@ -101,7 +102,9 @@ export default function Header({ placeholder }: HeaderProps) {
 
   // Handle avatar/profile click
   const handleProfileClick = () => {
-    if (user?.id) {
+    if (user?.role_id === 1) {
+      router.push(`/admin`);
+    } else if (user?.id) {
       router.push(`/user/profile?id=${user.id}`);
     }
   };
