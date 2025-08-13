@@ -130,9 +130,11 @@ export default function Header({ placeholder }: HeaderProps) {
 
         {/* Right section (both desktop and mobile): Shared dropdown trigger */}
         <div className="flex items-center gap-3 relative">
-          <button className="text-sm hidden md:inline text-gray-600 hover:text-blue-700 transition">
-            Become a host
-          </button>
+          {user?.role_id === 2 && (
+            <button className="text-sm hidden md:inline text-gray-600 hover:text-blue-700 transition">
+              Become a host
+            </button>
+          )}
           {user ? (
             <div className="relative" onClick={handleProfileClick}>
               <div
