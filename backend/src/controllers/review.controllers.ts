@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { ReviewDAO } from "../dao/review.dao";
+import { review_details } from "@prisma/client";
 
 export const getReviewsByProperty = async (req: Request, res: Response) => {
   try {
@@ -38,7 +39,7 @@ export const getReviewsByProperty = async (req: Request, res: Response) => {
       location_avg: review.location_avg ?? 0,
       value_avg: review.value_avg ?? 0,
 
-      details: review.review_details.map((d) => ({
+      details: review.review_details.map((d: any) => ({
         id: d.review_detail_id,
         user: {
           user_id: d.user?.user_id ?? null,
