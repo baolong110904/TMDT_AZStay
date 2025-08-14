@@ -7,7 +7,7 @@ import Listings from "@/components/HomeComponents/MainPageHomeListings";
 import MediumCard from "@/components/HomeComponents/MediumCard";
 import LargeCard from "@/components/HomeComponents/LargeCard";
 import Footer from "@/components/Footer";
-import { geocodeAddress } from "@/utils/geocoding"
+//import { geocodeAddress } from "@/utils/geocoding"
 
 export default function Home() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
