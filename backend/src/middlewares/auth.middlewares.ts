@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import { ENV } from '../config/environtment.config';
+import { Request, Response, NextFunction } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { ENV } from "../config/environtment.config";
 interface AuthRequest extends Request {
   user?: any;
 }
@@ -8,36 +8,46 @@ interface AuthRequest extends Request {
 export const authenticateJWT = (expectedType: string) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Access token missing' });
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Access token missing" });
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(" ")[1];
 
     try {
       const decoded = jwt.verify(token, ENV.JWT_SECRET) as JwtPayload;
       if (decoded.type !== expectedType) {
-        return res.status(403).json({ error: `Expected token type '${expectedType}'` });
+        return res
+          .status(403)
+          .json({ error: `Expected token type '${expectedType}'` });
       }
 
       req.user = decoded;
       next();
     } catch (err) {
-      return res.status(403).json({ error: 'Invalid or expired token' });
+      return res.status(403).json({ error: "Invalid or expired token" });
     }
   };
 };
 
-export const authorizeRoles = (...allowedRoles: string[]) => {
+export const authorizeRoles = (...allowedRoles: Number[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
+    console.log("Allowed roles:", allowedRoles);
+    console.log("User from token:", req.user);
     const user = req.user;
     if (!user || !allowedRoles.includes(user.role)) {
-      return res.status(403).json({ error: 'Forbidden: insufficient role' });
+      return res.status(403).json({ error: "Forbidden: insufficient role" });
     }
     next();
   };
 };
 
-export const verifyToken = authenticateJWT('access');
+export const verifyToken = authenticateJWT("access");
+
+export const Roles = {
+  ADMIN: 1,
+  CUSTOMER: 2,
+  PROPERTY_OWNER: 3,
+};
 
 export type { AuthRequest };

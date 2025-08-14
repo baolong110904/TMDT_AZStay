@@ -5,17 +5,12 @@ import * as AuthenticationControllers from '../controllers/authentication.contro
 import * as ImagesControllers from '../controllers/uploadImages.controllers';
 import * as PropertyControllers from '../controllers/property.controllers';
 // middlewares
-import { authenticateJWT, authorizeRoles } from '../middlewares/auth.middlewares';
+import { authenticateJWT, authorizeRoles, Roles } from '../middlewares/auth.middlewares';
 import { upload } from '../middlewares/upload.middlewares';
 
 
 const router = express.Router();
 
-export const Roles = {
-  ADMIN: '1',
-  CUSTOMER: '2',
-  PROPERTY_OWNER: '3',
-};
 
 // 1. sign up
 router.post('/signup', AuthenticationControllers.signUp);
@@ -28,8 +23,8 @@ router.post('/verify-otp', AuthenticationControllers.verifyOtpAndGenerateToken);
 // 5. change password
 router.post('/change-password', authenticateJWT('password_reset'), /*authorizeRoles(Roles.ADMIN, Roles.CUSTOMER, Roles.PROPERTY_OWNER),*/ AuthenticationControllers.changePassword); 
 // 6. upload/update avatar
-router.post('/upload-avatar', upload.single('avatar'), ImagesControllers.uploadAvatarController); // user avatar upload
+router.post('/upload-avatar', authenticateJWT('access'), authorizeRoles(Roles.PROPERTY_OWNER, Roles.CUSTOMER), upload.single('avatar'), ImagesControllers.uploadAvatarController); // user avatar upload
 // 7. create and upload images of property that they want to host
-router.post('/create-property', upload.array('images'), PropertyControllers.createProperty);
+router.post('/create-property', authenticateJWT('access'), authorizeRoles(Roles.PROPERTY_OWNER), upload.array('images'), PropertyControllers.createProperty);
 
 export default router;
