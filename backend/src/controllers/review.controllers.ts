@@ -45,9 +45,9 @@ export const getReviewsByProperty = async (req: Request, res: Response) => {
           name: d.user?.name ?? "Guest",
           avatar_url: d.user?.avatar_url ?? null,
         },
-        overall_rating: d.overall_rating,
-        comment: d.comment,
-        created_at: d.created_at,
+        overall_rating: d.overall_rating ? Number(d.overall_rating) : 0, // Decimal -> number
+        comment: d.comment ?? null,
+        created_at: d.created_at ?? new Date(), // fallback nếu null
       })),
     };
 
