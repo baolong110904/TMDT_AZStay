@@ -1,20 +1,6 @@
 import { Request, Response } from "express";
 import { ReviewDAO } from "../dao/review.dao";
 
-interface ReviewUser {
-  user_id: string;
-  name: string;
-  avatar_url: string | null;
-}
-
-interface ReviewDetail {
-  review_detail_id: string;
-  user?: ReviewUser | null;
-  overall_rating: number;
-  comment: string | null;
-  created_at: Date;
-}
-
 export const getReviewsByProperty = async (req: Request, res: Response) => {
   try {
     const { propertyId } = req.params;
@@ -38,8 +24,8 @@ export const getReviewsByProperty = async (req: Request, res: Response) => {
     // Chuẩn hóa payload để FE dùng trực tiếp
     const payload = {
       property: {
-        property_id: review.property.property_id,
-        title: review.property.title,
+        property_id: review.property?.property_id ?? null,
+        title: review.property?.title ?? "",
       },
       rating: review.rating, // tổng quan từ bảng review
       count: review.count, // tổng số review_details
@@ -52,7 +38,7 @@ export const getReviewsByProperty = async (req: Request, res: Response) => {
       location_avg: review.location_avg ?? 0,
       value_avg: review.value_avg ?? 0,
 
-      details: review.review_details.map((d: ReviewDetail) => ({
+      details: review.review_details.map((d) => ({
         id: d.review_detail_id,
         user: {
           user_id: d.user?.user_id ?? null,

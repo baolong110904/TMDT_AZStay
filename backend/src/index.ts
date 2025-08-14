@@ -56,3 +56,7 @@ app.use((req, res, next) => {
   console.log('Body:', req.body);
   next();
 });
+
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+console.log(Object.keys(prisma));

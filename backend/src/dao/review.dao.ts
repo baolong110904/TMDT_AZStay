@@ -2,7 +2,7 @@ import prisma from "../prisma/client.prisma";
 
 export class ReviewDAO {
   static async getReviewsByPropertyId(propertyId: string) {
-    return prisma.review.findUnique({
+    return prisma.review.findFirst({
       where: { property_id: propertyId }, // property_id là unique ⇒ ok
       include: {
         property: {
