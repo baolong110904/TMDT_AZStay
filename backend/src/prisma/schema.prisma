@@ -169,6 +169,7 @@ model user {
   userbid           userbid[]
   userfavorite      userfavorite[]
   userimage         userimage[]
+  review_details review_details[]
 }
 
 model userbid {
@@ -216,11 +217,35 @@ model user_click {
 }
 
 model review {
-  review_id   String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  property_id String   @unique @db.Uuid
-  property    property @relation(fields: [property_id], references: [property_id], onDelete: Cascade)
-  rating      Float
-  count       Int
-  created_at  DateTime @default(now()) @db.Timestamp(6)
-  updated_at  DateTime @updatedAt @db.Timestamp(6)
+  review_id          String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  property_id        String           @unique @db.Uuid
+  property           property         @relation(fields: [property_id], references: [property_id], onDelete: Cascade)
+
+  rating             Float
+  count              Int
+
+  cleanliness_avg    Float?
+  accuracy_avg       Float?
+  checkin_avg        Float?
+  communication_avg  Float?
+  location_avg       Float?
+  value_avg          Float?
+
+  created_at         DateTime         @default(now()) @db.Timestamp(6)
+  updated_at         DateTime         @updatedAt @db.Timestamp(6)
+
+  review_details     review_details[]
+}
+
+
+model review_details {
+  review_detail_id String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  review_id        String   @db.Uuid
+  user_id          String   @db.Uuid
+  overall_rating   Float
+  comment          String?
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+
+  review review @relation(fields: [review_id], references: [review_id], onDelete: Cascade)
+  user   user   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }

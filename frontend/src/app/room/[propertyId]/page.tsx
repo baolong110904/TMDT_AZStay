@@ -9,48 +9,46 @@ import { HeartButton } from "@/components/HeartButtons";
 import ImagePreview from "@/components/Room/ImagePreview";
 import BiddingBox from "@/components/Room/BiddingBox";
 import ReviewsSection from "@/components/Room/ReviewsSection";
-import api from "@/lib/axios"; // ✅ dùng api custom thay vì axios
+import api from "@/lib/axios";
 
 export default function Room() {
   const params = useParams();
-
   const propertyId = params?.propertyId as string;
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [property, setProperty] = useState<RoomProps | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // 🆕 State để lưu reviews
+  const [reviewsData, setReviewsData] = useState<{
+    overallRating: number;
+    totalReviews: number;
+    reviews: any[];
+    ratings: any;
+  } | null>(null);
+
   const toggleFavorite = () => {
-    setIsFavorite((prev) => {
-      return !prev;
-    });
+    setIsFavorite(prev => !prev);
   };
 
   useEffect(() => {
-    console.log("🌀 useEffect triggered, propertyId:", propertyId);
-
     if (!propertyId) {
-      console.warn("⚠️ No propertyId found, skipping fetch.");
       setLoading(false);
       return;
     }
 
     const fetchProperty = async () => {
-      console.log("🌐 Fetching property data from API...");
-      console.log("🔗 API URL:", `/properties/${propertyId}`);
-
       try {
         const res = await api.get(`/properties/${propertyId}`);
-        console.log("✅ API response:", res.data);
-      
         const mappedProperty: RoomProps = {
           ...res.data,
           imgUrl: res.data.propertyimage?.map((img: any) => img.image_url) || [],
           ownerName: res.data.user?.name || "Unknown host",
-          ownerImgUrl: res.data.user?.avatar || "/placeholder.jpg",
-          availableDate: res.data.checkin_date && res.data.checkout_date
-          ? [res.data.checkin_date, res.data.checkout_date]
-          : ["2025-08-12", "2025-08-15"],
+          ownerImgUrl: res.data.user?.avatar_url || "/placeholder.jpg",
+          availableDate:
+            res.data.checkin_date && res.data.checkout_date
+              ? [res.data.checkin_date, res.data.checkout_date]
+              : ["2025-08-12", "2025-08-15"],
           minPrice: Number(res.data.min_price ?? 0),
           currentPrice: Number(
             res.data.auction?.[0]?.final_price ?? res.data.min_price ?? 0
@@ -62,16 +60,47 @@ export default function Room() {
             ? new Date(res.data.auction[0].end_time)
             : new Date("2025-08-07T20:00:00"),
         };
-      
         setProperty(mappedProperty);
       } catch (err) {
         console.error("❌ Failed to fetch property:", err);
-      } finally {
-        setLoading(false);
       }
     };
 
-    fetchProperty();
+    // 🆕 Fetch reviews
+    const fetchReviews = async () => {
+      try {
+        const res = await api.get(`/reviews/${propertyId}`);
+        console.log("📊 Reviews API data:", res.data);
+        setReviewsData({
+          overallRating: res.data.rating,
+          totalReviews: res.data.count,
+          reviews: res.data.details.map((d: any) => ({
+            id: d.id, // review_detail_id
+            userName: d.user?.name ?? "Guest",
+            avatar: d.user?.avatar_url ?? "/placeholder-avatar.jpg",
+            rating: d.overall_rating, // ✅ ĐÚNG field ở schema
+            date: new Date(d.created_at).toLocaleString("en-US", {
+              month: "long",
+              year: "numeric",
+            }),
+            comment: d.comment,
+          })),
+          ratings: {
+            cleanliness: res.data.cleanliness_avg,
+            accuracy: res.data.accuracy_avg,
+            checkin: res.data.checkin_avg,
+            communication: res.data.communication_avg,
+            location: res.data.location_avg,
+            value: res.data.value_avg,
+          },
+        });
+      } catch (err) {
+        console.error("❌ Failed to fetch reviews:", err);
+      }
+    };
+    Promise.all([fetchProperty(), fetchReviews()]).finally(() => {
+      setLoading(false);
+    });
   }, [propertyId]);
 
   if (loading) {
@@ -95,7 +124,6 @@ export default function Room() {
       <Header />
 
       <div className="px-60 py-6">
-        {/* Titles and heart button */}
         <div className="text-3xl font-semibold flex items-center justify-between">
           <h1>{property.title}</h1>
           <HeartButton
@@ -105,14 +133,12 @@ export default function Room() {
           />
         </div>
 
-        {/* Images preview */}
         <div className="pt-6">
           <ImagePreview imgUrls={property.imgUrl || []} />
         </div>
       </div>
 
       <div className="px-60 py-6 flex flex-col lg:flex-row gap-10">
-        {/* LEFT */}
         <div className="lg:w-2/3 w-full">
           <div className="py-5 space-y-4">
             <p className="font-bold text-2xl">{property.address}</p>
@@ -131,7 +157,6 @@ export default function Room() {
           </div>
         </div>
 
-        {/* RIGHT */}
         <div className="lg:w-1/3 w-full">
           {property.availableDate && property.availableDate.length >= 2 && (
             <BiddingBox
@@ -142,9 +167,6 @@ export default function Room() {
               biddingStartTime={property.biddingStartTime}
               biddingEndTime={property.biddingEndTime}
               onConfirmBid={(price, dates) => {
-                console.log(
-                  `💰 Bidded ${price} for ${dates[0].toDateString()} - ${dates[1].toDateString()}`
-                );
                 alert(
                   `Bidded ${price} for ${dates[0].toDateString()} - ${dates[1].toDateString()}`
                 );
@@ -154,89 +176,15 @@ export default function Room() {
         </div>
       </div>
 
-      {/* Reviews Section - Full Width */}
       <div className="px-60 py-6">
-        <ReviewsSection
-          overallRating={5.0}
-          totalReviews={127}
-          reviews={[
-            {
-              id: "1",
-              userName: "Bic",
-              userLocation: "Manalapan Township, New Jersey",
-              rating: 5,
-              date: "June 2025",
-              comment:
-                "This apartment is one of the best Airbnb that we have stayed at anywhere so far. The host is very responsive and nice. The place is beautiful decorated and spacious and at center. We would definitely stay here again! Highly recommended for anyone visiting the area.",
-            },
-            {
-              id: "2",
-              userName: "Van",
-              userLocation: "Colbert, Washington",
-              rating: 5,
-              date: "1 day ago",
-              tripType: "Group trip",
-              comment:
-                "Uyển place was wonderful. Walking distance to city center and night market, it's exactly as described, quite and peaceful. The rooms were comfortable and clean. Uyển is a great host and very helpful.",
-            },
-            {
-              id: "3",
-              userName: "Dayna",
-              userLocation: "Pleasant Hill, California",
-              rating: 5,
-              date: "3 weeks ago",
-              tripType: "Stayed with kids",
-              comment:
-                "We had a wonderful stay at Bao Uyen’s place. It’s a beautifully designed home with top-of-the-line quality throughout. Every detail was thoughtfully considered, from the layout to the amenities. The host was very accommodating and responsive. Highly recommend!",
-            },
-            {
-              id: "4",
-              userName: "Yuen Yung",
-              userLocation: "9 years on Airbnb",
-              rating: 5,
-              date: "April 2025",
-              comment:
-                "Staying at Uyen’s place was extremely comfortable, very clear and easy instructions for check-in and check-out. The penthouse is spotless, amazing interior design. Uyen is also very friendly and helpful. Would love to come back!",
-            },
-            {
-              id: "5",
-              userName: "Park",
-              userLocation: "12 years on Airbnb",
-              rating: 5,
-              date: "1 week ago",
-              comment:
-                "Everything was perfect. The location was nice and the apartment was new and clean. The host was very kind and she was always ready to support us. We had a great time and would recommend this place to anyone.",
-            },
-            {
-              id: "6",
-              userName: "Danielle",
-              userLocation: "6 years on Airbnb",
-              rating: 5,
-              date: "May 2025",
-              tripType: "Group trip",
-              comment:
-                "Great place to stay, everything is exactly as listed. Only thing is that there is only ac in the master bedroom and none in the rest only fans. Would definitely recommend the host was very helpful and responsive.",
-            },
-            {
-              id: "7",
-              userName: "Alex",
-              userLocation: "London, UK",
-              rating: 5,
-              date: "2 months ago",
-              comment:
-                "Fantastic location and beautiful apartment. The check-in process was smooth and the host provided all the information we needed. Would stay again!",
-            },
-            {
-              id: "8",
-              userName: "Maria",
-              userLocation: "Barcelona, Spain",
-              rating: 5,
-              date: "March 2025",
-              comment:
-                "The apartment exceeded our expectations. It was clean, modern, and had everything we needed for a comfortable stay. The host was very welcoming and gave us great tips for exploring the city.",
-            },
-          ]}
-        />
+        {reviewsData && (
+          <ReviewsSection
+            overallRating={reviewsData.overallRating}
+            totalReviews={reviewsData.totalReviews}
+            reviews={reviewsData.reviews}
+            ratings={reviewsData.ratings}
+          />
+        )}
       </div>
 
       <Footer />

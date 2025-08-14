@@ -183,11 +183,36 @@ CREATE TABLE user_click (
 -- 17. Review
 CREATE TABLE review (
     review_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    property_id UUID REFERENCES property(property_id) ON DELETE CASCADE,
-    rating DECIMAL(3,2) CHECK (rating >= 0 AND rating <= 5),
+    property_id UUID UNIQUE REFERENCES property(property_id) ON DELETE CASCADE,
+    rating DECIMAL(3,2) CHECK (rating >= 0 AND rating <= 5), -- trung bình overall_rating
     count INT CHECK (count >= 0),
+
+    cleanliness_avg DECIMAL(3,2) CHECK (cleanliness_avg >= 0 AND cleanliness_avg <= 5),
+    accuracy_avg DECIMAL(3,2) CHECK (accuracy_avg >= 0 AND accuracy_avg <= 5),
+    checkin_avg DECIMAL(3,2) CHECK (checkin_avg >= 0 AND checkin_avg <= 5),
+    communication_avg DECIMAL(3,2) CHECK (communication_avg >= 0 AND communication_avg <= 5),
+    location_avg DECIMAL(3,2) CHECK (location_avg >= 0 AND location_avg <= 5),
+    value_avg DECIMAL(3,2) CHECK (value_avg >= 0 AND value_avg <= 5),
+
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 18. Review Details
+CREATE TABLE review_details (
+    review_detail_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    review_id UUID REFERENCES review(review_id) ON DELETE CASCADE,
+    user_id UUID REFERENCES "user"(user_id) ON DELETE SET NULL,
+    cleanliness DECIMAL(2,1) CHECK (cleanliness >= 0 AND cleanliness <= 5),
+    accuracy DECIMAL(2,1) CHECK (accuracy >= 0 AND accuracy <= 5),
+    checkin DECIMAL(2,1) CHECK (checkin >= 0 AND checkin <= 5),
+    communication DECIMAL(2,1) CHECK (communication >= 0 AND communication <= 5),
+    location DECIMAL(2,1) CHECK (location >= 0 AND location <= 5),
+    value DECIMAL(2,1) CHECK (value >= 0 AND value <= 5),
+    overall_rating DECIMAL(2,1) CHECK (overall_rating >= 0 AND overall_rating <= 5),
+    comment TEXT,
+    stay_date DATE,                 -- thời điểm khách đã ở
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 INSERT INTO "role" (role_name, description) 
@@ -225,3 +250,34 @@ INSERT INTO category(category_name, sub_category_id) VALUES
 ('Private Room in Home', 5),
 ('Shared Room in Home', 5),
 ('Family Homestay', 5);
+
+-- Function cập nhật rating & count
+CREATE OR REPLACE FUNCTION update_review_summary()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Cập nhật tổng quan cho property liên quan
+    UPDATE review
+    SET 
+        rating = (
+            SELECT ROUND(AVG(overall_rating)::numeric, 2)
+            FROM review_details
+            WHERE review_id = NEW.review_id
+        ),
+        count = (
+            SELECT COUNT(*)
+            FROM review_details
+            WHERE review_id = NEW.review_id
+        ),
+        updated_at = NOW()
+    WHERE review_id = COALESCE(NEW.review_id, OLD.review_id);
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger trên bảng review_details
+CREATE TRIGGER trg_update_review_summary
+AFTER INSERT OR UPDATE OR DELETE
+ON review_details
+FOR EACH ROW
+EXECUTE FUNCTION update_review_summary();

@@ -10,7 +10,6 @@ import rightImg from "../../assets/right.jpg";
 interface Review {
   id: string;
   userName: string;
-  userLocation: string;
   rating: number;
   date: string;
   tripType?: string;
@@ -208,14 +207,10 @@ export default function ReviewsSection({
                   </div>
                 )}
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="font-semibold text-base">{review.userName}</span>
-                    {review.userLocation && (
-                      <span className="text-gray-600 text-sm">{review.userLocation}</span>
-                    )}
-                  </div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-black text-base font-semibold">★★★★★</span>
+                    <span className="text-black text-base font-semibold">
+                      {"★".repeat(Math.round(review.rating))}{"☆".repeat(5 - Math.round(review.rating))}
+                    </span>
                     <span className="text-gray-700 text-sm font-medium">{review.date}</span>
                     {review.tripType && (
                       <span className="text-gray-500 text-sm">• {review.tripType}</span>
