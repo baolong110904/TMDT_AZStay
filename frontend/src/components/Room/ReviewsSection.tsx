@@ -17,12 +17,11 @@ interface Review {
   avatar?: string;
 }
 
-// Props for the ReviewsSection component
 interface ReviewsSectionProps {
-  overallRating?: number; // Average rating (e.g. 4.9)
-  totalReviews?: number; // Optional: total number of reviews (defaults to reviews.length)
-  isTopPercentage?: boolean; // Show 'top %' badge
-  percentageRank?: number; // e.g. 5 for top 5%
+  overallRating?: number;
+  totalReviews?: number;
+  isTopPercentage?: boolean;
+  percentageRank?: number;
   ratings?: {
     cleanliness: number;
     accuracy: number;
@@ -31,13 +30,9 @@ interface ReviewsSectionProps {
     location: number;
     value: number;
   };
-  reviews: Review[]; // Array of review objects (required)
+  reviews: Review[];
 }
 
-/**
- * ReviewsSection displays property reviews and ratings.
- * All review data should be provided by the backend.
- */
 export default function ReviewsSection({
   overallRating = 5.0,
   totalReviews,
@@ -53,14 +48,12 @@ export default function ReviewsSection({
   },
   reviews,
 }: ReviewsSectionProps) {
-
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [showLearnPopover, setShowLearnPopover] = useState(false);
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const learnBtnRef = useRef<HTMLButtonElement | null>(null);
   const [popoverPosition, setPopoverPosition] = useState<'top' | 'bottom'>('bottom');
 
-  // Close popover on outside click
   useEffect(() => {
     if (!showLearnPopover) return;
     function handleClick(e: MouseEvent) {
@@ -77,12 +70,11 @@ export default function ReviewsSection({
     return () => document.removeEventListener('mousedown', handleClick);
   }, [showLearnPopover]);
 
-  // Responsive popover position (above or below button)
   useEffect(() => {
     if (!showLearnPopover) return;
     if (!learnBtnRef.current) return;
     const btnRect = learnBtnRef.current.getBoundingClientRect();
-    const popoverHeight = 320; // estimated popover height
+    const popoverHeight = 320;
     const spaceBelow = window.innerHeight - btnRect.bottom;
     const spaceAbove = btnRect.top;
     if (spaceBelow < popoverHeight && spaceAbove > popoverHeight) {
@@ -92,13 +84,8 @@ export default function ReviewsSection({
     }
   }, [showLearnPopover]);
 
-
-  // Get initials for avatar fallback
   const getInitials = (name: string) => name.charAt(0).toUpperCase();
-
-  // Track expanded/collapsed state for long comments
   const [expandedComments, setExpandedComments] = useState<{ [id: string]: boolean }>({});
-  // Show all reviews or just the first 4
   const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 4);
 
   return (
@@ -108,28 +95,14 @@ export default function ReviewsSection({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Header: Overall rating and badge */}
+      {/* Header */}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-2">
-          <Image
-            src={leftImg}
-            alt="Left laurel"
-            width={220}
-            height={220}
-            priority
-            className="h-20 w-auto sm:h-28 select-none"
-          />
+          <Image src={leftImg} alt="Left laurel" width={220} height={220} priority className="h-20 w-auto sm:h-28 select-none" />
           <span className="font-bold leading-none text-6xl sm:text-7xl md:text-8xl">
             {overallRating.toFixed(1)}
           </span>
-          <Image
-            src={rightImg}
-            alt="Right laurel"
-            width={220}
-            height={220}
-            priority
-            className="h-20 w-auto sm:h-28 select-none"
-          />
+          <Image src={rightImg} alt="Right laurel" width={220} height={220} priority className="h-20 w-auto sm:h-28 select-none" />
         </div>
         <h3 className="text-2xl font-semibold mb-2">Guest favorite</h3>
         {isTopPercentage && (
@@ -143,7 +116,7 @@ export default function ReviewsSection({
 
       {/* Ratings breakdown */}
       <div className="mb-8 w-full flex flex-col lg:flex-row items-stretch justify-between gap-0 border-b border-gray-200 pb-8">
-        {/* Overall Rating Breakdown */}
+        {/* Stars */}
         <div className="flex flex-col justify-center items-start min-w-[160px] max-w-[180px] pr-4 border-r border-gray-200">
           <span className="text-base font-semibold mb-2">Overall rating</span>
           <div className="w-full">
@@ -163,16 +136,17 @@ export default function ReviewsSection({
             ))}
           </div>
         </div>
+
         {/* Category Ratings */}
         <div className="flex-1 grid grid-cols-6 divide-x divide-gray-200">
           {Object.entries(ratings).map(([key, value]) => {
             const iconMap = {
-                cleanliness: <FaSprayCan className="text-xl text-gray-700" />,
-                accuracy: <FaCheckCircle className="text-xl text-gray-700" />,
-                checkin: <FaKey className="text-xl text-gray-700" />,
-                communication: <FaCommentDots className="text-xl text-gray-700" />,
-                location: <FaMapMarkedAlt className="text-xl text-gray-700" />,
-                value: <FaTag className="text-xl text-gray-700" />,
+              cleanliness: <FaSprayCan className="text-xl text-gray-700" />,
+              accuracy: <FaCheckCircle className="text-xl text-gray-700" />,
+              checkin: <FaKey className="text-xl text-gray-700" />,
+              communication: <FaCommentDots className="text-xl text-gray-700" />,
+              location: <FaMapMarkedAlt className="text-xl text-gray-700" />,
+              value: <FaTag className="text-xl text-gray-700" />,
             };
             type RatingKey = keyof typeof iconMap;
             return (
@@ -186,7 +160,7 @@ export default function ReviewsSection({
         </div>
       </div>
 
-      {/* Reviews List */}
+      {/* Reviews */}
       <div className="mb-8">
         <h4 className="text-xl font-semibold mb-6">Reviews ({typeof totalReviews === 'number' ? totalReviews : reviews.length})</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
@@ -207,8 +181,11 @@ export default function ReviewsSection({
                   </div>
                 )}
                 <div className="flex-1">
+                  {/* THÊM LẠI TÊN USER */}
+                  <div className="text-base font-semibold text-gray-900">{review.userName}</div>
+                  
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-black text-base font-semibold">
+                    <span className="text-black text-sm font-medium">
                       {"★".repeat(Math.round(review.rating))}{"☆".repeat(5 - Math.round(review.rating))}
                     </span>
                     <span className="text-gray-700 text-sm font-medium">{review.date}</span>
@@ -248,20 +225,18 @@ export default function ReviewsSection({
         </div>
       </div>
 
-      {/* Show More/Less Button and Learn link */}
+      {/* Show more/less */}
       {reviews.length > 2 && (
         <div className="flex items-center justify-start gap-4 mt-6 relative">
           <button
             onClick={() => setShowAllReviews(!showAllReviews)}
             className="px-6 py-3 rounded-xl bg-gray-100 text-base font-medium border border-gray-200 hover:bg-gray-200 transition-colors"
-            style={{ minWidth: 'auto', width: 'auto' }}
           >
             {showAllReviews ? `Show less reviews` : `Show all ${typeof totalReviews === 'number' ? totalReviews : reviews.length} reviews`}
           </button>
           <button
             type="button"
             className="text-gray-600 text-base underline hover:text-gray-800 whitespace-nowrap focus:outline-none"
-            tabIndex={0}
             ref={learnBtnRef}
             onClick={() => setShowLearnPopover(true)}
           >
@@ -270,31 +245,24 @@ export default function ReviewsSection({
           {showLearnPopover && (
             <div
               ref={popoverRef}
-              className={`absolute left-1/2 z-50 w-[370px] max-w-[95vw] -translate-x-1/2 bg-white rounded-xl shadow-2xl border border-gray-300 p-6 text-base text-gray-1000 animate-fadein`}
-              style={popoverPosition === 'top'
-                ? { bottom: '110%' }
-                : { top: '110%' }}
+              className={`absolute left-1/2 z-50 w-[370px] max-w-[95vw] -translate-x-1/2 bg-white rounded-xl shadow-2xl border border-gray-300 p-6 text-base animate-fadein`}
+              style={popoverPosition === 'top' ? { bottom: '110%' } : { top: '110%' }}
             >
-              {/* Arrow */}
               <div
                 className={
                   popoverPosition === 'top'
-                    ? 'absolute left-1/2 translate-x-[-50%] bottom-[-14px] w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[14px] border-t-white drop-shadow-lg'
-                    : 'absolute left-1/2 translate-x-[-50%] top-[-14px] w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-b-[14px] border-b-white drop-shadow-lg'
+                    ? 'absolute left-1/2 translate-x-[-50%] bottom-[-14px] border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[14px] border-t-white drop-shadow-lg'
+                    : 'absolute left-1/2 translate-x-[-50%] top-[-14px] border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-b-[14px] border-b-white drop-shadow-lg'
                 }
-                style={{ zIndex: 51 }}
               />
               <button
-                className="absolute top-3 right-3 text-gray-500 hover:text-black text-xl font-bold focus:outline-none"
+                className="absolute top-3 right-3 text-gray-500 hover:text-black text-xl font-bold"
                 onClick={() => setShowLearnPopover(false)}
-                aria-label="Close"
               >
                 ×
               </button>
               <div className="text-gray-900 leading-relaxed text-base">
-                <p className="mb-4">Reviews from past guests help our community learn more about each home. By default, reviews are sorted by relevancy. Relevancy is based on recency, length, and information that you provide to us, such as your booking search, your country, and your language preferences.</p>
-                <p className="mb-4">Only the guest who booked the reservation can leave a review, and AZStay only moderates reviews flagged for not following our policies.</p>
-                <p className="mb-4">To be eligible for a percentile ranking or guest favorite label, listings need 5 or more recent reviews. Criteria is subject to change.</p>
+                <p className="mb-4">Reviews from past guests help our community learn more about each home...</p>
                 <a href="#" className="underline font-semibold text-black hover:text-blue-700">Learn more in our Help Center</a>
               </div>
             </div>
