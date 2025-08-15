@@ -21,4 +21,8 @@ const upload = multer({ storage });
 // Route upload avatar
 router.post("/avatar", upload.single("avatar"), uploadAvatarController);
 
+<<<<<<< Updated upstream
 export default router;
+=======
+// export default router;
+>>>>>>> Stashed changes

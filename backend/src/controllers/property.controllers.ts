@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import fs from "fs";
 import { PropertyDAO } from "../dao/property.dao";
 import { uploadPropertyImages } from "../dao/images.dao";
+import { getUserById } from "../dao/user.dao";
+import { AdminDAO } from "../dao/admin.dao";
 
 // Lấy tất cả property
 export const getAllProperties = async (req: Request, res: Response) => {
@@ -70,7 +72,7 @@ export const deleteProperty = async (req: Request, res: Response) => {
     res.status(400).json({ message: "Failed to delete property", error: error.message });
   }
 };
-
+// Tạo property, nếu ai là 2 (khách) hoặc 3 (chủ nhà - do data cũ) thì auto thành 4 (vừa là chủ nhà và khách) khi tạo property
 export const createProperty = async (req: Request, res: Response) => {
   const {
     user_id,
@@ -88,6 +90,13 @@ export const createProperty = async (req: Request, res: Response) => {
   const filePaths = files.map((file) => file.path);
 
   try {
+    const user_data = await getUserById(user_id);
+    if (!user_data) {
+      return res.status(404).json({message: "User not found"});
+    }
+    if (user_data.role_id === 2 || user_data.role_id === 3) {
+      AdminDAO.updateUserRole(user_id, 4);
+    }
     // 1. create property
     const createdProperty = await PropertyDAO.createProperty(
       user_id,
