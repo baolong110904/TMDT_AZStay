@@ -25,14 +25,24 @@ export const uploadAvatar = async (user_id: string, filePath: string) => {
       { fetch_format: "auto" }, // use modern formats like WebP if possible
     ],
   });
-  
+
   // saving avatar url to db
-  // await prisma.user
-  return await prisma.userimage.create({
-    data: {
-      user_id,
-      image_url: uploadResult.secure_url,
-    },
+  return await prisma.$transaction(async (tx) => {
+    // insert into userimage table
+    const imageRecord = await tx.userimage.create({
+      data: {
+        user_id,
+        image_url: uploadResult.secure_url,
+      },
+    });
+
+    // update avatar_url in user table
+    await tx.user.update({
+      where: { user_id },
+      data: { avatar_url: uploadResult.secure_url },
+    });
+
+    return imageRecord;
   });
 };
 
@@ -45,6 +55,10 @@ export const uploadPropertyImages = async (
       cloudinary.uploader.upload(filePath, {
         folder: "property_images",
         overwrite: false,
+        transformation: [
+          { quality: "auto" }, // automatic quality optimization
+          { fetch_format: "auto" }, // use modern formats like WebP if possible
+        ],
       })
     )
   );

@@ -21,4 +21,5 @@
 // // Route upload avatar
 // router.post("/avatar", upload.single("avatar"), uploadAvatarController);
 
+
 // export default router;

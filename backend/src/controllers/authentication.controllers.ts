@@ -24,7 +24,7 @@ const JWT_SECRET = ENV.JWT_SECRET;
 
 // signing up
 export const signUp = async (req: Request, res: Response) => {
-  const { email, password, gender, phone, role, dob, name } = req.body;
+  const { email, password, gender, phone, dob, name } = req.body;
   try {
     const existingEmail = await checkEmailExists(email);
     const parsedDob = new Date(dob);
@@ -56,11 +56,11 @@ export const signUp = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid name" });
     }
 
-    if (![2, 3].includes(Number(role))) {
-      return res
-        .status(400)
-        .json({ error: "Invalid role ID (must be 2 or 3)" });
-    }
+    // if (![2, 3, 4].includes(Number(role))) {
+    //   return res
+    //     .status(400)
+    //     .json({ error: "Invalid role ID (must be 2 or 3 or 4)" });
+    // }
 
     const hashedPassword = await Bcrypt.hash(password, 10);
 
@@ -71,7 +71,7 @@ export const signUp = async (req: Request, res: Response) => {
       gender,
       phone,
       parsedDob,
-      role
+      4 // role = 4
     );
 
     await sendEmail(
@@ -110,6 +110,7 @@ export const signUp = async (req: Request, res: Response) => {
         phone: user.phone,
         role: user.role_id,
         dob: user.dob,
+        avatar_url: user.avatar_url
       },
     });
   } catch (err) {
@@ -144,9 +145,9 @@ export const login = async (req: Request, res: Response) => {
     const signOptions: SignOptions = {
       expiresIn: "1h",
     };
-    
-    const token = jwt.sign(payload, JWT_SECRET, signOptions);
 
+    const token = jwt.sign(payload, JWT_SECRET, signOptions);
+    
     res.json({
       token,
       user: {
@@ -157,6 +158,7 @@ export const login = async (req: Request, res: Response) => {
         gender: user.gender,
         dob: user.dob,
         role_id: user.role_id,
+        avatar_url: user.avatar_url,
         oauth_provider: user.oauth_provider,
       },
     });
@@ -234,7 +236,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
   try {
     const user = await getUserByEmail(email);
-
+    
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

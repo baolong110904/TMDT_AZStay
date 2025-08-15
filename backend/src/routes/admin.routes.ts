@@ -6,5 +6,6 @@ const gei = express.Router();
 
 gei.post('/get-revenue', authenticateJWT('access'), authorizeRoles(Roles.ADMIN), AdminController.getRevenue);
 gei.post('/get-user', authenticateJWT('access'), authorizeRoles(Roles.ADMIN), AdminController.getUserInfo);
+gei.post('/change-role', authenticateJWT('access'), authorizeRoles(Roles.ADMIN), AdminController.changeUserRole);
 
 export default gei;
