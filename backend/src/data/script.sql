@@ -19,7 +19,7 @@ CREATE TABLE "user" (
     hashed_password TEXT,
     avatar_url TEXT,
     oauth_provider VARCHAR(50),
-    oauth_id VARCHAR(100),   
+    oauth_id VARCHAR(100),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -221,6 +221,8 @@ INSERT INTO "role" (role_name, description)
 VALUES ('Customer', 'Simply a customer who want to use the services');
 INSERT INTO "role" (role_name, description) 
 VALUES ('Property Owner', 'Property owner who want to publish their property for bidding');
+INSERT INTO "role" (role_name, description) 
+VALUES ('Property Owner and Customer', 'Customer and property owner at the same time');
 
 -- subcategory
 -- aparment

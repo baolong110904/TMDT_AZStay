@@ -1,4 +1,7 @@
 import prisma from "../prisma/client.prisma";
+import { Roles } from "../middlewares/auth.middlewares";
+import { getUserById } from "./user.dao";
+import { error } from "console";
 
 export class AdminDAO {
   static async viewRevenueByFiltering(data: { year: number; month: number }) {
@@ -47,13 +50,13 @@ export class AdminDAO {
         skip: skip,
         take: limit,
         where: {
-          role_id: {not: 1}
-        }
+          role_id: { not: 1 },
+        },
       }),
       prisma.user.count({
         where: {
-          role_id: {not: 1}
-        }
+          role_id: { not: 1 },
+        },
       }),
     ]);
 
@@ -62,6 +65,16 @@ export class AdminDAO {
       total,
       totalPages: Math.ceil(total / limit),
       currenPage: page,
+    };
+  }
+
+  static async updateUserRole(user_id: string, role_id: number ) {
+    // const { user_id, role_id } = data;
+
+    return prisma.user.update({
+      where: { user_id },
+      data: { role_id },
+    });
     }
   }
 }

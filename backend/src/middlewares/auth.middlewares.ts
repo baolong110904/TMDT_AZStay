@@ -43,11 +43,10 @@ export const authorizeRoles = (...allowedRoles: Number[]) => {
 };
 
 export const verifyToken = authenticateJWT("access");
-
+export type { AuthRequest };
 export const Roles = {
   ADMIN: 1,
   CUSTOMER: 2,
   PROPERTY_OWNER: 3,
+  PROPERTY_OWNER_AND_CUSTOMER: 4
 };
-
-export type { AuthRequest };
