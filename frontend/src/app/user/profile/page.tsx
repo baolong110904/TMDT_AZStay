@@ -7,7 +7,7 @@ import Sidebar from "@/components/SidebarProfile";
 import AboutMeSection from "@/components/Profile/AboutMeSection";
 import EditProfileSection from "@/components/EditProfileSection";
 import Header from "@/components/SubHeader"; 
-import { UserProfile } from "@/components/Type/UserProfileProps";
+import { UserProfile } from "@/components/Props/UserProfileProps";
 
 const PROFILE_EDIT_FIELDS = [
   { key: "work", label: "My work", icon: "💼" },
@@ -31,11 +31,11 @@ export default function ProfilePage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [profileFields, setProfileFields] = useState<UserProfile>({} as UserProfile);
+  const [profileFields, setProfileFields] = useState<Record<string, any>>({});
   const [activeTab, setActiveTab] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const id = searchParams?.get("id") ?? "";
+  const id = searchParams ? searchParams.get("id") : null;
   
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -72,13 +72,20 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setError(null);
     setSuccess(null);
+    
+    if (!user) {
+      setError("User not found.");
+      return;
+    }
 
     const formData = new FormData();
     if (avatar) formData.append("avatar", avatar);
     if (password) formData.append("password", password);
-    Object.keys(profileFields).forEach((key) => {
-      formData.append(key, (profileFields as any)[key]);
-    });
+    if (profileFields) {
+      Object.keys(profileFields).forEach((key) => {
+        formData.append(key, (profileFields as Record<string, any>)[key]); //allow indexing
+      });
+    }
 
     try {
       if (!user) return;

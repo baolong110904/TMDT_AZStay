@@ -100,32 +100,6 @@ export async function migrateToPostgres({
       );
       console.log(`🖼️ Image inserted: ${res2.rowCount} row(s)`);
     }
-
-    // 3️⃣ Insert review
-    if (listing.reviewStat && typeof listing.reviewStat.rating === 'number') {
-      const reviewId = uuidv4();
-      const res3 = await pg.query(
-        `
-        INSERT INTO review (
-          review_id,
-          property_id,
-          rating,
-          count
-        ) VALUES (
-          $1, $2, $3, $4
-        )
-        RETURNING *
-        `,
-        [
-          reviewId,
-          propertyId,
-          listing.reviewStat.rating ?? 0,
-          listing.reviewStat.count ?? 0,
-        ]
-      );
-      console.log(`⭐ Review inserted: ${res3.rowCount} row(s)`);
-    }
-
     console.log(`✅ Migrated listing to PostgreSQL: ${listing.title}`);
   } catch (err: any) {
     console.error(`❌ PostgreSQL migration failed for: ${listing?.title ?? '[NO TITLE]'}`);

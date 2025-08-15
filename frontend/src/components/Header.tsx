@@ -13,7 +13,7 @@ import NavigationTabs from "./NavigationTabs";
 import DesktopSearchBar from "./Search/DesktopSearchBar";
 import MobileSearchDrawer from "./Search/MobileSearchDrawer";
 import DropdownMenu from "./DropdownMenu";
-import { UserProfile } from "./Type/UserProfileProps";
+import { UserProfile } from "./Props/UserProfileProps";
 
 interface HeaderProps {
   placeholder?: string;
@@ -64,6 +64,7 @@ export default function Header({ placeholder }: HeaderProps) {
   // Check for logged-in user on client mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+    console.log("Stored user data:", storedUser); // Log toàn bộ dữ liệu user để kiểm tra
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
@@ -101,7 +102,9 @@ export default function Header({ placeholder }: HeaderProps) {
 
   // Handle avatar/profile click
   const handleProfileClick = () => {
-    if (user?.id) {
+    if (user?.role_id === 1) {
+      router.push(`/admin`);
+    } else if (user?.id) {
       router.push(`/user/profile?id=${user.id}`);
     }
   };
@@ -127,9 +130,11 @@ export default function Header({ placeholder }: HeaderProps) {
 
         {/* Right section (both desktop and mobile): Shared dropdown trigger */}
         <div className="flex items-center gap-3 relative">
-          <button className="text-sm hidden md:inline text-gray-600 hover:text-blue-700 transition">
-            Become a host
-          </button>
+          {user?.role_id === 2 && (
+            <button className="text-sm hidden md:inline text-gray-600 hover:text-blue-700 transition">
+              Become a host
+            </button>
+          )}
           {user ? (
             <div className="relative" onClick={handleProfileClick}>
               <div

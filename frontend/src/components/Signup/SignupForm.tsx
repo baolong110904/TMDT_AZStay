@@ -3,7 +3,6 @@
 import { useState } from "react";
 import api from "@/lib/axios";
 
-
 export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -64,11 +63,14 @@ export default function SignupForm() {
 
       if (token && userId && user) {
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify({
-          ...user,
-          id: userId,
-          avatar: "/default-avatar.png",
-        }));
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...user,
+            id: userId,
+            avatar: "/default-avatar.png",
+          })
+        );
         setSuccess("Account created successfully! An email has been sent. Redirecting to Home...");
         setTimeout(() => {
           window.location.href = "/home";
@@ -116,7 +118,9 @@ export default function SignupForm() {
         onChange={(e) => setGender(e.target.value)}
         required
       >
-        <option value="" disabled>Select Gender</option>
+        <option value="" disabled>
+          Select Gender
+        </option>
         <option value="male">Male</option>
         <option value="female">Female</option>
         <option value="other">Other</option>
@@ -135,18 +139,22 @@ export default function SignupForm() {
         onChange={(e) => setRole(e.target.value)}
         required
       >
-        <option value="" disabled>Select Role</option>
+        <option value="" disabled>
+          Select Role
+        </option>
         <option value="2">Guest</option>
         <option value="3">Host</option>
       </select>
       <input
         type="date"
         className="w-full px-4 py-2 border rounded text-black"
-        value={dob  }
+        value={dob}
         onChange={(e) => setDob(e.target.value)}
         required
       />
+
       {error && <p className="text-red-500">{error}</p>}
+
       {success && (
         <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md shadow-md flex items-center animate-fade-in">
           <svg
@@ -156,12 +164,7 @@ export default function SignupForm() {
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M5 13l4 4L19 7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
           </svg>
           <span>{success}</span>
         </div>
@@ -170,11 +173,10 @@ export default function SignupForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-60"
       >
         {loading ? "Signing up..." : "Sign Up"}
       </button>
-      
     </form>
   );
 }

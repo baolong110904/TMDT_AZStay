@@ -3,6 +3,7 @@ import { AuthRequest, Roles } from "../middlewares/auth.middlewares";
 import { AdminDAO } from "../dao/admin.dao";
 import { getUserById } from "../dao/user.dao";
 
+
 export const getRevenue = async (req: Request, res: Response) => {
   const { month, year } = req.body;
 
@@ -72,4 +73,5 @@ export const changeUserRole = async(req: Request, res: Response) => {
       message: "Internal server error, check log"
     })
   }
+
 }

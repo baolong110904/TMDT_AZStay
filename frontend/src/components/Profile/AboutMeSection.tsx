@@ -2,7 +2,7 @@ import React from "react";
 import Avatar from "../Avatar";
 import { getRoleName } from "../../utils/role";
 import comment from "@/assets/comment.png";
-import { UserProfile } from "../Type/UserProfileProps";
+import { UserProfile } from "../Props/UserProfileProps";
 
 export default function AboutMeSection({
   user,
@@ -24,9 +24,9 @@ export default function AboutMeSection({
       </div>
       <div className="flex gap-12 items-center mb-8">
         <div className="shadow-lg rounded-2xl bg-white px-12 py-8 flex flex-col items-center min-w-[320px]">
-          <Avatar name={user.name} size={96} />
+          <Avatar name={user.name} size={96} imgUrl={user.avatar || ""} />
           <h3 className="mt-6 text-2xl font-bold">{user.name || "admin"}</h3>
-          <p className="text-lg text-gray-500 mt-2">{getRoleName(user.roleId)}</p>
+          <p className="text-lg text-gray-500 mt-2">{getRoleName(user.role_id)}</p>
         </div>
         <div className="ml-8 w-full max-w-[340px]">
           <h4 className="text-xl font-bold mb-2">Complete your profile</h4>

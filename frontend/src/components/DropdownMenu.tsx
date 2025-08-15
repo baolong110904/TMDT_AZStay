@@ -9,7 +9,7 @@ import {
   GiftIcon,
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
-import { UserProfile } from "./Type/UserProfileProps";
+import { UserProfile } from "./Props/UserProfileProps";
 
 interface DropdownMenuProps {
   isOpen: boolean;

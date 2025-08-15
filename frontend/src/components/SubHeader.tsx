@@ -75,7 +75,9 @@ export default function Header() {
 
   // Handle avatar/profile click
   const handleProfileClick = () => {
-    if (user?.id) {
+    if (user?.role_id === 1) {
+      router.push(`/admin`);
+    } else if (user?.id) {
       router.push(`/user/profile?id=${user.id}`);
     }
   };

@@ -6,7 +6,7 @@ interface NominatimResult {
   [key: string]: any; // thêm nếu muốn linh hoạt hơn
 }
 
-export async function geocodeAddress(address: string) {
+export async function codeAddress(address: string) {
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
 
   const res = await axios.get<NominatimResult[]>(url, {

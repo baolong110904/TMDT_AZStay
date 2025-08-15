@@ -7,7 +7,7 @@ import { Heart } from "lucide-react";
 import Image from "next/image";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { Listing } from "../Type/MainPageListingProps";
+import { Listing } from "../Props/MainPageListingProps";
 import api from "@/lib/axios";
 
 interface Props {
@@ -58,7 +58,7 @@ export default function Listings({
             title: p.title,
             price: p.min_price ? p.min_price.toString() : "N/A",
             image: p.propertyimage?.[0]?.image_url || "/placeholder.jpg",
-            url: `/property/${p.property_id}`,
+            url: `/room/${p.property_id ?? ""}`, // sửa thành /room/
             rating: p.rating?.toString() || undefined,
             reviewsCount: p.reviewsCount?.toString() || undefined,
             locationHint: p.province || p.country || city,
@@ -120,7 +120,11 @@ export default function Listings({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-7 gap-3 justify-items-center">
         {displayedListings.map((item, idx) => (
-          <div key={idx} className="w-full">
+          <div
+            key={idx}
+            className="w-full cursor-pointer"
+            onClick={() => router.push(item.url || "/")}
+          >
             <div className="rounded-2xl h-[400px] hover:shadow-md hover:scale-105 transition bg-white">
               <div className="relative h-[60%]">
                 <Image
@@ -130,7 +134,10 @@ export default function Listings({
                   className="object-cover rounded-2xl"
                 />
                 <button
-                  onClick={() => toggleFavorite(idx)}
+                  onClick={(e) => {
+                    e.stopPropagation(); // tránh click heart cũng redirect
+                    toggleFavorite(idx);
+                  }}
                   className="absolute top-2 right-2 bg-white rounded-full p-1 hover:scale-105 transition"
                 >
                   <Heart
@@ -162,7 +169,6 @@ export default function Listings({
                   </p>
                 </div>
               </div>
-
             </div>
           </div>
         ))}

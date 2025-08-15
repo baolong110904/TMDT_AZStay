@@ -1,4 +1,4 @@
-export interface HomeDetailsProps{
+export interface RoomProps{
   propertyId: string;
 
   title: string;
@@ -19,6 +19,8 @@ export interface HomeDetailsProps{
   roomNumber: number;
   isAvailable: boolean;
   availableDate?: Date[];
+  biddingStartTime: Date;
+  biddingEndTime: Date;
 
   averageRating?: number;
   reviewCount?: number;

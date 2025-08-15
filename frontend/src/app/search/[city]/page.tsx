@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SearchHomeListings from "@/components/Search/SearchPageHomeListing";
 import api from "@/lib/axios";
-import { Listing } from "@/components/Type/MainPageListingProps";
+import { Listing } from "@/components/Props/MainPageListingProps";
 
 export default function SearchPage() {
   const params = useParams();
@@ -29,8 +29,6 @@ export default function SearchPage() {
       setLoading(true);
       setError(null);
       try {
-        
-        console.log("info: ", {city, checkin, checkout, guests});
         const res = await api.get("/properties", {
           params: {
             city,
@@ -41,23 +39,18 @@ export default function SearchPage() {
         });
 
         const { items } = res.data;
-        console.log("API items:", items);
 
         const mapped: Listing[] = items.map((p: any, index: number) => {
-          console.log(`Item ${index} first image:`, p.propertyimage?.[0]?.image_url);
-
           return {
             title: p.title,
             price: p.min_price ? p.min_price.toString() : "N/A",
             image: p.propertyimage?.[0]?.image_url || "/placeholder.jpg",
-            url: `/property/${p.property_id}`,
+            url: `/room/${p.property_id}`,
             rating: p.rating?.toString() || undefined,
             reviewsCount: p.reviewsCount?.toString() || undefined,
             locationHint: p.province || p.country || city,
           };
         });
-
-        console.log("Mapped listings:", mapped);
 
         setListings(mapped);
       } catch (err) {

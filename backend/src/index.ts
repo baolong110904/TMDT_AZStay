@@ -5,7 +5,9 @@ import { createServer } from "http";
 import userRoutes from "./routes/user.routes";
 import auctionRoutes from "./routes/auction.routes";
 import propertyRoutes from "./routes/property.routes";
-import uploadImageRoutes from "./routes/uploadImages.routes";
+import reviewRoutes from "./routes/review.routes";
+// import uploadImageRoutes from "./routes/uploadImages.routes";
+import adminRoutes from "./routes/admin.routes";
 import socketHandler from "./utils/socket.utils";
 import { initSocket } from "./utils/socket.utils";
 import { setupSwagger } from "./swagger"; // api testing
@@ -25,8 +27,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/user", userRoutes);
 app.use("/auction", auctionRoutes); 
 app.use("/properties", propertyRoutes); 
-app.use("/upload", uploadImageRoutes); 
-
+// app.use("/upload", uploadImageRoutes);
+app.use("/reviews", reviewRoutes);
+app.use("/admin", adminRoutes);
 
 socketHandler(io);
 
@@ -53,3 +56,7 @@ app.use((req, res, next) => {
   console.log('Body:', req.body);
   next();
 });
+
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+console.log(Object.keys(prisma));

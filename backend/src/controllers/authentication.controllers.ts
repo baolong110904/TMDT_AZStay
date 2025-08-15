@@ -85,12 +85,17 @@ export const signUp = async (req: Request, res: Response) => {
 
     // Generate JWT token
     const payload = {
-      userId: user.user_id,
+      sub: user.user_id,
+      email: user.email,
       role: user.role_id,
+      name: user.name,
+      type: "access",
     };
+
     const signOptions: SignOptions = {
       expiresIn: "1h",
     };
+
     const token = jwt.sign(payload, JWT_SECRET, signOptions);
 
     return res.status(201).json({
@@ -140,6 +145,7 @@ export const login = async (req: Request, res: Response) => {
     const signOptions: SignOptions = {
       expiresIn: "1h",
     };
+
     const token = jwt.sign(payload, JWT_SECRET, signOptions);
     
     res.json({

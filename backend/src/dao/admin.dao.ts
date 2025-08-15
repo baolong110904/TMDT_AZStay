@@ -2,6 +2,7 @@ import prisma from "../prisma/client.prisma";
 import { Roles } from "../middlewares/auth.middlewares";
 import { getUserById } from "./user.dao";
 import { error } from "console";
+
 export class AdminDAO {
   static async viewRevenueByFiltering(data: { year: number; month: number }) {
     const { year, month } = data;
@@ -74,5 +75,6 @@ export class AdminDAO {
       where: { user_id },
       data: { role_id },
     });
+    }
   }
 }

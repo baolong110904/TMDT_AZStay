@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link"; // ✅ Thêm import Link
 import { Heart } from "lucide-react";
 import clsx from "clsx";
-import { Listing } from "@/components/Type/MainPageListingProps";
+import { Listing } from "@/components/Props/MainPageListingProps";
 
 const PAGE_SIZE = 20;
 
@@ -12,7 +13,9 @@ export default function SearchHomeListings({ list }: { list: Listing[] }) {
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
 
-  const toggleFavorite = (idx: number) => {
+  const toggleFavorite = (idx: number, e: React.MouseEvent) => {
+    e.preventDefault(); // ✅ Ngăn click vào link
+    e.stopPropagation();
     setFavorites((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(idx)) {
@@ -51,8 +54,12 @@ export default function SearchHomeListings({ list }: { list: Listing[] }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-6 justify-items-center">
         {paginatedList.map((item, idx) => (
-          <div key={idx} className="w-full">
-            <div className="rounded-2xl h-[400px] hover:shadow-md hover:scale-101 transition bg-white">
+          <Link
+            key={idx}
+            href={item.url || `${item.url}`} // ✅ Link sang trang Room
+            className="w-full"
+          >
+            <div className="rounded-2xl h-[400px] hover:shadow-md hover:scale-101 transition bg-white cursor-pointer">
               <div className="relative h-[60%]">
                 <Image
                   src={item.image ?? ""}
@@ -61,7 +68,7 @@ export default function SearchHomeListings({ list }: { list: Listing[] }) {
                   className="object-cover rounded-2xl"
                 />
                 <button
-                  onClick={() => toggleFavorite(idx)}
+                  onClick={(e) => toggleFavorite(idx, e)}
                   className="absolute top-2 right-2 bg-white rounded-full p-1 hover:scale-105 transition"
                 >
                   <Heart
@@ -94,7 +101,7 @@ export default function SearchHomeListings({ list }: { list: Listing[] }) {
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
