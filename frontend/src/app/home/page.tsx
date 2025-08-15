@@ -7,7 +7,17 @@ import Listings from "@/components/HomeComponents/MainPageHomeListings";
 import MediumCard from "@/components/HomeComponents/MediumCard";
 import LargeCard from "@/components/HomeComponents/LargeCard";
 import Footer from "@/components/Footer";
-//import { geocodeAddress } from "@/utils/geocoding"
+
+function cleanCityName(name: string): string {
+  const withoutDiacritics = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  return withoutDiacritics
+    .replace(/\b(?:city|province|district|state|region|thanh pho|tinh|quan|huyen|phuong)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 export default function Home() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -32,12 +42,14 @@ export default function Home() {
           `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
         );
         const data = await res.json();
-        const detectedCity =
+        const detectedCityRaw =
           data.address?.city ||
           data.address?.town ||
           data.address?.village ||
           data.address?.state ||
           "Unknown";
+
+        const detectedCity = cleanCityName(detectedCityRaw);
         setCity(detectedCity);
       } catch (error) {
         console.error(error);
