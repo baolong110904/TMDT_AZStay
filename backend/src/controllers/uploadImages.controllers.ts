@@ -6,7 +6,7 @@ import { getUserById } from "../dao/user.dao";
 export const uploadAvatarController = async (req: Request, res: Response) => {
   const user_id = req.body.user_id; // hoặc req.user.user_id nếu dùng auth
   const file = req.file as Express.Multer.File;
-
+  
   try {
     const check = await getUserById(user_id);
     if (!check) {

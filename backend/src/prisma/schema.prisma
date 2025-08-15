@@ -107,18 +107,18 @@ model property {
   is_available    Boolean?          @default(true)
   created_at      DateTime?         @default(now()) @db.Timestamp(6)
   updated_at      DateTime?         @default(now()) @db.Timestamp(6)
-  max_guest       Int?              @db.SmallInt 
+  max_guest       Int?              @db.SmallInt
   checkin_date    DateTime?         @db.Date
-  checkout_date   DateTime?         @db.Date  
+  checkout_date   DateTime?         @db.Date
   auction         auction[]
   booking         booking[]
   externalservice externalservice[]
   category        category?         @relation(fields: [category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction)
   user            user?             @relation(fields: [owner_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
   propertyimage   propertyimage[]
+  review          review[]
   user_click      user_click[]
   userfavorite    userfavorite[]
-  review          review?
 }
 
 model propertyimage {
@@ -128,6 +128,43 @@ model propertyimage {
   is_cover    Boolean?  @default(false)
   uploaded_at DateTime? @default(now()) @db.Timestamp(6)
   property    property? @relation(fields: [property_id], references: [property_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model review {
+  review_id         String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  property_id       String?          @db.Uuid
+  rating            Decimal?         @db.Decimal(3, 2)
+  count             Int?
+  created_at        DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?        @default(now()) @db.Timestamp(6)
+  cleanliness_avg   Decimal?         @db.Decimal(3, 2)
+  accuracy_avg      Decimal?         @db.Decimal(3, 2)
+  checkin_avg       Decimal?         @db.Decimal(3, 2)
+  communication_avg Decimal?         @db.Decimal(3, 2)
+  location_avg      Decimal?         @db.Decimal(3, 2)
+  value_avg         Decimal?         @db.Decimal(3, 2)
+  property          property?        @relation(fields: [property_id], references: [property_id], onDelete: Cascade, onUpdate: NoAction)
+  review_details    review_details[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model review_details {
+  review_detail_id String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  review_id        String?   @db.Uuid
+  user_id          String?   @db.Uuid
+  cleanliness      Decimal?  @db.Decimal(2, 1)
+  accuracy         Decimal?  @db.Decimal(2, 1)
+  checkin          Decimal?  @db.Decimal(2, 1)
+  communication    Decimal?  @db.Decimal(2, 1)
+  location         Decimal?  @db.Decimal(2, 1)
+  value            Decimal?  @db.Decimal(2, 1)
+  overall_rating   Decimal?  @db.Decimal(2, 1)
+  comment          String?
+  stay_date        DateTime? @db.Date
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  review           review?   @relation(fields: [review_id], references: [review_id], onDelete: Cascade, onUpdate: NoAction)
+  user             user?     @relation(fields: [user_id], references: [user_id], onUpdate: NoAction)
 }
 
 model role {
@@ -164,12 +201,26 @@ model user {
   otp_verifications otp_verifications[]
   payment           payment[]
   property          property[]
+  review_details    review_details[]
   role              role?               @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction)
   user_click        user_click[]
   userbid           userbid[]
   userfavorite      userfavorite[]
   userimage         userimage[]
-  review_details review_details[]
+}
+
+model user_click {
+  click_id    String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id     String?   @db.Uuid
+  property_id String?   @db.Uuid
+  event_type  String?   @db.VarChar(50)
+  event_value String?
+  user_agent  String?
+  ip_address  String?
+  location    String?
+  clicked_at  DateTime? @default(now()) @db.Timestamp(6)
+  property    property? @relation(fields: [property_id], references: [property_id], onDelete: NoAction, onUpdate: NoAction)
+  user        user?     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model userbid {
@@ -200,52 +251,4 @@ model userimage {
   image_url   String
   uploaded_at DateTime? @default(now()) @db.Timestamp(6)
   user        user?     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model user_click {
-  click_id    String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id     String?   @db.Uuid
-  property_id String?   @db.Uuid
-  event_type  String?   @db.VarChar(50)
-  event_value String?
-  user_agent  String?
-  ip_address  String?
-  location    String?
-  clicked_at  DateTime? @default(now()) @db.Timestamp(6)
-  property    property? @relation(fields: [property_id], references: [property_id], onDelete: NoAction, onUpdate: NoAction)
-  user        user?     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model review {
-  review_id          String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  property_id        String           @unique @db.Uuid
-  property           property         @relation(fields: [property_id], references: [property_id], onDelete: Cascade)
-
-  rating             Float
-  count              Int
-
-  cleanliness_avg    Float?
-  accuracy_avg       Float?
-  checkin_avg        Float?
-  communication_avg  Float?
-  location_avg       Float?
-  value_avg          Float?
-
-  created_at         DateTime         @default(now()) @db.Timestamp(6)
-  updated_at         DateTime         @updatedAt @db.Timestamp(6)
-
-  review_details     review_details[]
-}
-
-
-model review_details {
-  review_detail_id String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  review_id        String   @db.Uuid
-  user_id          String   @db.Uuid
-  overall_rating   Float
-  comment          String?
-  created_at       DateTime @default(now()) @db.Timestamp(6)
-
-  review review @relation(fields: [review_id], references: [review_id], onDelete: Cascade)
-  user   user   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }

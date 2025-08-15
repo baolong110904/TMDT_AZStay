@@ -27,6 +27,7 @@ export const uploadAvatar = async (user_id: string, filePath: string) => {
   });
   
   // saving avatar url to db
+  // await prisma.user
   return await prisma.userimage.create({
     data: {
       user_id,
