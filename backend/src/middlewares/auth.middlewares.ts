@@ -46,4 +46,10 @@ export const Roles = {
   CUSTOMER: 2,
   PROPERTY_OWNER: 3,
   PROPERTY_OWNER_AND_CUSTOMER: 4
+<<<<<<< Updated upstream
 };
+=======
+};
+
+export type { AuthRequest };
+>>>>>>> Stashed changes

@@ -24,7 +24,11 @@ router.post("/avatar", upload.single("avatar"), uploadAvatarController);
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 export default router;
+=======
+// export default router;
+>>>>>>> Stashed changes
 =======
 // export default router;
 >>>>>>> Stashed changes

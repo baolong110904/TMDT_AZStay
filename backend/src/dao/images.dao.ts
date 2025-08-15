@@ -30,12 +30,15 @@ export const uploadAvatar = async (user_id: string, filePath: string) => {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   return await prisma.userimage.create({
     data: {
       user_id,
       image_url: uploadResult.secure_url,
     },
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -58,6 +61,9 @@ export const uploadAvatar = async (user_id: string, filePath: string) => {
     return imageRecord;
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

@@ -1,11 +1,14 @@
 import express from "express";
 import * as PropertyController from "../controllers/property.controllers";
+<<<<<<< Updated upstream
 import { verifyToken } from "../middlewares/auth.middlewares";
 
 const router = express.Router();
 
 router.post("/", verifyToken, PropertyController.createProperty);
 
+=======
+>>>>>>> Stashed changes
 import { authorizeRoles, Roles, verifyToken } from "../middlewares/auth.middlewares";
 import {upload} from "../middlewares/upload.middlewares";
 const router = express.Router();
