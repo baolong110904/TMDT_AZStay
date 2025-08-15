@@ -116,9 +116,11 @@ FROM review_with_users rw;
 
 -- Tạo 2-3 auction cho mỗi property
 WITH props AS (
-    SELECT property_id
+    SELECT property_id, min_price
     FROM property
 )
+
+-- Tạo auction
 INSERT INTO auction (auction_id, property_id, status, start_time, end_time, final_price, created_at)
 SELECT
     uuid_generate_v4(),
@@ -137,7 +139,10 @@ SELECT
         THEN NOW() + (g.n * interval '3 days') -- end_time trong tương lai cho active
         ELSE NOW() - ((max_n.max_n - g.n) * interval '15 days')  -- end_time trong quá khứ
     END AS end_time,
-    round((random() * 500 + 100)::numeric, 2) AS final_price,
+    round(
+        p.min_price + 10000 + (random() * 50000)::numeric,  -- luôn cao hơn min_price 10k, cộng thêm tối đa 50k
+        0
+    ) AS final_price,
     NOW()
 FROM props p
 CROSS JOIN LATERAL (
@@ -149,13 +154,13 @@ JOIN LATERAL (
     FROM generate_series(1, (floor(random() * 2) + 2)::int) AS n
 ) max_n ON TRUE;
 
---Tạo userbid
+-- Tạo userbid
 DO $$
 DECLARE
     auct RECORD;
     part_users UUID[];
     usr UUID;
-    min_price_val DECIMAL(12,2);
+    final_price_val DECIMAL(12,2);
     current_price DECIMAL(12,2);
     bid_count INT;
     i INT;
@@ -163,12 +168,13 @@ DECLARE
 BEGIN
     -- Lặp qua tất cả auction
     FOR auct IN
-        SELECT a.auction_id, p.owner_id, p.min_price, a.start_time, a.end_time
+        SELECT a.auction_id, p.owner_id, p.min_price, a.start_time, a.end_time, a.final_price
         FROM auction a
         JOIN property p ON p.property_id = a.property_id
-        WHERE a.start_time IS NOT NULL AND a.end_time IS NOT NULL
+        WHERE a.start_time IS NOT NULL 
+          AND a.end_time IS NOT NULL
     LOOP
-        min_price_val := auct.min_price;
+        final_price_val := auct.final_price;
         
         -- Lấy 1-2 user có role_id = 2 và khác owner
         SELECT ARRAY(
@@ -185,11 +191,23 @@ BEGIN
         LOOP
             -- Random số lượng bid của user (1–3)
             bid_count := (1 + floor(random() * 3))::int;
-            current_price := min_price_val + (random() * 100);
+            
+            -- Giá khởi điểm lấy từ min_price
+            current_price := auct.min_price;
             
             FOR i IN 1..bid_count LOOP
+                -- Tăng giá ít nhất 10,000 trước khi insert
+                current_price := current_price + 10000 + (random() * 50000);
+                
                 -- Random thời gian bid trong khoảng start_time -> end_time
-                bid_time_val := auct.start_time + (random() * (EXTRACT(EPOCH FROM (auct.end_time - auct.start_time))) * interval '1 second');
+                bid_time_val := auct.start_time + (
+                    random() * (EXTRACT(EPOCH FROM (auct.end_time - auct.start_time))) * interval '1 second'
+                );
+
+                -- Nếu là bid cuối của user và cũng là bid cuối của auction => đặt bằng final_price
+                IF i = bid_count THEN
+                    current_price := final_price_val;
+                END IF;
 
                 INSERT INTO userbid (
                     bid_id, auction_id, bidder_id, bid_time, bid_amount, status
@@ -199,16 +217,11 @@ BEGIN
                     auct.auction_id,
                     usr,
                     bid_time_val,
-                    round(current_price::numeric, 2),
+                    round(current_price::numeric, 0),
                     'valid'
                 );
-                
-                -- Tăng giá
-                current_price := current_price + (random() * 50 + 10);
             END LOOP;
         END LOOP;
     END LOOP;
 END $$;
-
-
 
