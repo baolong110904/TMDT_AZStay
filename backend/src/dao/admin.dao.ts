@@ -68,13 +68,12 @@ export class AdminDAO {
     };
   }
 
-  static async updateUserRole(user_id: string, role_id: number ) {
+  static async updateUserRole(user_id: string, role_id: number) {
     // const { user_id, role_id } = data;
 
     return prisma.user.update({
       where: { user_id },
       data: { role_id },
     });
-    }
   }
 }

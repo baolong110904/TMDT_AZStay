@@ -41,8 +41,9 @@ export const uploadAvatar = async (user_id: string, filePath: string) => {
       where: { user_id },
       data: { avatar_url: uploadResult.secure_url },
     });
-    
+
     return imageRecord;
+  });
 };
 
 export const uploadPropertyImages = async (
@@ -71,6 +72,6 @@ export const uploadPropertyImages = async (
   const savedImages = await prisma.propertyimage.createMany({
     data: imagesData,
   });
-  
+
   return savedImages;
 };
