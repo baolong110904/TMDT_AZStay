@@ -140,7 +140,11 @@ export const login = async (req: Request, res: Response) => {
     const signOptions: SignOptions = {
       expiresIn: "1h",
     };
+<<<<<<< Updated upstream
 
+=======
+    
+>>>>>>> Stashed changes
     const token = jwt.sign(payload, JWT_SECRET, signOptions);
     
     res.json({
