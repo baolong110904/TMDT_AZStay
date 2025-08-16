@@ -92,7 +92,7 @@ export default function AdminHeader() {
 
       {/* Nhóm phải (icons + avatar) */}
       <div className={`flex items-center gap-3 shrink-0 transition-transform duration-300 ${rightSlide}`}>
-        <button className="p-2 rounded-full hover:bg-gray-100" aria-label="Messages">
+        {/* <button className="p-2 rounded-full hover:bg-gray-100" aria-label="Messages">
           <ChatBubbleLeftRightIcon className="h-6 w-6 text-gray-500" />
         </button>
 
@@ -102,7 +102,7 @@ export default function AdminHeader() {
 
         <button className="p-2 rounded-full hover:bg-gray-100" aria-label="Settings">
           <CogIcon className="h-6 w-6 text-gray-500" />
-        </button>
+        </button> */}
 
         {/* Profile */}
         <div className="relative" ref={dropdownRef}>
