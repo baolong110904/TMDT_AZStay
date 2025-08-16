@@ -16,6 +16,7 @@ model auction {
   end_time    DateTime? @db.Timestamp(6)
   final_price Decimal?  @db.Decimal(12, 2)
   created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
   property    property? @relation(fields: [property_id], references: [property_id], onDelete: NoAction, onUpdate: NoAction)
   user        user?     @relation(fields: [winner_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
   userbid     userbid[]
@@ -229,10 +230,14 @@ model userbid {
   bidder_id  String?   @db.Uuid
   bid_time   DateTime? @db.Timestamp(6)
   bid_amount Decimal?  @db.Decimal(12, 2)
+  stay_start DateTime? @db.Timestamp(6) // ngày bắt đầu ở
+  stay_end   DateTime? @db.Timestamp(6) // ngày kết thúc ở
   status     String?   @db.VarChar(50)
+
   auction    auction?  @relation(fields: [auction_id], references: [auction_id], onDelete: NoAction, onUpdate: NoAction)
   user       user?     @relation(fields: [bidder_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 }
+
 
 model userfavorite {
   user_id     String    @db.Uuid

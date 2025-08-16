@@ -22,9 +22,6 @@ export const getAllProperties = async (req: Request, res: Response) => {
       guests: guests ? Number(guests) : undefined,
     });
 
-    console.log("📦 getAllProperties - Query Params:", req.query);
-    console.log("📦 getAllProperties - Response Data:", data);
-
     res.status(200).json(data);
   } catch (err) {
     const error = err as Error;

@@ -99,6 +99,7 @@ CREATE TABLE auction (
     end_time TIMESTAMP,
     final_price DECIMAL(12,2),
     created_at TIMESTAMP DEFAULT NOW()
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- 10. UserBid
@@ -106,6 +107,8 @@ CREATE TABLE userbid (
     bid_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     auction_id UUID REFERENCES auction(auction_id),
     bidder_id UUID REFERENCES "user"(user_id),
+    stay_start TIMESTAMP,
+    stay_end TIMESTAMP,
     bid_time TIMESTAMP,
     bid_amount DECIMAL(12,2),
     status VARCHAR(50)

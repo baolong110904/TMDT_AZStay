@@ -108,33 +108,81 @@ export class UserBidDAO {
     auction_id,
     bidder_id,
     bid_amount,
+    stay_start,
+    stay_end
   }: {
     auction_id: string;
     bidder_id: string;
     bid_amount: number;
+    stay_start: Date;
+    stay_end: Date;
   }) {
-    // Kiểm tra xem auction có tồn tại không
+    // Lấy thông tin auction + property
     const auction = await prisma.auction.findUnique({
       where: { auction_id },
+      include: { property: true }
     });
   
     if (!auction) {
       throw new Error("Auction not found");
     }
   
-    // Kiểm tra thời gian hợp lệ
     const now = new Date();
+  
+    // Kiểm tra thời gian đấu giá
     if (!auction.start_time || !auction.end_time) {
       throw new Error("Auction time not properly set");
     }
-  
+    console.log(auction.start_time);
+    console.log(auction.end_time);
     if (auction.start_time > now || auction.end_time < now) {
       throw new Error("Auction not active");
     }
   
-    // Tạo đối tượng DAO instance và lưu
-    const bidDAO = new UserBidDAO({ auction_id, bidder_id, bid_amount });
-    const savedBid = await bidDAO.save();
-    return this.toJSON(savedBid);
-  }
+    // Kiểm tra giá
+    const highestBid = await prisma.userbid.findFirst({
+      where: { auction_id },
+      orderBy: { bid_amount: "desc" }
+    });
+  
+    const highestBidAmount = highestBid?.bid_amount
+      ? Number(highestBid.bid_amount)
+      : null;
+  
+    const minBid = highestBidAmount !== null
+      ? highestBidAmount + 10000
+      : Number(auction.final_price) || 0;
+  
+    if (bid_amount < minBid) {
+      throw new Error(`Bid amount must be at least ${minBid}`);
+    }
+  
+    // Kiểm tra ngày lưu trú
+    const availableStart = auction.property?.checkin_date ?? null;
+    const availableEnd = auction.property?.checkout_date ?? null;
+  
+    if (!availableStart || !availableEnd) {
+      throw new Error("Property available dates are not set");
+    }
+  
+    if (stay_start < availableStart || stay_end > availableEnd) {
+      throw new Error("Stay dates must be within available period");
+    }
+    if (stay_start >= stay_end) {
+      throw new Error("stay_start must be before stay_end");
+    }
+  
+    // Lưu bid
+    const savedBid = await prisma.userbid.create({
+      data: {
+        auction_id,
+        bidder_id,
+        bid_amount,
+        stay_start,
+        stay_end,
+      }
+    });
+  
+    return savedBid;
+  }  
 }

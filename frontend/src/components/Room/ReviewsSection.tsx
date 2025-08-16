@@ -100,7 +100,7 @@ export default function ReviewsSection({
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-2">
           <Image src={leftImg} alt="Left laurel" width={220} height={220} priority className="h-20 w-auto sm:h-28 select-none" />
           <span className="font-bold leading-none text-6xl sm:text-7xl md:text-8xl">
-            {overallRating.toFixed(1)}
+            {Number(overallRating || 0).toFixed(1)}
           </span>
           <Image src={rightImg} alt="Right laurel" width={220} height={220} priority className="h-20 w-auto sm:h-28 select-none" />
         </div>

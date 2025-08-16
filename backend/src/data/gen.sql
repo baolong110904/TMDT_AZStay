@@ -129,30 +129,46 @@ SELECT
         WHEN g.n = max_n.max_n THEN 'active'
         ELSE 'ended'
     END AS status,
+
     CASE 
-        WHEN g.n = max_n.max_n 
-        THEN NOW() + (g.n * interval '1 day')  -- auction active bắt đầu gần hiện tại
-        ELSE NOW() - ((max_n.max_n - g.n + 2) * interval '15 days') -- auction cũ
+        WHEN g.n = max_n.max_n THEN
+            -- start_time: 1–3 ngày trước hiện tại
+            NOW() - ((1 + floor(random() * 3))::int * interval '1 day')
+        ELSE
+            NOW() - ((max_n.max_n - g.n + 2) * interval '15 days')
     END AS start_time,
+
     CASE 
-        WHEN g.n = max_n.max_n 
-        THEN NOW() + (g.n * interval '3 days') -- end_time trong tương lai cho active
-        ELSE NOW() - ((max_n.max_n - g.n) * interval '15 days')  -- end_time trong quá khứ
+        WHEN g.n = max_n.max_n THEN
+            -- end_time: 1–3 ngày sau hiện tại (và <= checkin_date - 1 ngày nếu có)
+            CASE 
+                WHEN p.checkin_date IS NOT NULL THEN
+                    LEAST(
+                        p.checkin_date - interval '1 day',
+                        NOW() + ((1 + floor(random() * 3))::int * interval '1 day')
+                    )
+                ELSE
+                    NOW() + ((1 + floor(random() * 3))::int * interval '1 day')
+            END
+        ELSE
+            NOW() - ((max_n.max_n - g.n) * interval '15 days')
     END AS end_time,
+
     round(
-        p.min_price + 10000 + (random() * 50000)::numeric,  -- luôn cao hơn min_price 10k, cộng thêm tối đa 50k
+        p.min_price + 100000 + (random() * 500000)::numeric, -- luôn > min_price 100k
         0
     ) AS final_price,
     NOW()
-FROM props p
+FROM property p
 CROSS JOIN LATERAL (
     SELECT n
-    FROM generate_series(1, (floor(random() * 2) + 2)::int) AS n  -- 2 hoặc 3 auction
+    FROM generate_series(1, (floor(random() * 2) + 2)::int) AS n
 ) g
 JOIN LATERAL (
     SELECT MAX(n) AS max_n
     FROM generate_series(1, (floor(random() * 2) + 2)::int) AS n
 ) max_n ON TRUE;
+
 
 -- Tạo userbid
 DO $$
@@ -165,17 +181,27 @@ DECLARE
     bid_count INT;
     i INT;
     bid_time_val TIMESTAMP;
+    stay_start_val TIMESTAMP;
+    stay_end_val TIMESTAMP;
+    stay_duration INT;
+    total_days INT;
 BEGIN
     -- Lặp qua tất cả auction
     FOR auct IN
-        SELECT a.auction_id, p.owner_id, p.min_price, a.start_time, a.end_time, a.final_price
+        SELECT a.auction_id, p.owner_id, p.min_price, a.start_time, a.end_time, a.final_price,
+               p.checkin_date, p.checkout_date
         FROM auction a
         JOIN property p ON p.property_id = a.property_id
         WHERE a.start_time IS NOT NULL 
           AND a.end_time IS NOT NULL
+          AND p.checkin_date IS NOT NULL
+          AND p.checkout_date IS NOT NULL
     LOOP
         final_price_val := auct.final_price;
         
+        -- Tính tổng số ngày lưu trú có thể
+        total_days := (auct.checkout_date - auct.checkin_date);
+
         -- Lấy 1-2 user có role_id = 2 và khác owner
         SELECT ARRAY(
             SELECT user_id
@@ -204,18 +230,34 @@ BEGIN
                     random() * (EXTRACT(EPOCH FROM (auct.end_time - auct.start_time))) * interval '1 second'
                 );
 
+                -- Random khoảng lưu trú nằm trong checkin_date và checkout_date
+                stay_start_val := auct.checkin_date + (
+                    floor(random() * GREATEST(0, total_days - 5))::int
+                ) * interval '1 day';
+
+                -- Thời gian ở: 5–7 ngày
+                stay_duration := 5 + floor(random() * 3);
+                stay_end_val := stay_start_val + (stay_duration || ' days')::interval;
+
+                -- Nếu stay_end vượt checkout_date thì ép về checkout_date
+                IF stay_end_val > auct.checkout_date THEN
+                    stay_end_val := auct.checkout_date;
+                END IF;
+
                 -- Nếu là bid cuối của user và cũng là bid cuối của auction => đặt bằng final_price
                 IF i = bid_count THEN
                     current_price := final_price_val;
                 END IF;
 
                 INSERT INTO userbid (
-                    bid_id, auction_id, bidder_id, bid_time, bid_amount, status
+                    bid_id, auction_id, bidder_id, stay_start, stay_end, bid_time, bid_amount, status
                 )
                 VALUES (
                     uuid_generate_v4(),
                     auct.auction_id,
                     usr,
+                    stay_start_val,
+                    stay_end_val,
                     bid_time_val,
                     round(current_price::numeric, 0),
                     'valid'
@@ -224,4 +266,3 @@ BEGIN
         END LOOP;
     END LOOP;
 END $$;
-

@@ -59,6 +59,7 @@ export default function Room() {
           currentPrice: Number(
             res.data.auction?.[0]?.final_price ?? res.data.min_price ?? 0
           ),
+          auctionId: res.data.auction?.[0]?.auction_id,
           biddingStartTime: res.data.auction?.[0]?.start_time
             ? new Date(res.data.auction[0].start_time)
             : new Date("2025-08-07T08:00:00"),
@@ -145,6 +146,8 @@ export default function Room() {
     fetchCoords();
   }, [property?.address, property?.latitude, property?.longitude]);
 
+  console.log(property);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -206,13 +209,9 @@ export default function Room() {
               currentPrice={property.currentPrice}
               availableDateStart={new Date(property.availableDate[0])}
               availableDateEnd={new Date(property.availableDate[1])}
-              biddingStartTime={property.biddingStartTime}
-              biddingEndTime={property.biddingEndTime}
-              onConfirmBid={(price, dates) => {
-                alert(
-                  `Bidded ${price} for ${dates[0].toDateString()} - ${dates[1].toDateString()}`
-                );
-              }}
+              biddingStartTime={new Date(property.biddingStartTime)}
+              biddingEndTime={new Date(property.biddingEndTime)}
+              auctionId={property.auctionId}
             />
           )}
         </div>

@@ -29,4 +29,14 @@ export class AuctionDAO {
       },
     });
   }
+
+  static async updateAuction(auction_id: string, newFinalPrice: number) {
+    return prisma.auction.update({
+      where: { auction_id },
+      data: {
+        final_price: newFinalPrice,
+        updated_at: new Date(),
+      },
+    });
+  }
 }

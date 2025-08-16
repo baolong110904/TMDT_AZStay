@@ -19,6 +19,8 @@ export interface RoomProps{
   roomNumber: number;
   isAvailable: boolean;
   availableDate?: Date[];
+
+  auctionId: string
   biddingStartTime: Date;
   biddingEndTime: Date;
 

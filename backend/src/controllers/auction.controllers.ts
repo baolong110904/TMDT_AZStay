@@ -18,31 +18,62 @@ export const getActiveAuctions = async (_req: Request, res: Response) => {
 
 export const placeBid = async (req: AuthRequest, res: Response) => {
   const { auctionId } = req.params;
-  const { bid_amount } = req.body;
+  let { bid_amount, stay_start, stay_end } = req.body;
   const bidder_id = req.user.sub;
 
+  console.log("📥 [placeBid] Incoming request:", {
+    auctionId,
+    bidder_id,
+    bid_amount,
+    stay_start,
+    stay_end
+  });
+
   try {
+    // Convert sang Date nếu là string
+    stay_start = new Date(stay_start);
+    stay_end = new Date(stay_end);
+
+    if (isNaN(stay_start.getTime()) || isNaN(stay_end.getTime())) {
+      throw new Error("Invalid stay_start or stay_end date");
+    }
+
+    // 1. Lưu bid mới
     const bid = await UserBidDAO.placeBid({
       auction_id: auctionId,
       bidder_id,
-      bid_amount,
+      bid_amount: Number(bid_amount),
+      stay_start,
+      stay_end
     });
 
+    console.log("✅ [placeBid] Bid inserted successfully:", bid);
+
+    // 2. Cập nhật auction.final_price bằng bid_amount mới
+    await AuctionDAO.updateAuction(auctionId, Number(bid_amount));
+
+    // 3. Emit event cho room socket
     const io = getIO();
     io.to(auctionId).emit("new-bid", {
       auctionId,
       bidder_id,
       bid_amount,
-      bid_id: bid.bid_id, // nếu có
+      stay_start,
+      stay_end,
+      bid_id: bid.bid_id,
       timestamp: bid.bid_time || new Date().toISOString(),
     });
 
     res.status(201).json(bid);
   } catch (err) {
-    const error = err as Error;
-    res.status(400).json({ message: "Failed to place bid", error: error.message });
+    console.error("❌ [placeBid] Error placing bid:", err);
+    res.status(400).json({
+      message: "Failed to place bid",
+      error: (err as Error).message,
+    });
   }
 };
+
 
 export const getBids = async (req: Request, res: Response) => {
   const { auctionId } = req.params;

@@ -4,15 +4,19 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import api from "@/lib/axios";
+import { io } from "socket.io-client";
+
+let socket: any;
 
 export default function BiddingBox({
   startPrice,
-  currentPrice,
+  currentPrice: initialPrice,
   availableDateStart,
   availableDateEnd,
   biddingStartTime,
   biddingEndTime,
-  onConfirmBid,
+  auctionId,
 }: {
   startPrice: number;
   currentPrice: number;
@@ -20,13 +24,55 @@ export default function BiddingBox({
   availableDateEnd: Date;
   biddingStartTime: Date;
   biddingEndTime: Date;
-  onConfirmBid: (price: number, dates: [Date, Date]) => void;
+  auctionId: string;
 }) {
-  const [bidAmount, setBidAmount] = useState(currentPrice + 10000);
+  const [currentPrice, setCurrentPrice] = useState(initialPrice);
+  const [bidAmount, setBidAmount] = useState(initialPrice + 10000);
   const [countdown, setCountdown] = useState("");
   const [selectedDates, setSelectedDates] = useState<[Date | null, Date | null]>([null, null]);
 
-  
+  // 🔌 Kết nối socket
+  useEffect(() => {
+    socket = io(process.env.NEXT_PUBLIC_API_URL as string, {
+      withCredentials: true,
+    });
+
+    // Join vào room theo auctionId
+    socket.emit("join-auction", auctionId);
+
+    // Lắng nghe event new-bid
+    socket.on("new-bid", (data: any) => {
+      if (data.auctionId === auctionId) {
+        console.log("📡 New bid received:", data);
+        setCurrentPrice(data.bid_amount);
+        setBidAmount(data.bid_amount + 10000); // auto gợi ý số tiếp theo
+      }
+    });
+
+    return () => {
+      socket.emit("leave-auction", auctionId);
+      socket.disconnect();
+    };
+  }, [auctionId]);
+
+  const handleConfirmBid = async () => {
+    if (!selectedDates[0] || !selectedDates[1]) {
+      alert("Please select a valid date range");
+      return;
+    }
+    try {
+      await api.post(`/auction/${auctionId}/bid`, {
+        bid_amount: bidAmount,
+        stay_start: selectedDates[0],
+        stay_end: selectedDates[1],
+      });
+      alert("✅ Bid placed successfully!");
+    } catch (err: any) {
+      console.error("❌ Failed to place bid:", err);
+      alert(err.response?.data?.message || "Failed to place bid");
+    }
+  };
+
   // Countdown logic
   useEffect(() => {
     const interval = setInterval(() => {
@@ -37,10 +83,16 @@ export default function BiddingBox({
         setCountdown("Bidding ended");
         return;
       }
+      const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
       const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((remaining / (1000 * 60)) % 60);
       const seconds = Math.floor((remaining / 1000) % 60);
-      setCountdown(`${hours}h ${minutes}m ${seconds}s`);
+
+      if (days > 0) {
+        setCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+      } else {
+        setCountdown(`${hours}h ${minutes}m ${seconds}s`);
+      }
     }, 1000);
     return () => clearInterval(interval);
   }, [biddingEndTime]);
@@ -93,7 +145,10 @@ export default function BiddingBox({
 
       {/* Time Info */}
       <div className="text-sm">
-        <p>Bidding started at: {biddingStartTime.toLocaleTimeString()}</p>
+        <p>
+          Bidding started at:{" "}
+          {biddingStartTime.toLocaleDateString()} {biddingStartTime.toLocaleTimeString()}
+        </p>
         <p>
           Ends in: <span className="font-semibold">{countdown}</span>
         </p>
@@ -114,13 +169,7 @@ export default function BiddingBox({
         <button
           className="bg-blue-500 text-white w-full p-2 rounded hover:bg-blue-600 transition"
           disabled={bidAmount <= currentPrice}
-          onClick={() => {
-            if (selectedDates[0] && selectedDates[1]) {
-              onConfirmBid(bidAmount, selectedDates as [Date, Date]);
-            } else {
-              alert("Please select a valid date range");
-            }
-          }}
+          onClick={handleConfirmBid}
         >
           Confirm Bidding
         </button>
