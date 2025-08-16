@@ -67,6 +67,7 @@ export default function Room() {
           minPrice: Number(res.data.min_price ?? 0),
           currentPrice: Number(res.data.auction?.[0]?.final_price ?? res.data.min_price ?? 0),
           currentPriceUserId: res.data.auction?.[0]?.winner_id,
+          currentPriceTime: res.data.auction?.[0]?.updated_at,
           auctionId: res.data.auction?.[0]?.auction_id,
           biddingStartTime: res.data.auction?.[0]?.start_time ? new Date(res.data.auction[0].start_time) : new Date(),
           biddingEndTime: res.data.auction?.[0]?.end_time ? new Date(res.data.auction[0].end_time) : new Date(),
@@ -179,6 +180,7 @@ export default function Room() {
               startPrice={property.minPrice}
               currentPrice={property.currentPrice}
               currentPriceUserId={property.currentPriceUserId}
+              currentPriceTime={new Date(property.currentPriceTime)}
               availableDateStart={new Date(property.availableDate[0])}
               availableDateEnd={new Date(property.availableDate[1])}
               biddingStartTime={new Date(property.biddingStartTime)}

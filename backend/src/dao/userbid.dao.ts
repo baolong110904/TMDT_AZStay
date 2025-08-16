@@ -133,8 +133,6 @@ export class UserBidDAO {
     if (!auction.start_time || !auction.end_time) {
       throw new Error("Auction time not properly set");
     }
-    console.log(auction.start_time);
-    console.log(auction.end_time);
     if (auction.start_time > now || auction.end_time < now) {
       throw new Error("Auction not active");
     }
@@ -165,7 +163,9 @@ export class UserBidDAO {
       throw new Error("Property available dates are not set");
     }
   
-    if (stay_start < availableStart || stay_end > availableEnd) {
+    console.log(availableStart);
+    console.log(availableEnd);
+    if (stay_end < availableStart || stay_start > availableEnd) {
       throw new Error("Stay dates must be within available period");
     }
     if (stay_start >= stay_end) {

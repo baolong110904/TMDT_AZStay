@@ -13,6 +13,7 @@ export default function BiddingBox({
   startPrice,
   currentPrice: initialPrice,
   currentPriceUserId,
+  currentPriceTime,
   availableDateStart,
   availableDateEnd,
   biddingStartTime,
@@ -23,6 +24,7 @@ export default function BiddingBox({
   startPrice: number;
   currentPrice: number;
   currentPriceUserId: string;
+  currentPriceTime: Date;
   availableDateStart: Date;
   availableDateEnd: Date;
   biddingStartTime: Date;
@@ -36,6 +38,10 @@ export default function BiddingBox({
   const [selectedDates, setSelectedDates] = useState<[Date | null, Date | null]>([null, null]);
   const [isHighestBidder, setIsHighestBidder] = useState(userId === currentPriceUserId);
   const [auctionEnded, setAuctionEnded] = useState(false);
+  const [sealedBidCountdown, setSealedBidCountdown] = useState("");
+  const [sealedBidEnded, setSealedBidEnded] = useState(false);
+
+  const sealedBidEndTime = new Date(currentPriceTime.getTime() + 3 * 60 * 60 * 1000); // +3h
 
   // 🔌 Socket
   useEffect(() => {
@@ -49,9 +55,13 @@ export default function BiddingBox({
       if (data.auctionId === auctionId) {
         setCurrentPrice(data.bid_amount);
         setBidAmount(data.bid_amount + 10000);
-
-        // Cập nhật highest bidder dựa vào bidder_id từ server
-        setIsHighestBidder(data.bidder_id === userId);
+    
+        // update highest bidder chính xác
+        if (data.bidder_id === userId) {
+          setIsHighestBidder(true);
+        } else {
+          setIsHighestBidder(false);
+        }
       }
     });
 
@@ -83,8 +93,27 @@ export default function BiddingBox({
     }
   };
 
-  console.log("userId: ", userId);
-  console.log("curr bid: ", currentPriceUserId);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const remaining = sealedBidEndTime.getTime() - now.getTime();
+  
+      if (remaining <= 0) {
+        clearInterval(interval);
+        setSealedBidCountdown("Sealed period ended");
+        setSealedBidEnded(true);
+        return;
+      }
+  
+      const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((remaining / (1000 * 60)) % 60);
+      const seconds = Math.floor((remaining / 1000) % 60);
+  
+      setSealedBidCountdown(`${hours}h ${minutes}m ${seconds}s`);
+    }, 1000);
+  
+    return () => clearInterval(interval);
+  }, [currentPriceTime]);
 
   useEffect(() => {
     setIsHighestBidder(userId === currentPriceUserId);
@@ -128,7 +157,7 @@ export default function BiddingBox({
     >
       <h2 className="text-xl font-semibold">Bidding Info</h2>
 
-      {auctionEnded ? (
+      {auctionEnded || sealedBidEnded ? (
         <div className="bg-red-600 text-white p-4 rounded-lg text-center font-bold text-lg">
           🚨 Auction Has Ended
         </div>
@@ -165,6 +194,12 @@ export default function BiddingBox({
               Current Price:{" "}
               <span className="font-semibold text-red-600">
                 {currentPrice.toLocaleString()} VND
+              </span>
+            </p>
+            <p>
+              Current Bid is Sealed in:{" "}
+              <span className="font-semibold text-purple-600">
+                {sealedBidCountdown}
               </span>
             </p>
           </div>
