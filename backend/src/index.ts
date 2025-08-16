@@ -20,10 +20,13 @@ const server = createServer(app);
 const io = initSocket(server);
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/", (req, res) => {
+  res.send("✅ Server is running!");
+});
 app.use("/user", userRoutes);
 app.use("/auction", auctionRoutes); 
 app.use("/properties", propertyRoutes); 
@@ -56,7 +59,3 @@ app.use((req, res, next) => {
   console.log('Body:', req.body);
   next();
 });
-
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-console.log(Object.keys(prisma));
