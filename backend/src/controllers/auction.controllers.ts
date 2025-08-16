@@ -50,7 +50,7 @@ export const placeBid = async (req: AuthRequest, res: Response) => {
     console.log("✅ [placeBid] Bid inserted successfully:", bid);
 
     // 2. Cập nhật auction.final_price bằng bid_amount mới
-    await AuctionDAO.updateAuction(auctionId, Number(bid_amount));
+    await AuctionDAO.updateAuction(auctionId, Number(bid_amount), bidder_id);
 
     // 3. Emit event cho room socket
     const io = getIO();

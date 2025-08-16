@@ -29,4 +29,5 @@ export interface RoomProps{
 
   minPrice: number;
   currentPrice: number;
+  currentPriceUserId: string;
 }

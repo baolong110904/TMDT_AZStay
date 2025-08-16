@@ -30,11 +30,12 @@ export class AuctionDAO {
     });
   }
 
-  static async updateAuction(auction_id: string, newFinalPrice: number) {
+  static async updateAuction(auction_id: string, newFinalPrice: number, newBidderId: string) {
     return prisma.auction.update({
       where: { auction_id },
       data: {
         final_price: newFinalPrice,
+        winner_id: newBidderId,
         updated_at: new Date(),
       },
     });
