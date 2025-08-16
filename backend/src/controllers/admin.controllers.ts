@@ -70,7 +70,7 @@ export const changeUserRole = async(req: Request, res: Response) => {
   } catch (error) {
     console.log("Error updating user role as admin:", error);
     return res.status(500).json({
-      message: "Internal server error, check log"
+      message: "Internal server error, check terminal log"
     })
   }
 
