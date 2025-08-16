@@ -73,5 +73,5 @@ export const changeUserRole = async(req: Request, res: Response) => {
       message: "Internal server error, check terminal log"
     })
   }
-
+  
 }
