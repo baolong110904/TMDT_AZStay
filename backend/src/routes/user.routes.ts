@@ -21,25 +21,21 @@ router.post('/send-otp', AuthenticationControllers.sendOtpToUser);
 // 4. verify otp and generate tokens
 router.post('/verify-otp', AuthenticationControllers.verifyOtpAndGenerateToken); 
 // 5. change password
-router.post('/change-password', authenticateJWT('password_reset'), authorizeRoles(Roles.ADMIN, Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), AuthenticationControllers.changePassword); 
+router.post('/change-password', 
+            authenticateJWT('password_reset'), 
+            authorizeRoles(Roles.ADMIN, Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
+            AuthenticationControllers.changePassword); 
 // 6. upload/update avatar
 router.post('/upload-avatar', 
             authenticateJWT('access'), 
             authorizeRoles(Roles.ADMIN, Roles.PROPERTY_OWNER, Roles.CUSTOMER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
             upload.single('avatar'), 
             ImagesControllers.uploadAvatarController); // user avatar upload
-// 7. create and upload images of property that they want to host
-router.post('/create-property', 
-            authenticateJWT('access'),
-            authorizeRoles(Roles.PROPERTY_OWNER, Roles.CUSTOMER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
-            upload.array('images'),
-            PropertyControllers.createProperty);
 
-// 8. get property by user_id
-router.post('/get-property-by-user-id',
-            authenticateJWT('access'),
-            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
-            PropertyControllers.getPropertyByUserId);
 
+// router.post('/update-property-images',
+//             authenticateJWT('access'),
+//             authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
+//             // PropertyControllers.);
 
 export default router;

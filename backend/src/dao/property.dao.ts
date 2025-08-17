@@ -47,7 +47,7 @@ export class PropertyDAO {
       },
     });
   }
-
+  // lấy property theo user id
   static async getPropertyByUserId(user_id: string) {
     const property_data = await prisma.property.findMany({
       where: {
@@ -60,7 +60,7 @@ export class PropertyDAO {
 
     return property_data;
   }
-
+  // lọc ra properties theo các filter
   static async getFilteredProperties(params: {
     city?: string;
     province?: string;

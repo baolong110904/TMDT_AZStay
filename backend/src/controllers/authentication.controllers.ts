@@ -26,6 +26,9 @@ const JWT_SECRET = ENV.JWT_SECRET;
 export const signUp = async (req: Request, res: Response) => {
   const { email, password, gender, phone, dob, name } = req.body;
   try {
+    if (!email || !password || !gender || !phone || !dob || !name) {
+      return res.status(400).json({message: "Missing one of those required fields: `email`, `password`, `gender`, `phone`. `dob`, `name`"});
+    }
     const existingEmail = await checkEmailExists(email);
     const parsedDob = new Date(dob);
 
@@ -124,6 +127,10 @@ export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   try {
+    if (!email || !password) {
+      return res.status(400).json({message: "Missing one of those required fields: `email`, `password`"});
+    }
+
     const user = await checkEmailExists(email);
     if (!user || !user.hashed_password) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -173,6 +180,10 @@ export const sendOtpToUser = async (req: Request, res: Response) => {
   const { email } = req.body;
 
   try {
+    if (!email) {
+      return res.status(400).json({message: "Missing required field: `email`"});
+    }
+    
     const user = await checkEmailExists(email);
     if (!user) {
       return res.status(404).json({ message: "Email not found" });
@@ -193,12 +204,12 @@ export const sendOtpToUser = async (req: Request, res: Response) => {
 };
 
 // verify otp and gen token (valid for 15 mins)
-export const verifyOtpAndGenerateToken = async (
-  req: Request,
-  res: Response
-) => {
+export const verifyOtpAndGenerateToken = async (req: Request, res: Response) => {
   const { email, otp } = req.body;
   try {
+    if (!email || !otp) {
+      return res.status(400).json({message: "Missing required one of those fields: `email`, `otp`"})
+    }
     const user = await getUserByEmail(email);
 
     if (!user) {
@@ -235,6 +246,10 @@ export const changePassword = async (req: Request, res: Response) => {
   const { newPassword } = req.body;
 
   try {
+    if (!newPassword) {
+      return res.status(400).json({message: "Misisng required field: `newPassword`"});
+    }
+    
     const user = await getUserByEmail(email);
     
     if (!user) {

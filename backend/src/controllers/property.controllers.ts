@@ -92,17 +92,40 @@ export const createProperty = async (req: Request, res: Response) => {
     min_price,
   } = req.body;
 
-  const files = req.files as Express.Multer.File[];
+  const files = (req.files as Express.Multer.File[]) || [];
   const filePaths = files.map((file) => file.path);
 
   try {
-    // if no images (at least 5 images) provided, not allow
+    // 0. Validate required fields
+    if (
+      !user_id ||
+      !category_id ||
+      !title ||
+      !description ||
+      !address ||
+      !province ||
+      !country ||
+      !max_guest ||
+      !min_price
+    ) {
+      // cleanup uploaded files if have
+      for (const file of filePaths) {
+        fs.unlink(file, (err) => {
+          if (err) console.error(`Failed to delete temp file ${file}:`, err);
+        });
+      }
+
+      return res.status(400).json({
+        message:
+          "Missing required one of those required fields: user_id, category_id, title, description, address, province, country, max_guest, min_price are mandatory",
+      });
+    }
+
+    // 1. Validate images (at least 5)
     if (files.length < 5) {
       for (const file of filePaths) {
         fs.unlink(file, (err) => {
-          if (err) {
-            console.error(`Failed to delete temp file ${file}:`, err);
-          }
+          if (err) console.error(`Failed to delete temp file ${file}:`, err);
         });
       }
       return res.status(400).json({
@@ -110,14 +133,18 @@ export const createProperty = async (req: Request, res: Response) => {
       });
     }
 
+    // 2. Check user existence
     const user_data = await getUserById(user_id);
     if (!user_data) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // 3. Auto-upgrade role if needed
     if (user_data.role_id === 2 || user_data.role_id === 3) {
-      AdminDAO.updateUserRole(user_id, 4);
+      await AdminDAO.updateUserRole(user_id, 4);
     }
-    // 1. create property
+
+    // 4. Create property
     const createdProperty = await PropertyDAO.createProperty({
       owner_id: user_id,
       category_id: Number(category_id),
@@ -132,12 +159,12 @@ export const createProperty = async (req: Request, res: Response) => {
       is_available: true,
     });
 
-    // 2. upload and save images
+    // 5. Upload and save images
     await uploadPropertyImages(createdProperty.property_id, filePaths);
 
     res.status(201).json({
       message: "Property created successfully",
-      createProperty,
+      property: createdProperty,
     });
   } catch (error) {
     console.error("Error creating property:", error);
@@ -153,7 +180,7 @@ export const createProperty = async (req: Request, res: Response) => {
     }
   }
 };
-
+// Lấy ra thông tin property + ảnh của property đó dựa trên user id
 export const getPropertyByUserId = async (req: Request, res: Response) => {
   const { user_id } = req.body;
   try {

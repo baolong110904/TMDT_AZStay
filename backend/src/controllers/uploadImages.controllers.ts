@@ -8,6 +8,10 @@ export const uploadAvatarController = async (req: Request, res: Response) => {
   const file = req.file as Express.Multer.File;
   
   try {
+    if (!user_id || !file) {
+      return res.status(400).json({message: "Missing required field: `user_id`"});
+    }
+
     const check = await getUserById(user_id);
     if (!check) {
       return res.status(404).json({ message: "User not found" });

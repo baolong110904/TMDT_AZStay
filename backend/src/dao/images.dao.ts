@@ -75,3 +75,8 @@ export const uploadPropertyImages = async (
 
   return savedImages;
 };
+
+// export const updatePropertyImages = async(
+//   property_id: string,
+  
+// )
