@@ -105,9 +105,14 @@ export default function Header() {
         </div>
         <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         <div className="hidden md:flex items-center gap-4">
-          <button className="text-sm text-gray-600 hover:text-blue-700 transition">
-            Become a host
-          </button>
+          {user?.role_id === 2 && (
+            <button
+              className="text-sm hidden md:inline text-gray-600 transition px-4 py-2 rounded-full hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:shadow-lg focus:outline-none cursor-pointer"
+              onClick={() => router.push("/community-commitment")}
+            >
+              Become a host
+            </button>
+          )}
           {/* Avatar only if logged in */}
           {user &&
             <div

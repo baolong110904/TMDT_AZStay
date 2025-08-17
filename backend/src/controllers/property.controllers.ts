@@ -69,15 +69,13 @@ export const deleteProperty = async (req: Request, res: Response) => {
   const { propertyId } = req.params;
   try {
     await PropertyDAO.deleteProperty(propertyId);
-    res.status(204).send();
+    return res.status(204).send();
   } catch (err) {
     const error = err as Error;
-    res
-      .status(400)
-      .json({ message: "Failed to delete property", error: error.message });
+    return res.status(400).json({ message: "Failed to delete property", error: error.message });
   }
 };
-// Tạo property, nếu ai là 2 (khách) hoặc 3 (chủ nhà - do data cũ) thì auto thành 4 (vừa là chủ nhà và khách) khi tạo property
+
 export const createProperty = async (req: Request, res: Response) => {
   const {
     user_id,
@@ -90,13 +88,40 @@ export const createProperty = async (req: Request, res: Response) => {
     country,
     max_guest,
     min_price,
+    draft,
   } = req.body;
 
   const files = (req.files as Express.Multer.File[]) || [];
   const filePaths = files.map((file) => file.path);
 
   try {
-    // 0. Validate required fields
+    // If client requests a draft creation, allow creating a minimal record
+    // without requiring images or all mandatory fields. Frontend will
+    // update the remaining fields in subsequent steps.
+    const isDraft = draft === true || draft === "true";
+    if (isDraft) {
+      const prisma = require("../prisma/client.prisma").default;
+
+      const createdProperty = await prisma.property.create({
+        data: {
+          owner_id: user_id,
+          category_id: Number(category_id) || null,
+          title: title || "Untitled listing",
+          description: description || "",
+          address: address || "",
+          ward: ward || null,
+          province: province || null,
+          country: country || "Viet Nam",
+          max_guest: Number(max_guest) || 1,
+          min_price: Number(min_price) || 0,
+          is_available: false,
+        },
+      });
+
+      return res.status(201).json({ message: "Draft property created", property: createdProperty });
+    }
+
+    // 0. Validate required fields for full create
     if (
       !user_id ||
       !category_id ||
@@ -110,9 +135,9 @@ export const createProperty = async (req: Request, res: Response) => {
     ) {
       // cleanup uploaded files if have
       for (const file of filePaths) {
-        fs.unlink(file, (err) => {
-          if (err) console.error(`Failed to delete temp file ${file}:`, err);
-        });
+        try {
+          fs.unlinkSync(file);
+        } catch (e) {}
       }
 
       return res.status(400).json({
@@ -124,9 +149,9 @@ export const createProperty = async (req: Request, res: Response) => {
     // 1. Validate images (at least 5)
     if (files.length < 5) {
       for (const file of filePaths) {
-        fs.unlink(file, (err) => {
-          if (err) console.error(`Failed to delete temp file ${file}:`, err);
-        });
+        try {
+          fs.unlinkSync(file);
+        } catch (e) {}
       }
       return res.status(400).json({
         message: "At least 5 images are required to create a property",
@@ -174,12 +199,12 @@ export const createProperty = async (req: Request, res: Response) => {
     });
   } finally {
     for (const file of filePaths) {
-      fs.unlink(file, (err) => {
-        if (err) console.error(`Failed to delete temp file ${file}:`, err);
-      });
+      try {
+        fs.unlinkSync(file);
+      } catch (e) {}
     }
   }
-};
+}
 // Lấy ra thông tin property + ảnh của property đó dựa trên user id
 export const getPropertyByUserId = async (req: Request, res: Response) => {
   const { user_id } = req.body;

@@ -98,13 +98,14 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
 
   const handleSearch = () => {
     const location = searchInput.trim() === "" ? "Nearby" : searchInput;
+    // Encode city for URL, keep spaces as %20
+    const citySlug = encodeURIComponent(location.trim());
     const query = new URLSearchParams({
-      location,
-      startDate: dateRange.startDate.toISOString(),
-      endDate: dateRange.endDate.toISOString(),
+      checkin: dateRange.startDate.toISOString(),
+      checkout: dateRange.endDate.toISOString(),
       guests: totalGuests.toString(),
     }).toString();
-    router.push(`/search?${query}`);
+    router.push(`/search/${citySlug}?${query}`);
   };
 
   return (

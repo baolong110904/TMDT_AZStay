@@ -41,8 +41,6 @@ export default function BiddingBox({
   const [sealedBidCountdown, setSealedBidCountdown] = useState("");
   const [sealedBidEnded, setSealedBidEnded] = useState(false);
 
-  const sealedBidEndTime = new Date(currentPriceTime.getTime() + 3 * 60 * 60 * 1000); // +3h
-
   // 🔌 Socket
   useEffect(() => {
     socket = io(process.env.NEXT_PUBLIC_API_URL as string, {
@@ -94,24 +92,25 @@ export default function BiddingBox({
   };
 
   useEffect(() => {
+    const sealedBidEndTime = new Date(currentPriceTime.getTime() + 3 * 60 * 60 * 1000); // +3h
     const interval = setInterval(() => {
       const now = new Date();
       const remaining = sealedBidEndTime.getTime() - now.getTime();
-  
+
       if (remaining <= 0) {
         clearInterval(interval);
         setSealedBidCountdown("Sealed period ended");
         setSealedBidEnded(true);
         return;
       }
-  
+
       const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((remaining / (1000 * 60)) % 60);
       const seconds = Math.floor((remaining / 1000) % 60);
-  
+
       setSealedBidCountdown(`${hours}h ${minutes}m ${seconds}s`);
     }, 1000);
-  
+
     return () => clearInterval(interval);
   }, [currentPriceTime]);
 

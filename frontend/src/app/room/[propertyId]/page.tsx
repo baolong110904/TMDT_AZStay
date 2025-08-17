@@ -78,7 +78,7 @@ export default function Room() {
       }
     };
 
-    console.log("abc: ", property?.currentPriceUserId);
+  // debug log removed to avoid unnecessary rerenders
 
     const fetchReviews = async () => {
       try {

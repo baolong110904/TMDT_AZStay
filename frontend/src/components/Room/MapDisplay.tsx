@@ -6,9 +6,10 @@ interface MapDisplayProps {
   latitude: number;
   longitude: number;
   address?: string;
+  hideHeader?: boolean;
 }
 
-export default function MapDisplay({ latitude, longitude, address }: MapDisplayProps) {
+export default function MapDisplay({ latitude, longitude, address, hideHeader }: MapDisplayProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
 
@@ -61,8 +62,12 @@ export default function MapDisplay({ latitude, longitude, address }: MapDisplayP
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-2">Where you’ll be</h2>
-      <p className="mb-4">{address}</p>
+      {!hideHeader && (
+        <>
+          <h2 className="text-2xl font-bold mb-2">Where you’ll be</h2>
+          <p className="mb-4">{address}</p>
+        </>
+      )}
       <div ref={mapRef} style={{ width: "100%", height: "400px", borderRadius: "16px", position: "relative", zIndex: 0 }} />
     </div>
   );

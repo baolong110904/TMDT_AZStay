@@ -1,5 +1,6 @@
 import express from "express";
 import * as PropertyController from "../controllers/property.controllers";
+import * as UploadPropertyImagesController from "../controllers/uploadPropertyImages.controllers";
 import { authorizeRoles, Roles, verifyToken } from "../middlewares/auth.middlewares";
 import {upload} from "../middlewares/upload.middlewares";
 const router = express.Router();
@@ -14,6 +15,12 @@ router.post('/create-property',
             authorizeRoles(Roles.PROPERTY_OWNER, Roles.CUSTOMER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
             upload.array('images'),
             PropertyController.createProperty);
+// upload images for an existing property
+router.post('/upload-images',
+            verifyToken,
+            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
+            upload.array('images'),
+            UploadPropertyImagesController.uploadPropertyImagesController);
 // get property by user_id
 router.post('/get-property-by-user-id',
             verifyToken,

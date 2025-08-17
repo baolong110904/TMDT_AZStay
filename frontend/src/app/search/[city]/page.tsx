@@ -11,7 +11,7 @@ import { Listing } from "@/components/Props/MainPageListingProps";
 export default function SearchPage() {
   const params = useParams();
   const rawCity = (params?.city as string) || "";
-  const city = decodeURIComponent(rawCity).replace(/-/g, " ");
+  const city = decodeURIComponent(rawCity);
 
   const searchParams = useSearchParams();
   const checkin = searchParams?.get("checkin") || "";

@@ -131,7 +131,10 @@ export default function Header({ placeholder }: HeaderProps) {
         {/* Right section (both desktop and mobile): Shared dropdown trigger */}
         <div className="flex items-center gap-3 relative">
           {user?.role_id === 2 && (
-            <button className="text-sm hidden md:inline text-gray-600 hover:text-blue-700 transition">
+            <button
+              className="text-sm hidden md:inline text-gray-600 transition px-4 py-2 rounded-full hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:shadow-lg focus:outline-none cursor-pointer"
+              onClick={() => router.push("/community-commitment")}
+            >
               Become a host
             </button>
           )}
