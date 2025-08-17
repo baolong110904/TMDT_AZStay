@@ -35,4 +35,11 @@ router.post('/create-property',
             upload.array('images'),
             PropertyControllers.createProperty);
 
+// 8. get property by user_id
+router.post('/get-property-by-user-id',
+            authenticateJWT('access'),
+            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
+            PropertyControllers.getPropertyByUserId);
+
+
 export default router;

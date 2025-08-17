@@ -4,6 +4,7 @@ import { PropertyDAO } from "../dao/property.dao";
 import { uploadPropertyImages } from "../dao/images.dao";
 import { getUserById } from "../dao/user.dao";
 import { AdminDAO } from "../dao/admin.dao";
+import { RawQueryArgs } from "@prisma/client/runtime/library";
 
 // Lấy tất cả property
 export const getAllProperties = async (req: Request, res: Response) => {
@@ -95,9 +96,23 @@ export const createProperty = async (req: Request, res: Response) => {
   const filePaths = files.map((file) => file.path);
 
   try {
+    // if no images (at least 5 images) provided, not allow
+    if (files.length < 5) {
+      for (const file of filePaths) {
+        fs.unlink(file, (err) => {
+          if (err) {
+            console.error(`Failed to delete temp file ${file}:`, err);
+          }
+        });
+      }
+      return res.status(400).json({
+        message: "At least 5 images are required to create a property",
+      });
+    }
+
     const user_data = await getUserById(user_id);
     if (!user_data) {
-      return res.status(404).json({message: "User not found"});
+      return res.status(404).json({ message: "User not found" });
     }
     if (user_data.role_id === 2 || user_data.role_id === 3) {
       AdminDAO.updateUserRole(user_id, 4);
@@ -136,5 +151,41 @@ export const createProperty = async (req: Request, res: Response) => {
         if (err) console.error(`Failed to delete temp file ${file}:`, err);
       });
     }
+  }
+};
+
+export const getPropertyByUserId = async (req: Request, res: Response) => {
+  const { user_id } = req.body;
+  try {
+    if (!user_id) {
+      return res
+        .status(400)
+        .json({ message: "User_id is missing in the input of the body" });
+    }
+
+    const user = await getUserById(user_id);
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "User_id is missing in the input of the body" });
+    }
+    const data = await PropertyDAO.getPropertyByUserId(user.user_id);
+
+    if (!data) {
+      return res
+        .status(400)
+        .json({ message: "This user does not have any property" });
+    }
+
+    return res.status(200).json({
+      message: "Finding property based on user_id successfully",
+      data: data,
+    });
+  } catch (error) {
+    console.error("Error finding property by user_id", error);
+    res.status(500).json({
+      message: "Failed to find property by using user_id",
+      error: String(error),
+    });
   }
 };

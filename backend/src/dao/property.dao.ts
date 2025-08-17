@@ -2,24 +2,21 @@ import { v2 as cloudinary } from "cloudinary";
 import prisma from "../prisma/client.prisma";
 import { geocodeAddress } from "../services/geocoding.service";
 
-
 export class PropertyDAO {
   // Tạo property mới (có geocoding + max_guest)
-  static async createProperty(
-    data: {
-      owner_id: string;
-      category_id: number;
-      title: string;
-      description?: string;
-      address: string;
-      ward?: string;
-      province?: string;
-      country?: string;
-      max_guest: number;
-      min_price?: number;
-      is_available?: boolean;
-    }
-  ) {
+  static async createProperty(data: {
+    owner_id: string;
+    category_id: number;
+    title: string;
+    description?: string;
+    address: string;
+    ward?: string;
+    province?: string;
+    country?: string;
+    max_guest: number;
+    min_price?: number;
+    is_available?: boolean;
+  }) {
     // Geocode để lấy tọa độ
     const { lat, lng } = await geocodeAddress(data.address);
 
@@ -42,13 +39,26 @@ export class PropertyDAO {
         user: true, // owner
         propertyimage: true,
         auction: {
-          orderBy: { start_time: 'desc' },
-          take: 1
+          orderBy: { start_time: "desc" },
+          take: 1,
         },
         booking: true,
         userfavorite: true,
       },
     });
+  }
+
+  static async getPropertyByUserId(user_id: string) {
+    const property_data = await prisma.property.findMany({
+      where: {
+        owner_id: user_id,
+      },
+      include: {
+        propertyimage: true,
+      },
+    });
+
+    return property_data;
   }
 
   static async getFilteredProperties(params: {
@@ -104,8 +114,8 @@ export class PropertyDAO {
           user: true, // owner
           propertyimage: true,
           auction: {
-            orderBy: { start_time: 'desc' },
-            take: 1
+            orderBy: { start_time: "desc" },
+            take: 1,
           },
           booking: true,
           userfavorite: true,

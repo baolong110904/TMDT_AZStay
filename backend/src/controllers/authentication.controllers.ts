@@ -71,7 +71,7 @@ export const signUp = async (req: Request, res: Response) => {
       gender,
       phone,
       parsedDob,
-      4 // role = 4
+      2 // role = 2 (default la customer)
     );
 
     await sendEmail(
