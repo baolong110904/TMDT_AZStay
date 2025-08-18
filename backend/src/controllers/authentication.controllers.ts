@@ -92,6 +92,7 @@ export const signUp = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role_id,
       name: user.name,
+      is_banned: user.is_banned,
       type: "access",
     };
 
@@ -146,6 +147,7 @@ export const login = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role_id,
       name: user.name,
+      is_banned: user.is_banned,
       type: "access",
     };
 

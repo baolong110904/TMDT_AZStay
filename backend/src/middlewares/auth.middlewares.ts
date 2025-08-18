@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { ENV } from "../config/environtment.config";
+import { error } from "console";
 interface AuthRequest extends Request {
   user?: any;
 }
@@ -16,13 +17,16 @@ export const authenticateJWT = (expectedType: string) => {
 
     try {
       const decoded = jwt.verify(token, ENV.JWT_SECRET) as JwtPayload;
+      req.user = decoded;
+      if (req.user.is_banned) {
+        return res.status(401).json({ message: "You are banned from our services" });
+      }
       if (decoded.type !== expectedType) {
         return res
           .status(403)
           .json({ error: `Expected token type '${expectedType}'` });
       }
 
-      req.user = decoded;
       next();
     } catch (err) {
       return res.status(403).json({ error: "Invalid or expired token" });
