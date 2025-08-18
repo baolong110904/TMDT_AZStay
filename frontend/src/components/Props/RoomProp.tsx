@@ -31,4 +31,5 @@ export interface RoomProps{
   currentPrice: number;
   currentPriceUserId: string;
   currentPriceTime: string;
+  biddingStatus: string;
 }

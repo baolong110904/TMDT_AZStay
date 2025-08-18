@@ -20,6 +20,7 @@ export default function BiddingBox({
   biddingEndTime,
   auctionId,
   userId,
+  biddingStatus,
 }: {
   startPrice: number;
   currentPrice: number;
@@ -31,6 +32,7 @@ export default function BiddingBox({
   biddingEndTime: Date;
   auctionId: string;
   userId: string;
+  biddingStatus: string;
 }) {
   const [currentPrice, setCurrentPrice] = useState(initialPrice);
   const [bidAmount, setBidAmount] = useState(initialPrice + 10000);
@@ -41,7 +43,8 @@ export default function BiddingBox({
   const [sealedBidCountdown, setSealedBidCountdown] = useState("");
   const [sealedBidEnded, setSealedBidEnded] = useState(false);
 
-  console.log({currentPriceUserId, userId});
+  console.log({currentPriceUserId, userId, currentPriceTime, biddingStartTime, biddingEndTime});
+  
 
   // 🔌 Socket
   useEffect(() => {
@@ -158,7 +161,7 @@ export default function BiddingBox({
     >
       <h2 className="text-xl font-semibold">Bidding Info</h2>
 
-      {auctionEnded || sealedBidEnded ? (
+      {auctionEnded || sealedBidEnded || (biddingStatus !== 'active') ? (
         <div className="bg-red-600 text-white p-4 rounded-lg text-center font-bold text-lg">
           🚨 Auction Has Ended
         </div>
@@ -222,6 +225,10 @@ export default function BiddingBox({
             {isHighestBidder ? (
               <div className="bg-green-500 text-white w-full p-2 rounded text-center font-semibold">
                 ✅ Currently Highest Bidder
+              </div>
+            ) : new Date() < biddingStartTime ? (
+              <div className="bg-yellow-400 text-white w-full p-2 rounded text-center font-semibold">
+                ⏳ Auction has not started yet
               </div>
             ) : (
               <>

@@ -185,4 +185,17 @@ export class UserBidDAO {
   
     return savedBid;
   }  
+  static async getBidById(bid_id: string) {
+    return prisma.userbid.findUnique({
+      where: { bid_id },
+      include: {
+        user: true, // thông tin người bid
+        auction: {
+          include: {
+            property: true, // thông tin property liên quan
+          },
+        },
+      },
+    });
+  }
 }

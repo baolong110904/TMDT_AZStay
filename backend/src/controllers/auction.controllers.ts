@@ -103,3 +103,21 @@ export const endAuction = async (auctionId: string) => {
     },
   });
 };
+
+export const getMyWinningAuctions = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user.sub; // user hiện tại
+    console.log("[getMyWinningAuctions] userId =", userId);
+
+    const auctions = await AuctionDAO.getAuctionsByWinner(userId);
+    console.log("[getMyWinningAuctions] auctions found =", auctions.length);
+
+    res.status(200).json(auctions);
+  } catch (err) {
+    console.error("[getMyWinningAuctions] ERROR:", err);
+    res.status(500).json({
+      message: "Failed to get winning auctions",
+      error: (err as Error).message,
+    });
+  }
+};

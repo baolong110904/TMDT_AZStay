@@ -22,7 +22,13 @@ export default function Room() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [coordsLoading, setCoordsLoading] = useState(false);
   const [userId, setUserId] = useState<string>(""); 
-
+  
+  const fromVietnamTime = (dateStr: string | null | undefined): Date | null => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    // vì JS coi dateStr là UTC, nên bị +7h → ta phải -7h lại
+    return new Date(d.getTime() - 7 * 60 * 60 * 1000);
+  };
   // Reviews
   const [reviewsData, setReviewsData] = useState<any>(null);
 
@@ -53,7 +59,7 @@ export default function Room() {
     const fetchProperty = async () => {
       try {
         const res = await api.get(`/properties/${propertyId}`);
-        console.log(res.data);
+    
         const mappedProperty: RoomProps = {
           ...res.data,
           imgUrl: res.data.propertyimage?.map((img: any) => img.image_url) || [],
@@ -61,17 +67,20 @@ export default function Room() {
           longitude: Number(res.data.longitude) || undefined,
           ownerName: res.data.user?.name || "Unknown host",
           ownerImgUrl: res.data.user?.avatar_url || "/placeholder.jpg",
-          availableDate: res.data.checkin_date && res.data.checkout_date
-            ? [res.data.checkin_date, res.data.checkout_date]
-            : ["2025-08-12", "2025-08-15"],
+          availableDate:
+            res.data.checkin_date && res.data.checkout_date
+              ? [res.data.checkin_date, res.data.checkout_date]
+              : ["2025-08-12", "2025-08-15"],
           minPrice: Number(res.data.min_price ?? 0),
           currentPrice: Number(res.data.auction?.[0]?.final_price ?? res.data.min_price ?? 0),
           currentPriceUserId: res.data.auction?.[0]?.winner_id,
-          currentPriceTime: res.data.auction?.[0]?.updated_at,
+          currentPriceTime: fromVietnamTime(res.data.auction?.[0]?.updated_at),
           auctionId: res.data.auction?.[0]?.auction_id,
-          biddingStartTime: res.data.auction?.[0]?.start_time ? new Date(res.data.auction[0].start_time) : new Date(),
-          biddingEndTime: res.data.auction?.[0]?.end_time ? new Date(res.data.auction[0].end_time) : new Date(),
+          biddingStartTime: fromVietnamTime(res.data.auction?.[0]?.start_time) ?? new Date(),
+          biddingEndTime: fromVietnamTime(res.data.auction?.[0]?.end_time) ?? new Date(),
+          biddingStatus: res.data.auction?.[0]?.status,
         };
+    
         setProperty(mappedProperty);
       } catch (err) {
         console.error("❌ Failed to fetch property:", err);
@@ -80,33 +89,39 @@ export default function Room() {
 
   // debug log removed to avoid unnecessary rerenders
 
-    const fetchReviews = async () => {
-      try {
-        const res = await api.get(`/reviews/${propertyId}`);
-        setReviewsData({
-          overallRating: res.data.rating,
-          totalReviews: res.data.count,
-          reviews: res.data.details.map((d: any) => ({
+  const fetchReviews = async () => {
+    try {
+      const res = await api.get(`/reviews/${propertyId}`);
+      setReviewsData({
+        overallRating: res.data.rating,
+        totalReviews: res.data.count,
+        reviews: res.data.details.map((d: any) => {
+          const utcDate = fromVietnamTime(d.created_at); // chuyển về đúng UTC trước
+          return {
             id: d.id,
             userName: d.user?.name ?? "Guest",
             avatar: d.user?.avatar_url ?? "/placeholder-avatar.jpg",
             rating: d.overall_rating,
-            date: new Date(d.created_at).toLocaleString("en-US", { month: "long", year: "numeric" }),
+            date: utcDate
+              ? utcDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+              : "Unknown date",
             comment: d.comment,
-          })),
-          ratings: {
-            cleanliness: res.data.cleanliness_avg,
-            accuracy: res.data.accuracy_avg,
-            checkin: res.data.checkin_avg,
-            communication: res.data.communication_avg,
-            location: res.data.location_avg,
-            value: res.data.value_avg,
-          },
-        });
-      } catch (err) {
-        console.error("❌ Failed to fetch reviews:", err);
-      }
-    };
+          };
+        }),
+        ratings: {
+          cleanliness: res.data.cleanliness_avg,
+          accuracy: res.data.accuracy_avg,
+          checkin: res.data.checkin_avg,
+          communication: res.data.communication_avg,
+          location: res.data.location_avg,
+          value: res.data.value_avg,
+        },
+      });
+    } catch (err) {
+      console.error("❌ Failed to fetch reviews:", err);
+    }
+  };
+  
 
     Promise.all([fetchProperty(), fetchReviews()]).finally(() => {
       setLoading(false);
@@ -187,6 +202,7 @@ export default function Room() {
               biddingEndTime={new Date(property.biddingEndTime)}
               auctionId={property.auctionId}
               userId={userId}
+              biddingStatus={property.biddingStatus}
             />
           )}
         </div>

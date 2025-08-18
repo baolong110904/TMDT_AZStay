@@ -40,4 +40,42 @@ export class AuctionDAO {
       },
     });
   }
+
+  static async getAuctionsByWinner(userId: string) {
+    try {
+      console.log("[getAuctionsByWinner] userId =", userId);
+  
+      const auctions = await prisma.auction.findMany({
+        where: { winner_id: userId },
+        include: {
+          property: true,
+          user: true,
+          userbid: {
+            where: { bidder_id: userId },
+          },
+        },
+        orderBy: { end_time: "desc" },
+      });
+  
+      console.log("[getAuctionsByWinner] raw auctions count =", auctions.length);
+  
+      // lọc lại để chỉ giữ bid thắng
+      const result = auctions.map((a) => {
+        const filteredBids = a.userbid.filter(
+          (b) => b.bid_amount?.toString() === a.final_price?.toString()
+        );
+  
+        console.log(
+          `[getAuctionsByWinner] auctionId=${a.auction_id}, final_price=${a.final_price}, filteredBids=${filteredBids.length}`
+        );
+  
+        return { ...a, userbid: filteredBids };
+      });
+  
+      return result;
+    } catch (err) {
+      console.error("[getAuctionsByWinner] ERROR:", err);
+      throw err;
+    }
+  }
 }

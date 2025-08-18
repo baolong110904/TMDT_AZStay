@@ -5,6 +5,7 @@ import { createServer } from "http";
 import userRoutes from "./routes/user.routes";
 import auctionRoutes from "./routes/auction.routes";
 import propertyRoutes from "./routes/property.routes";
+import bidRoutes from "./routes/userbid.routes";
 import reviewRoutes from "./routes/review.routes";
 // import uploadImageRoutes from "./routes/uploadImages.routes";
 import adminRoutes from "./routes/admin.routes";
@@ -30,6 +31,7 @@ app.get("/", (req, res) => {
 app.use("/user", userRoutes);
 app.use("/auction", auctionRoutes); 
 app.use("/properties", propertyRoutes); 
+app.use("/bids", bidRoutes); 
 // app.use("/upload", uploadImageRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/admin", adminRoutes);

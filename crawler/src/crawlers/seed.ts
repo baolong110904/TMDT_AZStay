@@ -36,7 +36,7 @@ export async function seed(city: string) {
       data: {
         title: item.title,
         description: item.description,
-        price: item.price,
+        price: item.price / 10,
         currency: item.currency,
         link: item.link,
         address: city,

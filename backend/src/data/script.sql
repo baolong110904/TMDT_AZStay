@@ -1,289 +1,277 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-	
--- 1. Role
-CREATE TABLE role (
-    role_id SERIAL PRIMARY KEY,
-    role_name VARCHAR(50) NOT NULL UNIQUE,
-    description TEXT
-);
-
--- 2. User
-CREATE TABLE "user" (
-    user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    role_id INT REFERENCES role(role_id),
-    name VARCHAR(100) NOT NULL,
-    gender VARCHAR(10),
-    dob DATE,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    phone VARCHAR(20),
-    hashed_password TEXT,
-    is_banned BOOLEAN DEFAULT FALSE,
-    avatar_url TEXT,
-    oauth_provider VARCHAR(50),
-    oauth_id VARCHAR(100),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- 3. UserImage
-CREATE TABLE userimage (
-    image_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES "user"(user_id),
-    image_url TEXT NOT NULL,
-    uploaded_at TIMESTAMP DEFAULT NOW()
-);
-
--- 4. Category
-CREATE TABLE category (
-    category_id SERIAL PRIMARY KEY,
-    sub_category_id INT REFERENCES category(category_id),
-    category_name VARCHAR(100) NOT NULL,
-    image_url TEXT
-);
-
--- 5. Property
-CREATE TABLE property (
-    property_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    owner_id UUID REFERENCES "user"(user_id),
-    category_id INT REFERENCES category(category_id),
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    address TEXT,
-    ward VARCHAR(100),
-    province VARCHAR(100),
-    country VARCHAR(100),
-    longitude DECIMAL(9,6),
-    latitude DECIMAL(9,6),
-    min_price DECIMAL(12,2),
-    max_guest SMALLINT,
-    checkin_date DATE,
-    checkout_date DATE, 
-    is_available BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- 6. PropertyImage
-CREATE TABLE propertyimage (
-    image_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    property_id UUID REFERENCES property(property_id),
-    image_url TEXT NOT NULL,
-    is_cover BOOLEAN DEFAULT FALSE,
-    uploaded_at TIMESTAMP DEFAULT NOW()
-);
-
--- 7. ExternalService
-CREATE TABLE externalservice (
-    external_service_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    property_id UUID REFERENCES property(property_id),
-    external_service_name VARCHAR(100) NOT NULL,
-    price DECIMAL(12,2),
-    uploaded_at TIMESTAMP DEFAULT NOW()
-);
-
--- 8. UserFavorite
-CREATE TABLE userfavorite (
-    user_id UUID REFERENCES "user"(user_id),
-    property_id UUID REFERENCES property(property_id),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
-    PRIMARY KEY (user_id, property_id)
-);
-
--- 9. Auction
-CREATE TABLE auction (
-    auction_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    property_id UUID REFERENCES property(property_id),
-    winner_id UUID REFERENCES "user"(user_id),
-    status VARCHAR(50),
-    start_time TIMESTAMP,
-    end_time TIMESTAMP,
-    final_price DECIMAL(12,2),
-    created_at TIMESTAMP DEFAULT NOW()
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- 10. UserBid
-CREATE TABLE userbid (
-    bid_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    auction_id UUID REFERENCES auction(auction_id),
-    bidder_id UUID REFERENCES "user"(user_id),
-    stay_start TIMESTAMP,
-    stay_end TIMESTAMP,
-    bid_time TIMESTAMP,
-    bid_amount DECIMAL(12,2),
-    status VARCHAR(50)
-);
-
--- 11. Method
-CREATE TABLE method (
-    method_id SERIAL PRIMARY KEY,
-    method_name VARCHAR(100),
-    transaction_to VARCHAR(100),
-    bank_code VARCHAR(50),
-    order_info TEXT,
-    response_code VARCHAR(20),
-    secure_hash TEXT,
-    pay_date TIMESTAMP,
-    card_type VARCHAR(50)
-);
-
--- 12. Payment
-CREATE TABLE payment (
-    payment_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES "user"(user_id),
-    booking_id UUID,
-    method_id INT REFERENCES method(method_id),
-    amount DECIMAL(12,2),
-    status VARCHAR(50),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- 13. Booking
-CREATE TABLE booking (
-    booking_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    property_id UUID REFERENCES property(property_id),
-    renter_id UUID REFERENCES "user"(user_id),
-    payment_id UUID REFERENCES payment(payment_id),
-    start_date DATE,
-    end_date DATE,
-    total_price DECIMAL(12,2),
-    status VARCHAR(50),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- 14. Tax
-CREATE TABLE tax (
-    tax_id SERIAL PRIMARY KEY,
-    tax_name VARCHAR(100) NOT NULL,
-    percentage DECIMAL(5,2),
-    created_at TIMESTAMP DEFAULT NOW(),
-    uploaded_at TIMESTAMP DEFAULT NOW()
-);
-
--- 15. forgot password otp
-create table otp_verifications (
-	otp_id UUID primary key default uuid_generate_v4(),
-	user_id UUID references "user"(user_id) on delete cascade,
-	token text not null,
-	expires_at timestamp not null
-);
-
--- 16. recommender system
-CREATE TABLE user_click (
-    click_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES "user"(user_id),
-    property_id UUID REFERENCES property(property_id),
-    event_type VARCHAR(50), --'click', 'view_detail', 'favorite', 'book', 'search', 'scroll'
-    event_value TEXT,        -- eg: search keyword, scroll %, ...
-    user_agent TEXT,
-    ip_address TEXT,
-    location TEXT,
-    clicked_at TIMESTAMP DEFAULT NOW()
-);
-
--- 17. Review
-CREATE TABLE review (
-    review_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    property_id UUID UNIQUE REFERENCES property(property_id) ON DELETE CASCADE,
-    rating DECIMAL(3,2) CHECK (rating >= 0 AND rating <= 5), -- trung bình overall_rating
-    count INT CHECK (count >= 0),
-
-    cleanliness_avg DECIMAL(3,2) CHECK (cleanliness_avg >= 0 AND cleanliness_avg <= 5),
-    accuracy_avg DECIMAL(3,2) CHECK (accuracy_avg >= 0 AND accuracy_avg <= 5),
-    checkin_avg DECIMAL(3,2) CHECK (checkin_avg >= 0 AND checkin_avg <= 5),
-    communication_avg DECIMAL(3,2) CHECK (communication_avg >= 0 AND communication_avg <= 5),
-    location_avg DECIMAL(3,2) CHECK (location_avg >= 0 AND location_avg <= 5),
-    value_avg DECIMAL(3,2) CHECK (value_avg >= 0 AND value_avg <= 5),
-
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- 18. Review Details
-CREATE TABLE review_details (
-    review_detail_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    review_id UUID REFERENCES review(review_id) ON DELETE CASCADE,
-    user_id UUID REFERENCES "user"(user_id) ON DELETE SET NULL,
-    cleanliness DECIMAL(2,1) CHECK (cleanliness >= 0 AND cleanliness <= 5),
-    accuracy DECIMAL(2,1) CHECK (accuracy >= 0 AND accuracy <= 5),
-    checkin DECIMAL(2,1) CHECK (checkin >= 0 AND checkin <= 5),
-    communication DECIMAL(2,1) CHECK (communication >= 0 AND communication <= 5),
-    location DECIMAL(2,1) CHECK (location >= 0 AND location <= 5),
-    value DECIMAL(2,1) CHECK (value >= 0 AND value <= 5),
-    overall_rating DECIMAL(2,1) CHECK (overall_rating >= 0 AND overall_rating <= 5),
-    comment TEXT,
-    stay_date DATE,                 -- thời điểm khách đã ở
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
-INSERT INTO "role" (role_name, description) 
-VALUES ('Admin', 'Administrator of the system');
-INSERT INTO "role" (role_name, description) 
-VALUES ('Customer', 'Simply a customer who want to use the services');
-INSERT INTO "role" (role_name, description) 
-VALUES ('Property Owner', 'Property owner who want to publish their property for bidding');
-INSERT INTO "role" (role_name, description) 
-VALUES ('Property Owner and Customer', 'Customer and property owner at the same time');
-
--- subcategory
--- aparment
-INSERT INTO category(category_name, sub_category_id) VALUES
-('Studio Apartment', 1),
-('Penthouse Apartment', 1),
-('Serviced Apartment', 1);
--- home
-INSERT INTO category(category_name, sub_category_id) VALUES
-('Townhouse', 2),
-('House In The Alley', 2);
--- villa
-INSERT INTO category(category_name, sub_category_id) VALUES
-('Beachfront Villa', 3),
-('Luxury Villa', 3),
-('Private Pool Villa', 3),
-('Hillside Villa', 3),
-('Eco Villa', 3);
--- bungalow
-INSERT INTO category(category_name, sub_category_id) VALUES
-('Traditional Bungalow', 4),
-('Modern Bungalow', 4),
-('Beach Bungalow', 4),
-('Garden Bungalow', 4);
-
-INSERT INTO category(category_name, sub_category_id) VALUES
-('Private Room in Home', 5),
-('Shared Room in Home', 5),
-('Family Homestay', 5);
-
--- Function cập nhật rating & count
-CREATE OR REPLACE FUNCTION update_review_summary()
-RETURNS TRIGGER AS $$
+-- 1. Tạo 500 user owner random
+DO $$
 BEGIN
-    -- Cập nhật tổng quan cho property liên quan
-    UPDATE review
-    SET 
-        rating = (
-            SELECT ROUND(AVG(overall_rating)::numeric, 2)
-            FROM review_details
-            WHERE review_id = NEW.review_id
-        ),
-        count = (
-            SELECT COUNT(*)
-            FROM review_details
-            WHERE review_id = NEW.review_id
-        ),
-        updated_at = NOW()
-    WHERE review_id = COALESCE(NEW.review_id, OLD.review_id);
+    FOR i IN 1..500 LOOP
+        INSERT INTO "user" (
+            role_id, 
+            name, 
+            email, 
+            hashed_password
+        ) VALUES (
+            3,
+            CONCAT('Owner ', i),
+            CONCAT('owner', i, '@example.com'),
+            '$2a$12$ANpXwJhvmZXTZIF0wl/24eLTQSl8SMJ9h3MfU2j3kq9t1KkQeCTGK'
+        );
+    END LOOP;
+END$$;
 
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
+select * from public.user;
 
--- Trigger trên bảng review_details
-CREATE TRIGGER trg_update_review_summary
-AFTER INSERT OR UPDATE OR DELETE
-ON review_details
-FOR EACH ROW
-EXECUTE FUNCTION update_review_summary();
+-- 2. Cập nhật tất cả property: gán owner_id random từ danh sách 500 owner
+DO $$
+DECLARE
+    prop RECORD;
+    rnd_user UUID;
+BEGIN
+    -- Lặp qua tất cả property chưa có owner
+    FOR prop IN
+        SELECT property_id
+        FROM property
+    LOOP
+        -- Lấy 1 user random role_id = 3
+        SELECT user_id
+        INTO rnd_user
+        FROM "user"
+        WHERE role_id = 4
+        ORDER BY random()
+        LIMIT 1;
+
+        -- Update owner_id
+        UPDATE property
+        SET owner_id = rnd_user
+        WHERE property_id = prop.property_id;
+    END LOOP;
+END $$;
+
+-- 3. Gán category_id random cho tất cả property
+UPDATE property
+SET category_id = (
+    SELECT category_id
+    FROM category
+    ORDER BY random()
+    LIMIT 1
+)
+WHERE category_id IS NULL;
+
+UPDATE "user"
+SET avatar_url = CONCAT('https://picsum.photos/seed/', user_id::text, '/400/400')
+WHERE role_id = 3;
+
+
+-- Tạo 1000 user (role_id = 2 là người dùng thường)
+INSERT INTO "user" (role_id, name, gender, dob, email, phone, hashed_password, avatar_url)
+SELECT 
+    2,
+    CONCAT('User ', g),
+    (ARRAY['Male','Female'])[floor(random()*2 + 1)],
+    date '1970-01-01' + (trunc(random()*18250) * interval '1 day'),
+    CONCAT('user', g, '@example.com'),
+    CONCAT('09', LPAD((trunc(random()*100000000))::text, 8, '0')),
+    '$2a$12$D2Nh1e.IQCdnD3SP.VWpxOZQldwCR9wPkiRTkEt5WmisPXF0DDxqS',
+    CONCAT('https://picsum.photos/seed/user', g, '/400/400')
+FROM generate_series(1, 1000) g;
+
+
+-- 1. Tạo lại review: mỗi property có 1 review
+INSERT INTO review (property_id, rating, count)
+SELECT 
+    p.property_id,
+    ROUND(((random() * 2) + 3)::numeric, 1),  -- rating 3.0 đến 5.0
+    floor(random() * 3 + 3)                   -- count 3-5 reviewDetails
+FROM property p;
+
+-- 2. Comment mẫu
+WITH comments AS (
+    SELECT unnest(ARRAY[
+        'Great place, very comfortable!',
+        'Clean and well located.',
+        'Had a wonderful stay, highly recommend.',
+        'Nice host, easy check-in.',
+        'Perfect for a weekend getaway.',
+        'Good value for money.',
+        'Spacious and bright apartment.',
+        'Loved the view and the location.'
+    ]) AS comment_text
+),
+-- 3. Chọn review và random user
+review_with_users AS (
+    SELECT 
+        r.review_id,
+        r.rating,
+        u.user_id,
+        c.comment_text
+    FROM review r
+    JOIN LATERAL (
+        SELECT user_id
+        FROM "user"
+        WHERE role_id = 2
+        ORDER BY random()
+        LIMIT (SELECT count FROM review WHERE review_id = r.review_id) -- số lượng reviewDetails
+    ) u ON true
+    JOIN comments c ON true
+    ORDER BY random()
+)
+-- 4. Tạo review_details
+INSERT INTO review_details (
+    review_id, user_id, cleanliness, accuracy, checkin, communication, location, value, overall_rating, comment, stay_date
+)
+SELECT 
+    rw.review_id,
+    rw.user_id,
+    rw.rating, rw.rating, rw.rating, rw.rating, rw.rating, rw.rating, rw.rating,
+    rw.comment_text,
+    NOW() - (floor(random() * 365) || ' days')::interval
+FROM review_with_users rw;
+
+-- Tạo auction
+INSERT INTO auction (auction_id, property_id, status, start_time, end_time, final_price, created_at)
+SELECT
+    uuid_generate_v4(),
+    p.property_id,
+    CASE 
+        WHEN g.n = max_n.max_n THEN 'active'
+        ELSE 'ended'
+    END AS status,
+
+    CASE 
+        WHEN g.n = max_n.max_n THEN
+            -- start_time: 1–3 ngày trước hiện tại
+            NOW() - ((1 + floor(random() * 3))::int * interval '1 day')
+        ELSE
+            NOW() - ((max_n.max_n - g.n + 2) * interval '15 days')
+    END AS start_time,
+
+    CASE 
+        WHEN g.n = max_n.max_n THEN
+            -- end_time: 1–3 ngày sau hiện tại (và <= checkin_date - 1 ngày nếu có)
+            CASE 
+                WHEN p.checkin_date IS NOT NULL THEN
+                    LEAST(
+                        p.checkin_date - interval '1 day',
+                        NOW() + ((1 + floor(random() * 3))::int * interval '1 day')
+                    )
+                ELSE
+                    NOW() + ((1 + floor(random() * 3))::int * interval '1 day')
+            END
+        ELSE
+            NOW() - ((max_n.max_n - g.n) * interval '15 days')
+    END AS end_time,
+
+    round(
+        p.min_price + 10000 + (random() * 50000)::numeric, -- luôn > min_price 100k
+        0
+    ) AS final_price,
+    NOW()
+FROM property p
+CROSS JOIN LATERAL (
+    SELECT n
+    FROM generate_series(1, (floor(random() * 2) + 2)::int) AS n
+) g
+JOIN LATERAL (
+    SELECT MAX(n) AS max_n
+    FROM generate_series(1, (floor(random() * 2) + 2)::int) AS n
+) max_n ON TRUE;
+
+-- Tạo userbid
+DO $$
+DECLARE
+    auct RECORD;
+    part_users UUID[];
+    usr UUID;
+    final_price_val DECIMAL(12,2);
+    current_price DECIMAL(12,2);
+    max_rounds INT;
+    round_idx INT;
+    bid_time_val TIMESTAMP;
+    stay_start_val TIMESTAMP;
+    stay_end_val TIMESTAMP;
+    stay_duration INT;
+    total_days INT;
+BEGIN
+    -- Lặp qua tất cả auction
+    FOR auct IN
+        SELECT a.auction_id, p.owner_id, p.min_price, a.start_time, a.end_time, a.final_price,
+               p.checkin_date, p.checkout_date
+        FROM auction a
+        JOIN property p ON p.property_id = a.property_id
+        WHERE a.start_time IS NOT NULL 
+          AND a.end_time IS NOT NULL
+          AND p.checkin_date IS NOT NULL
+          AND p.checkout_date IS NOT NULL
+    LOOP
+        final_price_val := auct.final_price;
+        total_days := (auct.checkout_date - auct.checkin_date);
+
+        -- Lấy 2 user (hoặc nhiều hơn nếu bạn muốn)
+        SELECT ARRAY(
+            SELECT user_id
+            FROM "user"
+            WHERE role_id = 2
+              AND user_id <> auct.owner_id
+            ORDER BY random()
+            LIMIT 2
+        ) INTO part_users;
+
+        -- Giá hiện tại
+        current_price := auct.min_price;
+
+        -- Random số vòng bid (2–6)
+        max_rounds := (2 + floor(random() * 5))::int;
+
+        FOR round_idx IN 1..max_rounds LOOP
+            -- Chọn user xen kẽ theo vòng
+            usr := part_users[(round_idx % array_length(part_users, 1)) + 1];
+
+            -- Tăng giá
+            current_price := current_price + 10000 + (random() * 50000);
+
+            -- Random thời gian bid trong khoảng
+            bid_time_val := auct.start_time + (
+                random() * (EXTRACT(EPOCH FROM (auct.end_time - auct.start_time))) * interval '1 second'
+            );
+
+            -- Random khoảng lưu trú
+            stay_start_val := auct.checkin_date + (
+                floor(random() * GREATEST(0, total_days - 5))::int
+            ) * interval '1 day';
+
+            stay_duration := 5 + floor(random() * 3);
+            stay_end_val := stay_start_val + (stay_duration || ' days')::interval;
+
+            IF stay_end_val > auct.checkout_date THEN
+                stay_end_val := auct.checkout_date;
+            END IF;
+
+            -- Nếu là bid cuối cùng thì đặt = final_price
+            IF round_idx = max_rounds THEN
+                current_price := final_price_val;
+            END IF;
+
+            INSERT INTO userbid (
+                bid_id, auction_id, bidder_id, stay_start, stay_end, bid_time, bid_amount, status
+            )
+            VALUES (
+                uuid_generate_v4(),
+                auct.auction_id,
+                usr,
+                stay_start_val,
+                stay_end_val,
+                bid_time_val,
+                round(current_price::numeric, 0),
+                'past'
+            );
+        END LOOP;
+    END LOOP;
+END $$;
+
+UPDATE auction a
+SET winner_id = ub.bidder_id, final_price = ub.bid_amount
+FROM (
+    SELECT DISTINCT ON (auction_id) 
+           auction_id, bidder_id, bid_time, bid_amount
+    FROM userbid
+    WHERE status = 'valid'
+    ORDER BY auction_id, bid_amount DESC
+) ub
+WHERE a.auction_id = ub.auction_id;
