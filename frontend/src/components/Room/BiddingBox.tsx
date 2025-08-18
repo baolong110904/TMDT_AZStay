@@ -41,6 +41,8 @@ export default function BiddingBox({
   const [sealedBidCountdown, setSealedBidCountdown] = useState("");
   const [sealedBidEnded, setSealedBidEnded] = useState(false);
 
+  console.log({currentPriceUserId, userId});
+
   // 🔌 Socket
   useEffect(() => {
     socket = io(process.env.NEXT_PUBLIC_API_URL as string, {

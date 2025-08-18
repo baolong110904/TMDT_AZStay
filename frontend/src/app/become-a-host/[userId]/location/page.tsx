@@ -96,8 +96,9 @@ export default function LocationPage() {
           if (data) {
             setAddress(data.display_name || `${lat}, ${lon}`);
             const a = data.address || {};
+            console.log(a);
             setWard((a.suburb && String(a.suburb)) || (a.quarter && String(a.quarter)) || null);
-            setProvince((a.state && String(a.state)) || (a.county && String(a.county)) || null);
+            setProvince((a.state && String(a.state)) || (a.county && String(a.county)) || (a.city && String(a.city)) || null);
             setCountry((a.country && String(a.country)) || null);
           }
         } catch (e) {

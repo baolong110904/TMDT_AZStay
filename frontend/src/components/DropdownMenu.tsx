@@ -53,7 +53,7 @@ export default function DropdownMenu({ isOpen, setIsOpen, user, onLogout }: Drop
         Help Center
       </button>
       <button
-        onClick={() => handleNavigation("/become-host")}
+        onClick={() => handleNavigation("/become-a-host")}
         className="flex items-center w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition"
       >
         <HomeIcon className="h-5 w-5 text-gray-400 mr-3" />

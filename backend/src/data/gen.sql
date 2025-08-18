@@ -19,20 +19,30 @@ END$$;
 select * from public.user;
 
 -- 2. Cập nhật tất cả property: gán owner_id random từ danh sách 500 owner
-UPDATE property p
-SET owner_id = u.user_id
-FROM (
-    SELECT user_id
-    FROM "user"
-    WHERE role_id = 3
-    ORDER BY random()
-) u
-WHERE p.property_id IN (
-    SELECT property_id FROM property
-)
-AND p.owner_id IS NULL
--- chọn ngẫu nhiên 1 owner cho mỗi property
-AND (SELECT count(*) FROM property) > 0;
+DO $$
+DECLARE
+    prop RECORD;
+    rnd_user UUID;
+BEGIN
+    -- Lặp qua tất cả property chưa có owner
+    FOR prop IN
+        SELECT property_id
+        FROM property
+    LOOP
+        -- Lấy 1 user random role_id = 3
+        SELECT user_id
+        INTO rnd_user
+        FROM "user"
+        WHERE role_id = 4
+        ORDER BY random()
+        LIMIT 1;
+
+        -- Update owner_id
+        UPDATE property
+        SET owner_id = rnd_user
+        WHERE property_id = prop.property_id;
+    END LOOP;
+END $$;
 
 -- 3. Gán category_id random cho tất cả property
 UPDATE property
@@ -114,12 +124,6 @@ SELECT
     NOW() - (floor(random() * 365) || ' days')::interval
 FROM review_with_users rw;
 
--- Tạo 2-3 auction cho mỗi property
-WITH props AS (
-    SELECT property_id, min_price
-    FROM property
-)
-
 -- Tạo auction
 INSERT INTO auction (auction_id, property_id, status, start_time, end_time, final_price, created_at)
 SELECT
@@ -155,7 +159,7 @@ SELECT
     END AS end_time,
 
     round(
-        p.min_price + 100000 + (random() * 500000)::numeric, -- luôn > min_price 100k
+        p.min_price + 10000 + (random() * 50000)::numeric, -- luôn > min_price 100k
         0
     ) AS final_price,
     NOW()
@@ -169,7 +173,6 @@ JOIN LATERAL (
     FROM generate_series(1, (floor(random() * 2) + 2)::int) AS n
 ) max_n ON TRUE;
 
-
 -- Tạo userbid
 DO $$
 DECLARE
@@ -178,8 +181,8 @@ DECLARE
     usr UUID;
     final_price_val DECIMAL(12,2);
     current_price DECIMAL(12,2);
-    bid_count INT;
-    i INT;
+    max_rounds INT;
+    round_idx INT;
     bid_time_val TIMESTAMP;
     stay_start_val TIMESTAMP;
     stay_end_val TIMESTAMP;
@@ -198,71 +201,77 @@ BEGIN
           AND p.checkout_date IS NOT NULL
     LOOP
         final_price_val := auct.final_price;
-        
-        -- Tính tổng số ngày lưu trú có thể
         total_days := (auct.checkout_date - auct.checkin_date);
 
-        -- Lấy 1-2 user có role_id = 2 và khác owner
+        -- Lấy 2 user (hoặc nhiều hơn nếu bạn muốn)
         SELECT ARRAY(
             SELECT user_id
             FROM "user"
             WHERE role_id = 2
               AND user_id <> auct.owner_id
             ORDER BY random()
-            LIMIT (1 + floor(random() * 2))::int
+            LIMIT 2
         ) INTO part_users;
 
-        -- Với mỗi user tham gia
-        FOREACH usr IN ARRAY part_users
-        LOOP
-            -- Random số lượng bid của user (1–3)
-            bid_count := (1 + floor(random() * 3))::int;
-            
-            -- Giá khởi điểm lấy từ min_price
-            current_price := auct.min_price;
-            
-            FOR i IN 1..bid_count LOOP
-                -- Tăng giá ít nhất 10,000 trước khi insert
-                current_price := current_price + 10000 + (random() * 50000);
-                
-                -- Random thời gian bid trong khoảng start_time -> end_time
-                bid_time_val := auct.start_time + (
-                    random() * (EXTRACT(EPOCH FROM (auct.end_time - auct.start_time))) * interval '1 second'
-                );
+        -- Giá hiện tại
+        current_price := auct.min_price;
 
-                -- Random khoảng lưu trú nằm trong checkin_date và checkout_date
-                stay_start_val := auct.checkin_date + (
-                    floor(random() * GREATEST(0, total_days - 5))::int
-                ) * interval '1 day';
+        -- Random số vòng bid (2–6)
+        max_rounds := (2 + floor(random() * 5))::int;
 
-                -- Thời gian ở: 5–7 ngày
-                stay_duration := 5 + floor(random() * 3);
-                stay_end_val := stay_start_val + (stay_duration || ' days')::interval;
+        FOR round_idx IN 1..max_rounds LOOP
+            -- Chọn user xen kẽ theo vòng
+            usr := part_users[(round_idx % array_length(part_users, 1)) + 1];
 
-                -- Nếu stay_end vượt checkout_date thì ép về checkout_date
-                IF stay_end_val > auct.checkout_date THEN
-                    stay_end_val := auct.checkout_date;
-                END IF;
+            -- Tăng giá
+            current_price := current_price + 10000 + (random() * 50000);
 
-                -- Nếu là bid cuối của user và cũng là bid cuối của auction => đặt bằng final_price
-                IF i = bid_count THEN
-                    current_price := final_price_val;
-                END IF;
+            -- Random thời gian bid trong khoảng
+            bid_time_val := auct.start_time + (
+                random() * (EXTRACT(EPOCH FROM (auct.end_time - auct.start_time))) * interval '1 second'
+            );
 
-                INSERT INTO userbid (
-                    bid_id, auction_id, bidder_id, stay_start, stay_end, bid_time, bid_amount, status
-                )
-                VALUES (
-                    uuid_generate_v4(),
-                    auct.auction_id,
-                    usr,
-                    stay_start_val,
-                    stay_end_val,
-                    bid_time_val,
-                    round(current_price::numeric, 0),
-                    'valid'
-                );
-            END LOOP;
+            -- Random khoảng lưu trú
+            stay_start_val := auct.checkin_date + (
+                floor(random() * GREATEST(0, total_days - 5))::int
+            ) * interval '1 day';
+
+            stay_duration := 5 + floor(random() * 3);
+            stay_end_val := stay_start_val + (stay_duration || ' days')::interval;
+
+            IF stay_end_val > auct.checkout_date THEN
+                stay_end_val := auct.checkout_date;
+            END IF;
+
+            -- Nếu là bid cuối cùng thì đặt = final_price
+            IF round_idx = max_rounds THEN
+                current_price := final_price_val;
+            END IF;
+
+            INSERT INTO userbid (
+                bid_id, auction_id, bidder_id, stay_start, stay_end, bid_time, bid_amount, status
+            )
+            VALUES (
+                uuid_generate_v4(),
+                auct.auction_id,
+                usr,
+                stay_start_val,
+                stay_end_val,
+                bid_time_val,
+                round(current_price::numeric, 0),
+                'valid'
+            );
         END LOOP;
     END LOOP;
 END $$;
+
+UPDATE auction a
+SET winner_id = ub.bidder_id
+FROM (
+    SELECT DISTINCT ON (auction_id) 
+           auction_id, bidder_id, bid_time
+    FROM userbid
+    WHERE status = 'valid'
+    ORDER BY auction_id, bid_time DESC
+) ub
+WHERE a.auction_id = ub.auction_id;

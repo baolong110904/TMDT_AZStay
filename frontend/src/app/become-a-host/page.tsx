@@ -91,9 +91,18 @@ export default function BecomeAHost() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Logo top left */}
-      <div className="absolute top-6 left-25 z-10">
+      <div
+        className="absolute top-6 left-25 z-10 cursor-pointer"
+        onClick={() => router.push("/home")}
+      >
         <div className="relative h-15 w-32 md:w-40 flex-shrink-0">
-          <Image src="/logo2.png" alt="Logo" fill className="object-contain object-left" />
+          <Image
+            src="/logo2.png"
+            alt="Logo"
+            fill
+            className="object-contain object-left"
+            priority
+          />
         </div>
       </div>
 

@@ -121,8 +121,17 @@ export default function Header({ placeholder }: HeaderProps) {
     <header className="sticky top-0 z-50 bg-white shadow-sm transition-all duration-500 ease-in-out mb-5">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-2 md:px-8">
         {/* Logo */}
-        <div className="relative h-12 w-32 md:w-40 flex-shrink-0">
-          <Image src="/logo2.png" alt="Logo" fill className="object-contain object-left" />
+        <div
+          className="relative h-12 w-32 md:w-40 flex-shrink-0 cursor-pointer"
+          onClick={() => router.push("/home")}
+        >
+          <Image
+            src="/logo2.png"
+            alt="Logo"
+            fill
+            className="object-contain object-left"
+            priority
+          />
         </div>
 
         {/* Navigation Tabs */}

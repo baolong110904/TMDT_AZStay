@@ -9,7 +9,7 @@ export default function PricePage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const userId = params?.userId as string;
+  const [userId, setUserId] = useState<string>(""); 
   const propertyId = searchParams?.get("property_id");
 
   const totalSteps = 7;
@@ -20,6 +20,23 @@ export default function PricePage() {
 
   const { setCanProceed, setNav } = useHostFlow();
   const { setOnNext } = useHostFlow() as any;
+
+  // 🆕 Lấy user_id từ localStorage
+  useEffect(() => {
+    try {
+      const user = localStorage.getItem("user");
+      if (user) {
+        const parsed = JSON.parse(user);
+        if (parsed?.user_id) {
+          setUserId(parsed.user_id);
+        }
+      }
+    } catch (err) {
+      console.error("❌ Failed to parse user from localStorage:", err);
+    }
+  }, []);
+
+  console.log("user", userId);
 
   useEffect(() => {
   // final next should go to hosting listings when flow completes
@@ -70,7 +87,7 @@ export default function PricePage() {
   return (
     <div className="max-w-4xl mx-auto py-12 px-6">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold">Now, set a monthly base price</h1>
+        <h1 className="text-3xl font-bold">Now, set a daily base price</h1>
       </div>
 
       <div className="bg-white rounded-xl shadow p-10">
