@@ -136,19 +136,19 @@ export class PropertyDAO {
   static async updateProperty(
     property_id: string,
     updateData: Partial<{
-      owner_id: string;
-      category_id: number;
-      title: string;
-      description: string;
-      address: string;
-      ward: string;
-      province: string;
-      country: string;
-      longitude: number;
-      latitude: number;
-      max_guest: number;
-      min_price: number;
-      is_available: boolean;
+      owner_id?: string;
+      category_id?: number;
+      title?: string;
+      description?: string;
+      address?: string;
+      ward?: string;
+      province?: string;
+      country?: string;
+      longitude?: number;
+      latitude?: number;
+      max_guest?: number;
+      min_price?: number;
+      is_available?: boolean;
     }>
   ) {
     return prisma.property.update({

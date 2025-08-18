@@ -88,7 +88,7 @@ export const createProperty = async (req: Request, res: Response) => {
     country,
     max_guest,
     min_price,
-    // draft,
+    draft,
   } = req.body;
 
   const files = (req.files as Express.Multer.File[]) || [];
@@ -98,28 +98,28 @@ export const createProperty = async (req: Request, res: Response) => {
     // If client requests a draft creation, allow creating a minimal record
     // without requiring images or all mandatory fields. Frontend will
     // update the remaining fields in subsequent steps.
-    // const isDraft = draft === true || draft === "true";
-    // if (isDraft) {
-    //   const prisma = require("../prisma/client.prisma").default;
+    const isDraft = draft === true || draft === "true";
+    if (isDraft) {
+      const prisma = require("../prisma/client.prisma").default;
 
-    //   const createdProperty = await prisma.property.create({
-    //     data: {
-    //       owner_id: user_id,
-    //       category_id: Number(category_id) || null,
-    //       title: title || "Untitled listing",
-    //       description: description || "",
-    //       address: address || "",
-    //       ward: ward || null,
-    //       province: province || null,
-    //       country: country || "Viet Nam",
-    //       max_guest: Number(max_guest) || 1,
-    //       min_price: Number(min_price) || 0,
-    //       is_available: false,
-    //     },
-    //   });
+      const createdProperty = await prisma.property.create({
+        data: {
+          owner_id: user_id,
+          category_id: Number(category_id) || null,
+          title: title || "Untitled listing",
+          description: description || "",
+          address: address || "",
+          ward: ward || null,
+          province: province || null,
+          country: country || "Viet Nam",
+          max_guest: Number(max_guest) || 1,
+          min_price: Number(min_price) || 0,
+          is_available: false,
+        },
+      });
 
-    //   return res.status(201).json({ message: "Draft property created", property: createdProperty });
-    // }
+      return res.status(201).json({ message: "Draft property created", property: createdProperty });
+    }
 
     // 0. Validate required fields for full create
     if (
