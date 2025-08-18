@@ -17,6 +17,7 @@ CREATE TABLE "user" (
     email VARCHAR(100) UNIQUE NOT NULL,
     phone VARCHAR(20),
     hashed_password TEXT,
+    is_banned BOOLEAN DEFAULT FALSE,
     avatar_url TEXT,
     oauth_provider VARCHAR(50),
     oauth_id VARCHAR(100),

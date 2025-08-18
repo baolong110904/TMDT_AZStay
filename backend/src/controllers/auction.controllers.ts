@@ -1,15 +1,19 @@
-import { Request, Response } from 'express';
-import { AuthRequest } from '../middlewares/auth.middlewares';
-import { AuctionDAO } from '../dao/auction.dao'
-import { UserBidDAO } from '../dao/userbid.dao'
+import { Request, Response } from "express";
+import { AuthRequest } from "../middlewares/auth.middlewares";
+import { AuctionDAO } from "../dao/auction.dao";
+import { UserBidDAO } from "../dao/userbid.dao";
 import prisma from "../prisma/client.prisma";
-import { getIO } from "../utils/socket.utils"
+import { getIO } from "../utils/socket.utils";
 
 export const createAuction = async (req: Request, res: Response) => {
-    const { property_id, start_time, end_time } = req.body;
-    const auction = await AuctionDAO.createAuction({ property_id, start_time, end_time });
-    res.status(201).json(auction);
-  };
+  const { property_id, start_time, end_time } = req.body;
+  const auction = await AuctionDAO.createAuction({
+    property_id,
+    start_time,
+    end_time,
+  });
+  res.status(201).json(auction);
+};
 
 export const getActiveAuctions = async (_req: Request, res: Response) => {
   const auctions = await AuctionDAO.getActiveAuctions();
@@ -26,7 +30,7 @@ export const placeBid = async (req: AuthRequest, res: Response) => {
     bidder_id,
     bid_amount,
     stay_start,
-    stay_end
+    stay_end,
   });
 
   try {
@@ -44,7 +48,7 @@ export const placeBid = async (req: AuthRequest, res: Response) => {
       bidder_id,
       bid_amount: Number(bid_amount),
       stay_start,
-      stay_end
+      stay_end,
     });
 
     console.log("✅ [placeBid] Bid inserted successfully:", bid);
@@ -73,7 +77,6 @@ export const placeBid = async (req: AuthRequest, res: Response) => {
     });
   }
 };
-
 
 export const getBids = async (req: Request, res: Response) => {
   const { auctionId } = req.params;
