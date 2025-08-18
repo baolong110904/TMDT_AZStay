@@ -22,7 +22,7 @@ router.post('/upload-images',
             upload.array('images'),
             UploadPropertyImagesController.uploadPropertyImagesController);
 // get property by user_id
-router.post('/get-property-by-user-id',
+router.get('/get-property-by-user-id',
             verifyToken,
             authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
             PropertyController.getPropertyByUserId);
