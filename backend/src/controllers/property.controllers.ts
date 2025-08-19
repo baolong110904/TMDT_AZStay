@@ -159,15 +159,15 @@ export const createProperty = async (req: Request, res: Response) => {
     }
 
     // 2. Check user existence
-    // const user_data = await getUserById(user_id);
-    // if (!user_data) {
-    //   return res.status(404).json({ message: "User not found" });
-    // }
-
-    // // 3. Auto-upgrade role if needed
-    // if (user_data.role_id === 2 || user_data.role_id === 3) {
-    //   await AdminDAO.updateUserRole(user_id, 4);
-    // }
+    const user_data = await getUserById(user_id);
+    if (!user_data) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // 3. Auto-upgrade role if needed
+    if (user_data.role_id === 2 || user_data.role_id === 3) {
+      await AdminDAO.updateUserRole(user_id, 4);
+    }
 
     // 4. Create property
     const createdProperty = await PropertyDAO.createProperty({

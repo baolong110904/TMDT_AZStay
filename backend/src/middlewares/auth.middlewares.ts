@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { ENV } from "../config/environtment.config";
-import { error } from "console";
+import { supabase } from "../utils/supabase.utils";
 interface AuthRequest extends Request {
   user?: any;
 }
@@ -26,7 +26,7 @@ export const authenticateJWT = (expectedType: string) => {
           .status(403)
           .json({ error: `Expected token type '${expectedType}'` });
       }
-
+      
       next();
     } catch (err) {
       return res.status(403).json({ error: "Invalid or expired token" });
