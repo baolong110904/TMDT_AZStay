@@ -41,8 +41,8 @@ export default function SignupForm() {
       setLoading(false);
       return;
     }
-    if (role !== "2" && role !== "3") {
-      setError("Role must be Guest (2) or Host (3).");
+    if (role !== "2" && role !== "4") {
+      setError("Role must be Guest (2) or Host (4).");
       setLoading(false);
       return;
     }
@@ -91,7 +91,7 @@ export default function SignupForm() {
       <input
         type="text"
         placeholder="Name"
-        className="w-full px-4 py-2 border rounded text-black"
+        className="w-full px-4 py-2 border rounded-3xl text-black"
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
@@ -99,7 +99,7 @@ export default function SignupForm() {
       <input
         type="email"
         placeholder="Email"
-        className="w-full px-4 py-2 border rounded text-black"
+        className="w-full px-4 py-2 border rounded-3xl text-black"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
@@ -107,13 +107,13 @@ export default function SignupForm() {
       <input
         type="password"
         placeholder="Password"
-        className="w-full px-4 py-2 border rounded text-black"
+        className="w-full px-4 py-2 border rounded-3xl text-black"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
       />
       <select
-        className="w-full px-4 py-2 border rounded text-black"
+        className="w-full px-4 py-2 border rounded-3xl text-black"
         value={gender}
         onChange={(e) => setGender(e.target.value)}
         required
@@ -128,13 +128,13 @@ export default function SignupForm() {
       <input
         type="tel"
         placeholder="Phone (valid Vietnam phone number)"
-        className="w-full px-4 py-2 border rounded text-black"
+        className="w-full px-4 py-2 border rounded-3xl text-black"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
         required
       />
       <select
-        className="w-full px-4 py-2 border rounded text-black"
+        className="w-full px-4 py-2 border rounded-3xl text-black"
         value={role}
         onChange={(e) => setRole(e.target.value)}
         required
@@ -143,11 +143,11 @@ export default function SignupForm() {
           Select Role
         </option>
         <option value="2">Guest</option>
-        <option value="3">Host</option>
+        <option value="4">Host</option>
       </select>
       <input
         type="date"
-        className="w-full px-4 py-2 border rounded text-black"
+        className="w-full px-4 py-2 border rounded-3xl text-black"
         value={dob}
         onChange={(e) => setDob(e.target.value)}
         required
@@ -173,7 +173,7 @@ export default function SignupForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-60"
+        className="w-full bg-green-600 text-white py-2 rounded-3xl hover:bg-green-700 disabled:opacity-60"
       >
         {loading ? "Signing up..." : "Sign Up"}
       </button>

@@ -18,6 +18,7 @@ import {
 import * as constraints from "../utils/constraint.utils"; // checking info constraints
 import { sendEmail } from "../utils/sendEmail.utils"; // sending email fucntion
 import { supabase } from "../utils/supabase.utils"; // oauth provider
+import prisma from "../prisma/client.prisma";
 
 // jwt secret key
 const JWT_SECRET = ENV.JWT_SECRET;
@@ -27,7 +28,10 @@ export const signUp = async (req: Request, res: Response) => {
   const { email, password, gender, phone, dob, name } = req.body;
   try {
     if (!email || !password || !gender || !phone || !dob || !name) {
-      return res.status(400).json({message: "Missing one of those required fields: `email`, `password`, `gender`, `phone`. `dob`, `name`"});
+      return res.status(400).json({
+        message:
+          "Missing one of those required fields: `email`, `password`, `gender`, `phone`. `dob`, `name`",
+      });
     }
     const existingEmail = await checkEmailExists(email);
     const parsedDob = new Date(dob);
@@ -114,7 +118,7 @@ export const signUp = async (req: Request, res: Response) => {
         phone: user.phone,
         role: user.role_id,
         dob: user.dob,
-        avatar_url: user.avatar_url
+        avatar_url: user.avatar_url,
       },
     });
   } catch (err) {
@@ -129,7 +133,9 @@ export const login = async (req: Request, res: Response) => {
 
   try {
     if (!email || !password) {
-      return res.status(400).json({message: "Missing one of those required fields: `email`, `password`"});
+      return res.status(400).json({
+        message: "Missing one of those required fields: `email`, `password`",
+      });
     }
 
     const user = await checkEmailExists(email);
@@ -156,7 +162,7 @@ export const login = async (req: Request, res: Response) => {
     };
 
     const token = jwt.sign(payload, JWT_SECRET, signOptions);
-    
+
     res.json({
       token,
       user: {
@@ -183,9 +189,11 @@ export const sendOtpToUser = async (req: Request, res: Response) => {
 
   try {
     if (!email) {
-      return res.status(400).json({message: "Missing required field: `email`"});
+      return res
+        .status(400)
+        .json({ message: "Missing required field: `email`" });
     }
-    
+
     const user = await checkEmailExists(email);
     if (!user) {
       return res.status(404).json({ message: "Email not found" });
@@ -206,11 +214,16 @@ export const sendOtpToUser = async (req: Request, res: Response) => {
 };
 
 // verify otp and gen token (valid for 15 mins)
-export const verifyOtpAndGenerateToken = async (req: Request, res: Response) => {
+export const verifyOtpAndGenerateToken = async (
+  req: Request,
+  res: Response
+) => {
   const { email, otp } = req.body;
   try {
     if (!email || !otp) {
-      return res.status(400).json({message: "Missing required one of those fields: `email`, `otp`"})
+      return res.status(400).json({
+        message: "Missing required one of those fields: `email`, `otp`",
+      });
     }
     const user = await getUserByEmail(email);
 
@@ -227,8 +240,12 @@ export const verifyOtpAndGenerateToken = async (req: Request, res: Response) => 
     await deleteOTP(otpRecord.otp_id);
 
     const payload = {
+      sub: user.user_id,
       email: user.email,
-      type: "password_reset", // token type: password reset
+      role: user.role_id,
+      name: user.name,
+      is_banned: user.is_banned,
+      type: "access",
     };
 
     const signOptions: SignOptions = {
@@ -249,11 +266,13 @@ export const changePassword = async (req: Request, res: Response) => {
 
   try {
     if (!newPassword) {
-      return res.status(400).json({message: "Misisng required field: `newPassword`"});
+      return res
+        .status(400)
+        .json({ message: "Misisng required field: `newPassword`" });
     }
-    
+
     const user = await getUserByEmail(email);
-    
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -276,18 +295,87 @@ export const changePassword = async (req: Request, res: Response) => {
   }
 };
 
-// // signup using facebook integration
-// export async function testFacebookLogin() {
-//   const { data, error } = await supabase.auth.signInWithOAuth({
-//     provider: "facebook",
-//     options: {
-//       redirectTo: window.location.origin, // Đảm bảo trùng với Redirect URI trong Meta Developer
-//     },
-//   });
+// // signup using google integration
+export async function syncAuth(req: Request, res: Response) {
+  try {
+    const { supabaseToken } = req.body;
+    if (!supabaseToken) {
+      return res.status(400).json({ error: "Supabase token is required" });
+    }
 
-//   if (error) {
-//     console.error("Login failed:", error.message);
-//   } else {
-//     console.log("Redirecting to Facebook login...");
-//   }
-// }
+    // verify supabase token
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(supabaseToken);
+    if (error || !user) {
+      return res.status(401).json({ error: "Invalid Supabase token" });
+    }
+
+    // find user inside the db
+    let dbUser = await prisma.user.findUnique({ where: { email: user.email } });
+
+    if (!dbUser) {
+      dbUser = await prisma.user.create({
+        data: {
+          email: user.email!,
+          name: user.user_metadata?.full_name || "",
+          // avatar_url: user.user_metadata?.avatar_url || null,
+          oauth_provider: user.app_metadata?.provider || "google",
+          oauth_id: user.id,
+          role_id: 2,
+        },
+      });
+    }
+
+    if (dbUser.is_banned) {
+      return res
+        .status(403)
+        .json({ error: "You are banned from our services" });
+    }
+
+    const payload = {
+      sub: dbUser.user_id,
+      email: dbUser.email,
+      role: dbUser.role_id,
+      name: dbUser.name,
+      is_banned: dbUser.is_banned,
+      type: "access",
+    };
+    const signOptions: SignOptions = {
+      expiresIn: "1h",
+    };
+
+    const token = jwt.sign(payload, ENV.JWT_SECRET, signOptions);
+
+    console.log(
+      dbUser.user_id,
+      dbUser.name,
+      dbUser.email,
+      dbUser.phone,
+      dbUser.gender,
+      dbUser.dob,
+      dbUser.role_id,
+      dbUser.avatar_url,
+      dbUser.oauth_provider
+    );
+    console.log(token);
+    res.status(200).json({
+      token,
+      user: {
+        user_id: dbUser.user_id,
+        name: dbUser.name,
+        email: dbUser.email,
+        phone: dbUser.phone,
+        gender: dbUser.gender,
+        dob: dbUser.dob,
+        role_id: dbUser.role_id,
+        avatar_url: dbUser.avatar_url,
+        oauth_provider: dbUser.oauth_provider,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to sync user" });
+  }
+}

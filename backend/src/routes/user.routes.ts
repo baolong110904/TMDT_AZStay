@@ -32,10 +32,6 @@ router.post('/upload-avatar',
             upload.single('avatar'), 
             ImagesControllers.uploadAvatarController); // user avatar upload
 
-
-// router.post('/update-property-images',
-//             authenticateJWT('access'),
-//             authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
-//             // PropertyControllers.);
+router.post('/sync', AuthenticationControllers.syncAuth);
 
 export default router;
