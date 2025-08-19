@@ -1,6 +1,6 @@
 import api from '@/lib/axios';
 import { supabase } from './supabase';
-
+import process from 'process';
 
 export async function googleLogin(router: any, setLoading: (val: boolean) => void, setError: (val: string | null) => void) {
   try {
@@ -10,7 +10,7 @@ export async function googleLogin(router: any, setLoading: (val: boolean) => voi
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin + "/auth", // where you handle the redirect
+        redirectTo: process.env.NEXT_PUBLIC_REDIRECT_URL, // where you handle the redirect
       },
     });
 
