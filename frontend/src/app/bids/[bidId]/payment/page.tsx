@@ -9,16 +9,15 @@ export default function PaymentPage() {
   const params = useParams();
   const bidId = params?.bidId as string;
   const [loading, setLoading] = useState(false);
+  const [loadingPaypal, setLoadingPaypal] = useState(false);
   const [bidInfo, setBidInfo] = useState<any>(null);
 
   const fromVietnamTime = (dateStr: string | null | undefined): Date | null => {
     if (!dateStr) return null;
     const d = new Date(dateStr);
-    // vì JS coi dateStr là UTC, nên bị +7h → ta phải -7h lại
     return new Date(d.getTime() - 7 * 60 * 60 * 1000);
   };
   
-  // Calculate number of nights
   const getNights = () => {
     const start = bidInfo?.stay_start ? fromVietnamTime(bidInfo.stay_start) : null;
     const end = bidInfo?.stay_end ? fromVietnamTime(bidInfo.stay_end) : null;
@@ -26,7 +25,6 @@ export default function PaymentPage() {
     return Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
   };
 
-  // Fetch bid info
   useEffect(() => {
     if (!bidId) return;
     async function fetchBid() {
@@ -40,36 +38,58 @@ export default function PaymentPage() {
     fetchBid();
   }, [bidId]);
 
-  const handlePayment = async () => {
+  const handleVNPay = async () => {
     if (!bidInfo) return;
     setLoading(true);
     try {
       const nights = getNights();
-
       const totalAmount = (bidInfo.auction.final_price || 0) * nights;
       const depositAmount = 0.05 * totalAmount;
 
-      const res = await api.post(`/payment/create-session`, {
+      const res = await api.post(`/payment/vnpay/create-session`, {
         bidId: bidId,
         amount: depositAmount,
       });
 
-      const data = res.data;
-
-      if (data?.paymentUrl) {
-        window.location.href = data.paymentUrl;
+      if (res.data?.paymentUrl) {
+        window.location.href = res.data.paymentUrl;
       } else {
-        alert("Unable to create payment link!");
+        alert("Unable to create VNPay link!");
       }
-    } catch (err: any) {
-      console.error("Payment error:", err);
-      alert("Payment failed!");
+    } catch (err) {
+      console.error("VNPay error:", err);
+      alert("VNPay payment failed!");
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper to format date
+  const handlePayPal = async () => {
+    if (!bidInfo) return;
+    setLoadingPaypal(true);
+    try {
+      const nights = getNights();
+      const totalAmount = (bidInfo.auction.final_price || 0) * nights;
+      const depositAmount = (0.05 * totalAmount) / 24000; // giả sử convert VND→USD tỉ giá 24k
+
+      const res = await api.post(`/payment/paypal/create-session`, {
+        bidId: bidId,
+        amount: depositAmount.toFixed(2),
+      });
+
+      if (res.data?.approvalUrl) {
+        window.location.href = res.data.approvalUrl;
+      } else {
+        alert("Unable to create PayPal link!");
+      }
+    } catch (err) {
+      console.error("PayPal error:", err);
+      alert("PayPal payment failed!");
+    } finally {
+      setLoadingPaypal(false);
+    }
+  };
+
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return "Not available";
     const date = fromVietnamTime(dateStr);
@@ -123,15 +143,28 @@ export default function PaymentPage() {
             VND
           </p>
 
-          <button
-            onClick={handlePayment}
-            disabled={loading}
-            className={`w-full mt-4 px-4 py-2 rounded-lg text-white font-medium ${
-              loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {loading ? "Processing..." : "Pay Now"}
-          </button>
+          {/* Hai nút thanh toán */}
+          <div className="flex flex-col gap-3 mt-4">
+            <button
+              onClick={handleVNPay}
+              disabled={loading}
+              className={`w-full px-4 py-2 rounded-lg text-white font-medium ${
+                loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {loading ? "Processing..." : "Pay with VNPay"}
+            </button>
+
+            <button
+              onClick={handlePayPal}
+              disabled={loadingPaypal}
+              className={`w-full px-4 py-2 rounded-lg text-white font-medium ${
+                loadingPaypal ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+              }`}
+            >
+              {loadingPaypal ? "Processing..." : "Pay with PayPal"}
+            </button>
+          </div>
         </div>
       ) : (
         <p>Loading auction information...</p>
