@@ -11,6 +11,21 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(false);
   const [bidInfo, setBidInfo] = useState<any>(null);
 
+  const fromVietnamTime = (dateStr: string | null | undefined): Date | null => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    // vì JS coi dateStr là UTC, nên bị +7h → ta phải -7h lại
+    return new Date(d.getTime() - 7 * 60 * 60 * 1000);
+  };
+  
+  // Calculate number of nights
+  const getNights = () => {
+    const start = bidInfo?.stay_start ? fromVietnamTime(bidInfo.stay_start) : null;
+    const end = bidInfo?.stay_end ? fromVietnamTime(bidInfo.stay_end) : null;
+    if (!start || !end) return 1;
+    return Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+  };
+
   // Fetch bid info
   useEffect(() => {
     if (!bidId) return;
@@ -29,9 +44,14 @@ export default function PaymentPage() {
     if (!bidInfo) return;
     setLoading(true);
     try {
-      const res = await api.post(`/api/payment/create-session`, {
+      const nights = getNights();
+
+      const totalAmount = (bidInfo.auction.final_price || 0) * nights;
+      const depositAmount = 0.05 * totalAmount;
+
+      const res = await api.post(`/payment/create-session`, {
         bidId: bidId,
-        amount: bidInfo.auction.final_price,
+        amount: depositAmount,
       });
 
       const data = res.data;
@@ -49,6 +69,13 @@ export default function PaymentPage() {
     }
   };
 
+  // Helper to format date
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "Not available";
+    const date = fromVietnamTime(dateStr);
+    return date?.toLocaleDateString();
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <h1 className="text-2xl font-bold mb-4">Auction Payment #{bidId}</h1>
@@ -64,9 +91,34 @@ export default function PaymentPage() {
             {bidInfo?.user?.name || "Not available"}
           </p>
           <p className="mb-2">
-            <span className="font-semibold">Final Price:</span>{" "}
+            <span className="font-semibold">Stay Start:</span>{" "}
+            {formatDate(bidInfo.stay_start)}
+          </p>
+          <p className="mb-2">
+            <span className="font-semibold">Stay End:</span>{" "}
+            {formatDate(bidInfo.stay_end)}
+          </p>
+          <p className="mb-2">
+            <span className="font-semibold">Number of Nights:</span> {getNights()}
+          </p>
+          <p className="mb-2">
+              <span className="font-semibold">Price per Night:</span>{" "}
+              {bidInfo?.auction?.final_price
+                ? Number(bidInfo.auction.final_price).toLocaleString()
+                : "Not available"}{" "}
+              VND
+          </p>
+          <p className="mb-2">
+            <span className="font-semibold">Total Price:</span>{" "}
             {bidInfo?.auction?.final_price
-              ? Number(bidInfo.auction.final_price).toLocaleString()
+              ? (bidInfo.auction.final_price * getNights()).toLocaleString()
+              : "Not available"}{" "}
+            VND
+          </p>
+          <p className="mb-2">
+            <span className="font-semibold">Deposit (5%):</span>{" "}
+            {bidInfo?.auction?.final_price
+              ? ((bidInfo.auction.final_price * getNights()) * 0.05).toLocaleString()
               : "Not available"}{" "}
             VND
           </p>

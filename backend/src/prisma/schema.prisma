@@ -26,16 +26,19 @@ model booking {
   booking_id  String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   property_id String?   @db.Uuid
   renter_id   String?   @db.Uuid
-  payment_id  String?   @db.Uuid
+  payment_id  String?   @unique @db.Uuid
+  bid_id      String?   @unique @db.Uuid
   start_date  DateTime? @db.Date
   end_date    DateTime? @db.Date
   total_price Decimal?  @db.Decimal(12, 2)
   status      String?   @db.VarChar(50)
   created_at  DateTime? @default(now()) @db.Timestamp(6)
   updated_at  DateTime? @default(now()) @db.Timestamp(6)
-  payment     payment?  @relation(fields: [payment_id], references: [payment_id], onDelete: NoAction, onUpdate: NoAction)
+
+  payment     payment?
   property    property? @relation(fields: [property_id], references: [property_id], onDelete: NoAction, onUpdate: NoAction)
   user        user?     @relation(fields: [renter_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  userbid     userbid?  // thêm quan hệ ngược lại
 }
 
 model category {
@@ -81,13 +84,14 @@ model otp_verifications {
 model payment {
   payment_id String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_id    String?   @db.Uuid
-  booking_id String?   @db.Uuid
+  booking_id String?   @unique @db.Uuid 
   method_id  Int?
   amount     Decimal?  @db.Decimal(12, 2)
   status     String?   @db.VarChar(50)
   created_at DateTime? @default(now()) @db.Timestamp(6)
   updated_at DateTime? @default(now()) @db.Timestamp(6)
-  booking    booking[]
+  
+  booking    booking?  @relation(fields: [booking_id], references: [booking_id])
   method     method?   @relation(fields: [method_id], references: [method_id], onDelete: NoAction, onUpdate: NoAction)
   user       user?     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -229,13 +233,16 @@ model userbid {
   bid_id     String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   auction_id String?   @db.Uuid
   bidder_id  String?   @db.Uuid
+  booking_id String?   @unique @db.Uuid   // thêm booking_id duy nhất
   bid_time   DateTime? @db.Timestamp(6)
   bid_amount Decimal?  @db.Decimal(12, 2)
   status     String?   @db.VarChar(50)
   stay_start DateTime? @db.Timestamp(6)
   stay_end   DateTime? @db.Timestamp(6)
+
   auction    auction?  @relation(fields: [auction_id], references: [auction_id], onDelete: NoAction, onUpdate: NoAction)
   user       user?     @relation(fields: [bidder_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  booking    booking?  @relation(fields: [booking_id], references: [booking_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model userfavorite {

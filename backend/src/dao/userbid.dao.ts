@@ -185,6 +185,14 @@ export class UserBidDAO {
   
     return savedBid;
   }  
+  static async updateStatusByBookingId(bookingId: string, status: string) {
+    return prisma.userbid.updateMany({
+      where: {
+        booking_id: bookingId// booking có quan hệ 1-1 với userbid
+      },
+      data: { status },
+    });
+  }
   static async getBidById(bid_id: string) {
     return prisma.userbid.findUnique({
       where: { bid_id },
@@ -196,6 +204,12 @@ export class UserBidDAO {
           },
         },
       },
+    });
+  }
+  static async updateBookingId(bidId: string, bookingId: string) {
+    return prisma.userbid.update({
+      where: { bid_id: bidId },
+      data: { booking_id: bookingId },
     });
   }
 }
