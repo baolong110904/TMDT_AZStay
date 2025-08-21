@@ -49,14 +49,15 @@ export default function EditRoomPage() {
     try {
       setLoading(true);
       const res = await api.get(`properties/${propertyId}`);
-      setProperty(res.data);
+      const data = res.data?.data ?? res.data;
+      setProperty(data);
       setForm({
-        title: res.data.title || "",
-        description: res.data.description || "",
-        address: res.data.address || "",
-        max_guest: res.data.max_guest || 1,
-        min_price: res.data.min_price || 0,
-        is_available: !!res.data.is_available,
+        title: data?.title || "",
+        description: data?.description || "",
+        address: data?.address || "",
+        max_guest: data?.max_guest ?? 1,
+        min_price: data?.min_price ?? 0,
+        is_available: !!data?.is_available,
       });
     } catch (err: any) {
       console.error("Failed to load property", err);
@@ -80,70 +81,73 @@ export default function EditRoomPage() {
         is_available: !!form.is_available,
       };
       const res = await api.patch(`properties/${propertyId}`, payload);
-      setProperty(res.data);
-      alert('Property updated');
+      const data = res.data?.data ?? res.data;
+      setProperty(data);
+      window.alert("Property updated");
     } catch (err: any) {
-      console.error('Update failed', err);
-      setError(err?.response?.data?.message || err.message || 'Update failed');
-    } finally { setLoading(false); }
+      console.error("Update failed", err);
+      setError(err?.response?.data?.message || err.message || "Update failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Auctions: create (POST /auction), list active (GET /auction/active filtered), view bids, finalize (PATCH /auction/:id/end)
   const createAuction = async (start: string, end: string) => {
     try {
       setLoading(true);
-      await api.post('auction', { property_id: propertyId, start_time: start, end_time: end });
+      await api.post("auction", { property_id: propertyId, start_time: start, end_time: end });
       await fetchAuctionsForProperty();
-      alert('Auction created');
+      window.alert("Auction created");
     } catch (err: any) {
-      console.error('Create auction failed', err);
-      setError(err?.response?.data?.message || err.message || 'Create auction failed');
-    } finally { setLoading(false); }
+      console.error("Create auction failed", err);
+      setError(err?.response?.data?.message || err.message || "Create auction failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchAuctionsForProperty = async () => {
     try {
-      // use available endpoint /auction/active then filter by propertyId
-      const res = await api.get('auction/active');
-      const active: Auction[] = (res.data || []).filter((a: any) => a.property_id === propertyId);
-      // also include any auctions the user won (my-wins) that belong to this property
-      const winsRes = await api.get('auction/my-wins');
-      const wins: Auction[] = (winsRes.data || []).filter((a: any) => a.property_id === propertyId);
-      // merge unique auctions by id
+      const res = await api.get("auction/active");
+      const active: Auction[] = (res.data?.data ?? res.data ?? []).filter((a: any) => a.property_id === propertyId);
+      const winsRes = await api.get("auction/my-wins");
+      const wins: Auction[] = (winsRes.data?.data ?? winsRes.data ?? []).filter((a: any) => a.property_id === propertyId);
       const map = new Map<string, Auction>();
       active.concat(wins).forEach((a: Auction) => map.set(a.auction_id, a));
       setAuctions(Array.from(map.values()));
     } catch (err: any) {
-      console.error('Failed to fetch auctions', err);
+      console.error("Failed to fetch auctions", err);
     }
   };
 
   const viewBids = async (auctionId: string) => {
     try {
       const res = await api.get(`auction/${auctionId}/bids`);
-      setBids(res.data || []);
+      setBids(res.data?.data ?? res.data ?? []);
     } catch (err: any) {
-      console.error('Failed to fetch bids', err);
-      setError(err?.response?.data?.message || err.message || 'Failed to fetch bids');
+      console.error("Failed to fetch bids", err);
+      setError(err?.response?.data?.message || err.message || "Failed to fetch bids");
     }
   };
 
   const finalizeAuction = async (auctionId: string) => {
-    if (!confirm('Are you sure you want to finalize this auction?')) return;
+    if (!window.confirm("Are you sure you want to finalize this auction?")) return;
     try {
       setLoading(true);
       const res = await api.patch(`auction/${auctionId}/end`);
-      alert(res.data?.message || 'Auction finalized');
+      window.alert(res.data?.message || "Auction finalized");
       await fetchAuctionsForProperty();
     } catch (err: any) {
-      console.error('Finalize failed', err);
-      setError(err?.response?.data?.message || err.message || 'Finalize failed');
-    } finally { setLoading(false); }
+      console.error("Finalize failed", err);
+      setError(err?.response?.data?.message || err.message || "Finalize failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-5xl mx-auto py-12 px-6">
+    <div className="h-full overflow-hidden bg-gradient-to-b from-blue-50 to-white">
+      <div className="max-w-5xl mx-auto py-12 px-6 h-full overflow-hidden">
         <div className="bg-white rounded-xl shadow overflow-hidden">
           <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
             <h2 className="text-2xl font-semibold">Edit listing</h2>
@@ -157,32 +161,32 @@ export default function EditRoomPage() {
             <div className="grid grid-cols-1 gap-4">
               <label className="flex flex-col">
                 <span className="text-sm font-medium">Title</span>
-                <input className="border rounded px-3 py-2 mt-1" value={form.title || ''} onChange={(e) => handleChange('title', e.target.value)} />
+                <input className="border rounded px-3 py-2 mt-1" value={form.title || ""} onChange={(e) => handleChange("title", e.target.value)} />
               </label>
 
               <label className="flex flex-col">
                 <span className="text-sm font-medium">Description</span>
-                <textarea className="border rounded px-3 py-2 mt-1" rows={4} value={form.description || ''} onChange={(e) => handleChange('description', e.target.value)} />
+                <textarea className="border rounded px-3 py-2 mt-1" rows={4} value={form.description || ""} onChange={(e) => handleChange("description", e.target.value)} />
               </label>
 
               <label className="flex flex-col">
                 <span className="text-sm font-medium">Address</span>
-                <input className="border rounded px-3 py-2 mt-1" value={form.address || ''} onChange={(e) => handleChange('address', e.target.value)} />
+                <input className="border rounded px-3 py-2 mt-1" value={form.address || ""} onChange={(e) => handleChange("address", e.target.value)} />
               </label>
 
               <div className="grid grid-cols-2 gap-4">
                 <label className="flex flex-col">
                   <span className="text-sm font-medium">Max guests</span>
-                  <input type="number" className="border rounded px-3 py-2 mt-1" value={form.max_guest || 1} onChange={(e) => handleChange('max_guest', Number(e.target.value))} />
+                  <input type="number" className="border rounded px-3 py-2 mt-1" value={form.max_guest || 1} onChange={(e) => handleChange("max_guest", Number(e.target.value))} />
                 </label>
                 <label className="flex flex-col">
                   <span className="text-sm font-medium">Price (min)</span>
-                  <input type="number" className="border rounded px-3 py-2 mt-1" value={form.min_price || 0} onChange={(e) => handleChange('min_price', Number(e.target.value))} />
+                  <input type="number" className="border rounded px-3 py-2 mt-1" value={form.min_price || 0} onChange={(e) => handleChange("min_price", Number(e.target.value))} />
                 </label>
               </div>
 
               <label className="inline-flex items-center gap-2">
-                <input type="checkbox" checked={!!form.is_available} onChange={(e) => handleChange('is_available', e.target.checked)} />
+                <input type="checkbox" checked={!!form.is_available} onChange={(e) => handleChange("is_available", e.target.checked)} />
                 <span className="text-sm">Is available (visible)</span>
               </label>
 

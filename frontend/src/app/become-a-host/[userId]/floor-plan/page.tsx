@@ -53,7 +53,7 @@ export default function FloorPlanPage() {
     } finally {
       setSaving(false);
     }
-  }, [propertyId, title, description, router, guests, userId]);
+  }, [propertyId, title, description, router]);
 
   useEffect(() => {
     setNav({ next: `/become-a-host/${userId}/standout`, prev: `/become-a-host/${userId}/about-your-place`, currentStep, totalSteps });

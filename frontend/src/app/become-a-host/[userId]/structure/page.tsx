@@ -91,14 +91,12 @@ export default function StructurePage() {
   useEffect(() => {
     setNav({ next: `/become-a-host/${userId}/location`, prev: `/become-a-host/${userId}/about-your-place`, currentStep: 2, totalSteps: 7 });
     setCanProceed(Boolean(selectedCategory));
-    setOnNext(() => handleSubmit);
+    if (setOnNext) setOnNext(() => handleSubmit);
     return () => {
       setCanProceed(false);
-      setOnNext(null);
+      if (setOnNext) setOnNext(null);
     };
   }, [userId, selectedCategory, setCanProceed, setNav, setOnNext, handleSubmit]);
-
-  // handleSubmit moved above and wrapped with useCallback
 
   return (
       <div className="flex-1 flex flex-col items-center justify-center pt-0 px-6 md:px-4">
