@@ -173,17 +173,38 @@ create table otp_verifications (
 );
 
 -- 16. recommender system
-CREATE TABLE user_click (
-    click_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES "user"(user_id),
-    property_id UUID REFERENCES property(property_id),
-    event_type VARCHAR(50), --'click', 'view_detail', 'favorite', 'book', 'search', 'scroll'
-    event_value TEXT,        -- eg: search keyword, scroll %, ...
-    user_agent TEXT,
-    ip_address TEXT,
-    location TEXT,
-    clicked_at TIMESTAMP DEFAULT NOW()
+-- 1 per-user recommendations (normalized)
+CREATE TABLE IF NOT EXISTS user_recommendations (
+  user_id      uuid NOT NULL,
+  property_id  uuid NOT NULL,
+  score        double precision NOT NULL,
+  "rank"         int NOT NULL,
+  generated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, property_id)
 );
+ 
+CREATE INDEX IF NOT EXISTS idx_user_recs_user_rank ON user_recommendations (user_id, "rank");
+CREATE INDEX IF NOT EXISTS idx_user_recs_property ON user_recommendations (property_id);
+
+-- 2 item–item similarities (optional but useful for debug & “similar listings”)
+CREATE TABLE IF NOT EXISTS property_similarities (
+  property_a   uuid NOT NULL,
+  property_b   uuid NOT NULL,
+  sim          double precision NOT NULL,
+  generated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (property_a, property_b)
+);
+
+CREATE INDEX IF NOT EXISTS idx_property_sim_b ON property_similarities (property_b);
+
+-- view array
+CREATE OR REPLACE VIEW user_recommendations_array AS
+SELECT
+  user_id,
+  ARRAY_AGG(property_id ORDER BY "rank") AS recommended_property_ids,
+  MIN(generated_at) AS generated_at
+FROM user_recommendations
+GROUP BY user_id;
 
 -- 17. Review
 CREATE TABLE review (

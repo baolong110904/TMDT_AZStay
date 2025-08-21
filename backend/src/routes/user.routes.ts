@@ -31,7 +31,7 @@ router.post('/upload-avatar',
             authorizeRoles(Roles.ADMIN, Roles.PROPERTY_OWNER, Roles.CUSTOMER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
             upload.single('avatar'), 
             ImagesControllers.uploadAvatarController); // user avatar upload
-
+// sync Google Open Authorization
 router.post('/sync', AuthenticationControllers.syncAuth);
 
 export default router;
