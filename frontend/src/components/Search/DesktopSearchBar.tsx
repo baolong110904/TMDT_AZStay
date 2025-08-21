@@ -66,20 +66,30 @@ export default function DesktopSearchBar({ showSearchBar, placeholder }: Desktop
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     const debounce = setTimeout(async () => {
       if (searchInput.length < 2) {
         setSuggestions([]);
         return;
       }
       try {
-        // const res = await fetch(`/api/search?query=${encodeURIComponent(searchInput)}`);
-        // const data = await res.json();
-        // setSuggestions(data);
-      } catch (error) {
+        const q = encodeURIComponent(searchInput.trim());
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${q}&addressdetails=1&limit=6`;
+        const res = await fetch(url, { signal: controller.signal });
+        if (!res.ok) throw new Error(`OSM search failed: ${res.status}`);
+        const data = await res.json();
+        const names = (data || []).map((d: any) => d.display_name).filter(Boolean);
+        setSuggestions(names);
+      } catch (error: any) {
+        if (error.name === 'AbortError') return; // expected when cancelled
         console.error("Error fetching suggestions:", error);
+        setSuggestions([]);
       }
     }, 300);
-    return () => clearTimeout(debounce);
+    return () => {
+      clearTimeout(debounce);
+      try { controller.abort(); } catch (_) {}
+    };
   }, [searchInput]);
 
   const handleSelect = (ranges: RangeKeyDict) => {

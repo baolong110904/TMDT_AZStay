@@ -207,37 +207,33 @@ export const createProperty = async (req: Request, res: Response) => {
 }
 // Lấy ra thông tin property + ảnh của property đó dựa trên user id
 export const getPropertyByUserId = async (req: Request, res: Response) => {
-  const { user_id } = req.body;
+  try {
+    console.log("[getPropertyByUserId] request", {
+      method: req.method,
+      originalUrl: req.originalUrl,
+      query: req.query,
+      body: req.body,
+      // @ts-ignore
+      userFromToken: (req as any).user,
+    });
+  } catch (e) {}
+
+  const fromQuery = req.query?.user_id as string | undefined;
+  const fromBody = req.body && (req.body.user_id as string | undefined);
+
+  const fromToken = (req as any).user && ((req as any).user.user_id || (req as any).user.userId || (req as any).user.id);
+  const user_id = fromQuery ?? fromBody ?? fromToken;
+
   try {
     if (!user_id) {
-      return res
-        .status(400)
-        .json({ message: "User_id is missing in the input of the body" });
+      return res.status(200).json({ message: "No user_id provided", data: [] });
     }
 
-    const user = await getUserById(user_id);
-    if (!user) {
-      return res
-        .status(400)
-        .json({ message: "User_id is missing in the input of the body" });
-    }
-    const data = await PropertyDAO.getPropertyByUserId(user.user_id);
+    const data = await PropertyDAO.getPropertyByUserId(user_id);
 
-    if (!data) {
-      return res
-        .status(400)
-        .json({ message: "This user does not have any property" });
-    }
-
-    return res.status(200).json({
-      message: "Finding property based on user_id successfully",
-      data: data,
-    });
-  } catch (error) {
+    return res.status(200).json({ message: "Finding property based on user_id successfully", data: data || [] });
+  } catch (error: any) {
     console.error("Error finding property by user_id", error);
-    res.status(500).json({
-      message: "Failed to find property by using user_id",
-      error: String(error),
-    });
+    res.status(500).json({ message: "Failed to find property by using user_id", error: String(error?.message || error), stack: error?.stack });
   }
 };

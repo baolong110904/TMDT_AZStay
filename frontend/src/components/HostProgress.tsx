@@ -12,7 +12,6 @@ export default function HostProgress({ totalSteps, currentStep, segments = 4 }: 
   const percent = Math.max(0, Math.min(100, (currentStep / totalSteps) * 100));
 
   // debug: attach a short instance id for runtime inspection (dev-only, lightweight)
-  // initialize with null so TypeScript (strict) accepts the ref type
   const instanceIdRef = useRef<string | null>(null);
   if (!instanceIdRef.current) instanceIdRef.current = Math.random().toString(36).slice(2, 8);
 

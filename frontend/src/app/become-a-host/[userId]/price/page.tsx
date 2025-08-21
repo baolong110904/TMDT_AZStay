@@ -68,7 +68,7 @@ export default function PricePage() {
       const numeric = Number(price.replace(/[^0-9.-]/g, "")) || 0;
       await api.patch(
         `/properties/${propertyId}`,
-        { min_price: numeric },
+        { min_price: numeric, is_available: true },
         { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
       );
   alert("Saved");
