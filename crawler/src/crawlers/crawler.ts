@@ -69,7 +69,7 @@ export async function fetchAirbnbListings(location: string = 'New York') {
         const style = img.getAttribute('style') || '';
         return uri.includes('https://a0.muscache.com') && style.includes('--dls-liteimage-object-fit');
       });
-      
+        
       const imageUrl = (imageEl as HTMLImageElement)?.src ?? '';
       const description = card.querySelector('[data-testid="listing-card-name"]')?.textContent?.trim() ?? '';
 

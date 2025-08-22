@@ -14,7 +14,7 @@ const TABS = [
   { label: "Dashboard", icon: <ChartBarIcon className="h-6 w-6" />, href: "/admin/dashboard" },
   { label: "Auction Management", icon: <RiAuctionFill className="h-6 w-6" />, href: "/admin/auctions" },
   { label: "User/Host Management", icon: <UsersIcon className="h-6 w-6" />, href: "/admin/users" },
-  { label: "Catalogs", icon: <HomeIcon className="h-6 w-6" />, href: "/admin/catalogs" },
+  // { label: "Catalogs", icon: <HomeIcon className="h-6 w-6" />, href: "/admin/catalogs" },
   { label: "Settings", icon: <CogIcon className="h-6 w-6" />, href: "/admin/settings" },
 ];
 

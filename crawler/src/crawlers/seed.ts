@@ -28,7 +28,7 @@ export async function seed(city: string) {
       console.log(`⚠️  Skipped existing listing: ${item.link}`);
       continue;
     }
-
+    
     // 📍 Tọa độ xấp xỉ
     const approxCoord = randomOffset(center.lat, center.lng);
 
@@ -66,8 +66,8 @@ export async function seed(city: string) {
         }
       });
     }
-
     await migrateToPostgres({ listing, imageUrl: item.imageUrl });
+    return listings;
   }
 
   console.log(`✅ Done seeding and migrating ${listings.length} listings for ${city}`);

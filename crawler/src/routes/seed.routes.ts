@@ -28,7 +28,7 @@ cron.schedule('30 9 * * *', async () => {
   console.log('🕒 Daily auto-seed starting...');
   for (const city of cities) {
     try {
-      await seed(city);
+      const result = await seed(city);
     } catch (err) {
       console.error(`❌ Failed to seed ${city}`, err);
     }
