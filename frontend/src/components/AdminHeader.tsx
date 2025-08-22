@@ -49,6 +49,7 @@ export default function AdminHeader() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("resetToken");
     setUser(null);
     router.push("/login");
   };

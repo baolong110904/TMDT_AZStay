@@ -58,7 +58,21 @@ export default function LoginForm() {
         onChange={(e) => setPassword(e.target.value)}
         required
       />
+
+      {/* Forgot password link */}
+      <div className="text-right">
+        <button
+          type="button"
+          onClick={() => router.push("/forgot-password")}
+          tabIndex={-1}
+          className="text-sm text-blue-600 hover:underline cursor-pointer"
+        >
+          Forgot password?
+        </button>
+      </div>
+
       {error && <p className="text-red-500">{error}</p>}
+      
       <button
         type="submit"
         disabled={loading}

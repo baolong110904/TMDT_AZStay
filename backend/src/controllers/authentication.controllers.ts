@@ -245,7 +245,7 @@ export const verifyOtpAndGenerateToken = async (
       role: user.role_id,
       name: user.name,
       is_banned: user.is_banned,
-      type: "access",
+      type: "password_reset",
     };
 
     const signOptions: SignOptions = {
@@ -314,7 +314,7 @@ export async function syncAuth(req: Request, res: Response) {
 
     // find user inside the db
     let dbUser = await prisma.user.findUnique({ where: { email: user.email } });
-
+    
     if (!dbUser) {
       dbUser = await prisma.user.create({
         data: {

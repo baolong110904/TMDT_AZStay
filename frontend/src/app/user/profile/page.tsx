@@ -9,20 +9,6 @@ import EditProfileSection from "@/components/EditProfileSection";
 import Header from "@/components/SubHeader"; 
 import { UserProfile } from "@/components/Props/UserProfileProps";
 
-const PROFILE_EDIT_FIELDS = [
-  { key: "work", label: "My work", icon: "💼" },
-  { key: "funFact", label: "My fun fact", icon: "💡" },
-  { key: "decadeBorn", label: "Decade I was born", icon: "🎂" },
-  { key: "uselessSkill", label: "My most useless skill", icon: "✏️" },
-  { key: "favSong", label: "My favorite song in high school", icon: "🎵" },
-  { key: "bioTitle", label: "My biography title would be", icon: "📖" },
-  { key: "whereGo", label: "Where I've always wanted to go", icon: "🌍" },
-  { key: "pets", label: "Pets", icon: "🐾" },
-  { key: "school", label: "Where I went to school", icon: "🎓" },
-  { key: "tooMuchTime", label: "I spend too much time", icon: "⏰" },
-  { key: "languages", label: "Languages I speak", icon: "🌐" },
-  { key: "obsessed", label: "I'm obsessed with", icon: "❤️" },
-];
 
 export default function ProfilePage() {
   const [user, setUser] = useState<UserProfile | null>();
@@ -31,7 +17,6 @@ export default function ProfilePage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [profileFields, setProfileFields] = useState<Record<string, any>>({});
   const [activeTab, setActiveTab] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,10 +50,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleFieldChange = (key: string, value: string) => {
-    setProfileFields((prev: any) => ({ ...prev, [key]: value }));
-  };
-
   const handleSave = async () => {
     setError(null);
     setSuccess(null);
@@ -81,11 +62,6 @@ export default function ProfilePage() {
     const formData = new FormData();
     if (avatar) formData.append("avatar", avatar);
     if (password) formData.append("password", password);
-    if (profileFields) {
-      Object.keys(profileFields).forEach((key) => {
-        formData.append(key, (profileFields as Record<string, any>)[key]); //allow indexing
-      });
-    }
 
     try {
       if (!user) return;
@@ -110,7 +86,7 @@ export default function ProfilePage() {
       setError(err.response?.data?.message || "Failed to update profile.");
     }
   };
-
+  
   if (!user) return <p>Loading...</p>;
 
   return (
@@ -126,17 +102,12 @@ export default function ProfilePage() {
             <EditProfileSection
               user={user}
               avatar={avatar}
-              password={password}
               error={error}
               success={success}
-              profileFields={profileFields}
               handleAvatarChange={handleAvatarChange}
-              handleFieldChange={handleFieldChange}
               handleSave={handleSave}
               handleCancel={handleCancel}
               setUser={setUser}
-              setPassword={setPassword}
-              PROFILE_EDIT_FIELDS={PROFILE_EDIT_FIELDS}
             />
           )}
         </main>

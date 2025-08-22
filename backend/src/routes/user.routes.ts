@@ -22,9 +22,8 @@ router.post('/send-otp', AuthenticationControllers.sendOtpToUser);
 router.post('/verify-otp', AuthenticationControllers.verifyOtpAndGenerateToken); 
 // 5. change password
 router.post('/change-password', 
-            authenticateJWT('password_reset'), 
-            authorizeRoles(Roles.ADMIN, Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
-            AuthenticationControllers.changePassword); 
+            authenticateJWT('password_reset'),
+            AuthenticationControllers.changePassword);
 // 6. upload/update avatar
 router.post('/upload-avatar', 
             authenticateJWT('access'), 
@@ -33,5 +32,6 @@ router.post('/upload-avatar',
             ImagesControllers.uploadAvatarController); // user avatar upload
 // sync Google Open Authorization
 router.post('/sync', AuthenticationControllers.syncAuth);
+// router.put('/update', )
 
 export default router;

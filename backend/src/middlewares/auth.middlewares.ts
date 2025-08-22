@@ -22,11 +22,11 @@ export const authenticateJWT = (expectedType: string) => {
         return res.status(401).json({ message: "You are banned from our services" });
       }
       if (decoded.type !== expectedType) {
+        console.log("Decoded:", decoded);
         return res
           .status(403)
           .json({ error: `Expected token type '${expectedType}'` });
       }
-      
       next();
     } catch (err) {
       return res.status(403).json({ error: "Invalid or expired token" });
