@@ -24,8 +24,22 @@ router.post('/create-property',
 // upload images for an existing property
 router.post('/upload-images',
             verifyToken,
-            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
+            authorizeRoles(Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
             upload.array('images'),
             UploadPropertyImagesController.uploadPropertyImagesController);
+
+router.post('/add-fav', 
+            verifyToken, 
+            authorizeRoles(Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
+            PropertyController.addPropertyFavorites);
+router.post('/remove-fav', 
+            verifyToken, 
+            authorizeRoles(Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
+            PropertyController.removePropertyFavorites);
+
+router.get('/get-fav', 
+            verifyToken, 
+            authorizeRoles(Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
+            PropertyController.getFavoritesProperties);
 
 export default router;
