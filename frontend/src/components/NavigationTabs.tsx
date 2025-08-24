@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo, useState } from "react";
 import { IoHomeOutline } from "react-icons/io5";
 import { TbBalloon } from "react-icons/tb";
 import { MdFavorite, MdRecommend } from "react-icons/md";
@@ -22,13 +22,49 @@ export default function NavigationTabs({ activeTab, setActiveTab }: NavigationTa
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const underlineRef = useRef<HTMLSpanElement>(null);
   const router = useRouter();
+  const [userId, setUserId] = useState<string>("");
+  const [roleId, setRoleId] = useState<number | null>(null);
 
-  const tabs: Tab[] = [
-    { name: "Homes", icon: <IoHomeOutline size={20} />, href: "/home" },
-    { name: "For you", icon: <MdRecommend size={20} />, href: "/foryou" },
-    { name: "Favorites", icon: <MdFavorite size={20} />, href: "/favorites" },
-    { name: "Upcoming", icon: <TbBalloon size={20} />, href: "/upcoming" },
-  ];
+  useEffect(() => {
+    // Read user and id from localStorage
+    try {
+      const lsUserId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
+      const storedUser = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+      let uid = lsUserId || "";
+      let role: number | null = null;
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          uid = uid || parsed?.user_id || parsed?.id || "";
+          role = parsed?.role_id ?? null;
+        } catch {
+          // ignore
+        }
+      }
+      setUserId(uid);
+      setRoleId(typeof role === "number" ? role : null);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const tabs: Tab[] = useMemo(() => {
+    const base: Tab[] = [
+      { name: "Homes", icon: <IoHomeOutline size={20} />, href: "/home" },
+      { name: "For you", icon: <MdRecommend size={20} />, href: "/foryou" },
+      { name: "Favorites", icon: <MdFavorite size={20} />, href: "/favorites" },
+    ];
+    const isHost = roleId === 3 || roleId === 4;
+    const hostingHref = userId
+      ? `/hosting/listings?userId=${encodeURIComponent(String(userId))}`
+      : "/hosting/listings";
+    base.push(
+      isHost
+        ? { name: "Hosting", icon: <TbBalloon size={20} />, href: hostingHref }
+        : { name: "Upcoming", icon: <TbBalloon size={20} />, href: "/upcoming" }
+    );
+    return base;
+  }, [roleId, userId]);
   
   useEffect(() => {
     const activeEl = tabRefs.current[activeTab];

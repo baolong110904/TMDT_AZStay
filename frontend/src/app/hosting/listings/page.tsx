@@ -67,7 +67,7 @@ export default function HostingListingsPage() {
 
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 				{properties.map((p) => (
-					<div key={p.property_id} onClick={() => router.push(`/edit-room/${p.property_id}`)} role="button" tabIndex={0} className="bg-white rounded-lg shadow overflow-hidden cursor-pointer" onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/edit-room/${p.property_id}`); }}>
+					<div key={p.property_id} onClick={() => router.push(`/edit-room/${p.property_id}/photo`)} role="button" tabIndex={0} className="bg-white rounded-lg shadow overflow-hidden cursor-pointer" onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/edit-room/${p.property_id}/photo`); }}>
 						<div className="h-64 bg-gray-200 w-full relative">
 							{(() => {
 								// prefer explicit cover_image, else propertyimage with is_cover, else first image

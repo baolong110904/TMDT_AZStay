@@ -76,7 +76,13 @@ export const uploadPropertyImages = async (
   return savedImages;
 };
 
-// export const updatePropertyImages = async(
-//   property_id: string,
-  
-// )
+export const getPropertyImages = async (property_id: string) => {
+  return prisma.propertyimage.findMany({
+    where: { property_id },
+    orderBy: { uploaded_at: "desc" },
+  });
+};
+
+export const deletePropertyImage = async (image_id: string) => {
+  return prisma.propertyimage.delete({ where: { image_id } });
+};

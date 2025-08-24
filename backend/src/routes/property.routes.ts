@@ -1,6 +1,7 @@
 import express from "express";
 import * as PropertyController from "../controllers/property.controllers";
 import * as UploadPropertyImagesController from "../controllers/uploadPropertyImages.controllers";
+import * as ImagesController from "../controllers/images.controllers";
 import { authorizeRoles, Roles, verifyToken } from "../middlewares/auth.middlewares";
 import {upload} from "../middlewares/upload.middlewares";
 const router = express.Router();
@@ -27,5 +28,16 @@ router.post('/upload-images',
             authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
             upload.array('images'),
             UploadPropertyImagesController.uploadPropertyImagesController);
+
+// property images: list and delete
+router.get('/:propertyId/images',
+            verifyToken,
+            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
+            ImagesController.listPropertyImages);
+
+router.delete('/images/:imageId',
+            verifyToken,
+            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
+            ImagesController.removePropertyImage);
 
 export default router;
