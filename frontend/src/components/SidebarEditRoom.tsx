@@ -127,15 +127,18 @@ export default function SidebarEditRoom({ basePath, currentSection = "", propert
 
       <div className="mt-3 overflow-auto h-[calc(80vh-120px)] pr-2">
         <div className="mb-4">
-          <div className="rounded-xl border border-gray-100 p-3 shadow-sm mx-auto max-w-[300px]">
+          <Link
+            href={`${basePath}/auction`}
+            className={`block rounded-xl border border-gray-100 p-3 shadow-sm bg-white hover:shadow-md mx-auto max-w-[300px] ${activeSection === 'auction' ? 'ring-2 ring-gray-200 border-transparent' : ''}`}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <div className="flex items-center gap-2 font-medium text-sm text-amber-600">● Complete required steps</div>
-                <div className="text-sm text-gray-500 mt-2">Finish these final tasks to publish your listing and start getting booked.</div>
+                <div className="flex items-center gap-2 font-medium text-sm text-red-600">● Complete required steps</div>
+                <div className="text-sm text-gray-500 mt-2">Finish the auction setup to publish your listing and start getting booked.</div>
               </div>
               <div className="text-gray-400">›</div>
             </div>
-          </div>
+          </Link>
         </div>
 
         <div className="mb-4">
@@ -189,9 +192,12 @@ export default function SidebarEditRoom({ basePath, currentSection = "", propert
               {localProperty?.weekly_discount ? `${localProperty.weekly_discount}% weekly discount` : '5% weekly discount'}
             </div>
           </Link>
-          <Link href={`${basePath}/availability`} className={`block rounded-xl p-3 bg-white shadow-sm border border-gray-100 hover:shadow-md mx-auto max-w-[300px] ${activeSection === 'availability' ? 'ring-2 ring-gray-200 border-transparent' : ''}`}>
-            <div className="text-sm font-bold">Availability</div>
-            <div className="text-gray-500 mt-2">{localProperty?.min_nights ?? '1'} – {localProperty?.max_nights ?? '365'} night stays<br/>{localProperty?.advance_notice ?? 'Same day advance notice'}</div>
+          <Link href={`${basePath}/available-date`} className={`block rounded-xl p-3 bg-white shadow-sm border border-gray-100 hover:shadow-md mx-auto max-w-[300px] ${activeSection === 'available-date' ? 'ring-2 ring-gray-200 border-transparent' : ''}`}>
+            <div className="text-sm font-bold">Available date</div>
+            <div className="text-gray-500 mt-2">
+              <div>Check-in: {localProperty?.checkin_date ? new Date(localProperty.checkin_date).toLocaleDateString() : '—'}</div>
+              <div>Check-out: {localProperty?.checkout_date ? new Date(localProperty.checkout_date).toLocaleDateString() : '—'}</div>
+            </div>
           </Link>
           <Link href={`${basePath}/guests`} className={`block rounded-xl p-3 bg-white shadow-sm border border-gray-100 hover:shadow-md mx-auto max-w-[300px] ${activeSection === 'guests' ? 'ring-2 ring-gray-200 border-transparent' : ''}`}>
             <div className="text-sm font-bold">Number of guests</div>

@@ -6,7 +6,6 @@ import {
   QuestionMarkCircleIcon,
   HomeIcon,
   UsersIcon,
-  GiftIcon,
   LockClosedIcon,
   ClockIcon,
 } from "@heroicons/react/24/outline";
@@ -31,6 +30,11 @@ export default function DropdownMenu({
   const handleNavigation = (path: string) => {
     setIsOpen(false);
     if (path) router.push(path);
+  };
+
+  const handleAuctionManagement = () => {
+    setIsOpen(false);
+    router.push("/auction-management");
   };
 
   if (!isOpen) return null;
@@ -62,6 +66,14 @@ export default function DropdownMenu({
       >
         <Gavel className="h-5 w-5 text-gray-400 mr-3" />
         Bids
+      </button>
+
+      <button
+        onClick={handleAuctionManagement}
+        className="flex items-center w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition"
+      >
+        <ClockIcon className="h-5 w-5 text-gray-400 mr-3" />
+        Auction Management
       </button>
 
       <button
@@ -101,13 +113,6 @@ export default function DropdownMenu({
         Find a co-host
       </button>
 
-      <button
-        onClick={() => handleNavigation("/gift-cards")}
-        className="flex items-center w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition"
-      >
-        <GiftIcon className="h-5 w-5 text-gray-400 mr-3" />
-        Gift cards
-      </button>
 
       {!user && (
         <button

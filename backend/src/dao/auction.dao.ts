@@ -16,17 +16,19 @@ export class AuctionDAO {
     });
   }
   
-  static async getActiveAuctions() {
+  static async getActiveAuctions(userId: string) {
     const now = new Date();
     return prisma.auction.findMany({
       where: {
         start_time: { lte: now },
         end_time: { gte: now },
-        status: "active",
+        // scope to current owner's properties
+        property: { owner_id: userId },
       },
       include: {
         property: true,
       },
+      orderBy: { end_time: "asc" },
     });
   }
 

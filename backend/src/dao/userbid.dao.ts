@@ -93,17 +93,6 @@ export class UserBidDAO {
     });
   }
 
-  static toJSON(bid: UserBid) {
-    return {
-      bid_id: bid.bid_id,
-      auction_id: bid.auction_id,
-      bidder_id: bid.bidder_id,
-      bid_amount: bid.bid_amount,
-      bid_time: bid.bid_time,
-      status: bid.status,
-    };
-  }
-
   static async placeBid({
     auction_id,
     bidder_id,
@@ -180,6 +169,7 @@ export class UserBidDAO {
         bid_amount,
         stay_start,
         stay_end,
+        status: 'pending'
       }
     });
   

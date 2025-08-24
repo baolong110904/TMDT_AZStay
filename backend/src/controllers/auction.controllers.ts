@@ -15,9 +15,14 @@ export const createAuction = async (req: Request, res: Response) => {
   res.status(201).json(auction);
 };
 
-export const getActiveAuctions = async (_req: Request, res: Response) => {
-  const auctions = await AuctionDAO.getActiveAuctions();
-  res.status(200).json(auctions);
+export const getActiveAuctions = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user.sub;
+    const auctions = await AuctionDAO.getActiveAuctions(userId);
+    res.status(200).json(auctions);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to get active auctions" });
+  }
 };
 
 export const placeBid = async (req: AuthRequest, res: Response) => {

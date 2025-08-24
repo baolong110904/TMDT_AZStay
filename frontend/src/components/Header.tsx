@@ -58,7 +58,8 @@ export default function Header({ placeholder }: HeaderProps) {
     if (pathname.startsWith("/home")) setActiveTab("Homes");
     else if (pathname.startsWith("/foryou")) setActiveTab("For you");
     else if (pathname.startsWith("/favorites")) setActiveTab("Favorites");
-    else if (pathname.startsWith("/upcoming")) setActiveTab("Favorites");
+  else if (pathname.startsWith("/hosting")) setActiveTab("Hosting");
+  else if (pathname.startsWith("/upcoming")) setActiveTab("Upcoming");
   }, [pathname]);
 
   // Check for logged-in user on client mount
