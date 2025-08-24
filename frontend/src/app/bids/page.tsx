@@ -7,7 +7,7 @@ import api from "@/lib/axios";
 
 type UserBid = {
   bid_id: string;
-  status: "valid" | "cancelled" | "completed";
+  status: "valid" | "cancelled" | "completed" | "pending";
 };
 
 type Auction = {
@@ -21,7 +21,7 @@ type Auction = {
 };
 
 export default function BidsPage() {
-  const [filter, setFilter] = useState<"all" | "ongoing" | "cancelled" | "past">("all");
+  const [filter, setFilter] = useState<"all" | "ongoing" | "cancelled" | "past" | "pending">("all");
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -50,6 +50,7 @@ export default function BidsPage() {
   const mapBidStatus = (status: UserBid["status"]) => {
     if (status === "valid") return "ongoing";
     if (status === "cancelled") return "cancelled";
+    if (status === "pending") return "pending";
     return "past"; // completed
   };
 
@@ -70,7 +71,7 @@ export default function BidsPage() {
 
       {/* Filter */}
       <div className="flex gap-3 mb-6">
-        {["all", "ongoing", "cancelled", "past"].map((f) => (
+        {["all", "ongoing", "pending", "cancelled", "past"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f as any)}
@@ -84,6 +85,8 @@ export default function BidsPage() {
               ? "All"
               : f === "ongoing"
               ? "Ongoing"
+              : f === "pending"
+              ? "Pending"
               : f === "cancelled"
               ? "Cancelled"
               : "Past"}
@@ -120,12 +123,15 @@ export default function BidsPage() {
                   Status:{" "}
                   {bidStatus === "ongoing" ? (
                     <span className="text-blue-600 font-medium">Ongoing</span>
+                  ) : bidStatus === "pending" ? (
+                    <span className="text-purple-600 font-medium">Pending Confirmation</span>
                   ) : bidStatus === "cancelled" ? (
                     <span className="text-red-600 font-medium">Cancelled</span>
                   ) : (
                     <span className="text-gray-600 font-medium">Past</span>
                   )}
                 </p>
+
                 {auction.payment_status && (
                   <p className="text-sm">
                     Payment:{" "}
@@ -142,7 +148,7 @@ export default function BidsPage() {
                 )}
               </div>
 
-              {/* 👉 Nút Pay Deposit khi ongoing */}
+              {/* 👉 Chỉ hiện Pay Deposit khi ongoing (pending thì ẩn) */}
               {bidStatus === "ongoing" && (
                 <button
                   onClick={() => router.push(`/bids/${bid.bid_id}/payment`)}
