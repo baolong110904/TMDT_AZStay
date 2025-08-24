@@ -216,6 +216,7 @@ export default function EditRoomPage() {
                   <div className="text-sm">Status: <span className="font-semibold">{a.status}</span></div>
                 </div>
                 <div className="flex gap-2">
+                  <button className="px-3 py-1 border rounded" onClick={() => router.push(`/edit-room/${propertyId}/auction/${a.auction_id}`)}>Monitor</button>
                   <button className="px-3 py-1 border rounded" onClick={() => viewBids(a.auction_id)}>View bids</button>
                   <button className="px-3 py-1 bg-green-600 text-white rounded" onClick={() => finalizeAuction(a.auction_id)}>Finalize</button>
                 </div>

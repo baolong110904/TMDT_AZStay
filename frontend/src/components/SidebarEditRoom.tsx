@@ -133,7 +133,7 @@ export default function SidebarEditRoom({ basePath, currentSection = "", propert
           >
             <div className="flex items-center justify-between">
               <div>
-                <div className="flex items-center gap-2 font-medium text-sm text-amber-600">● Complete required steps</div>
+                <div className="flex items-center gap-2 font-medium text-sm text-red-600">● Complete required steps</div>
                 <div className="text-sm text-gray-500 mt-2">Finish the auction setup to publish your listing and start getting booked.</div>
               </div>
               <div className="text-gray-400">›</div>
@@ -190,6 +190,13 @@ export default function SidebarEditRoom({ basePath, currentSection = "", propert
               {`₫${Number(localProperty?.min_price ?? 0).toLocaleString()} per night`}<br/>
               {localProperty?.weekend_price ? `₫${Number(localProperty.weekend_price).toLocaleString()} weekend price` : '₫739,867 weekend price'}<br/>
               {localProperty?.weekly_discount ? `${localProperty.weekly_discount}% weekly discount` : '5% weekly discount'}
+            </div>
+          </Link>
+          <Link href={`${basePath}/available-date`} className={`block rounded-xl p-3 bg-white shadow-sm border border-gray-100 hover:shadow-md mx-auto max-w-[300px] ${activeSection === 'available-date' ? 'ring-2 ring-gray-200 border-transparent' : ''}`}>
+            <div className="text-sm font-bold">Available date</div>
+            <div className="text-gray-500 mt-2">
+              <div>Check-in: {localProperty?.checkin_date ? new Date(localProperty.checkin_date).toLocaleDateString() : '—'}</div>
+              <div>Check-out: {localProperty?.checkout_date ? new Date(localProperty.checkout_date).toLocaleDateString() : '—'}</div>
             </div>
           </Link>
           <Link href={`${basePath}/guests`} className={`block rounded-xl p-3 bg-white shadow-sm border border-gray-100 hover:shadow-md mx-auto max-w-[300px] ${activeSection === 'guests' ? 'ring-2 ring-gray-200 border-transparent' : ''}`}>

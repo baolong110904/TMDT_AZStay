@@ -54,7 +54,19 @@ export const getPropertyById = async (req: Request, res: Response) => {
 export const updateProperty = async (req: Request, res: Response) => {
   const { propertyId } = req.params;
   try {
-    const updated = await PropertyDAO.updateProperty(propertyId, req.body);
+    const body = { ...req.body } as any;
+    // Normalize checkin/checkout to proper Date when provided as strings
+    try {
+      if (body.checkin_date) {
+        const d = new Date(body.checkin_date);
+        if (!isNaN(d.getTime())) body.checkin_date = d;
+      }
+      if (body.checkout_date) {
+        const d = new Date(body.checkout_date);
+        if (!isNaN(d.getTime())) body.checkout_date = d;
+      }
+    } catch {}
+    const updated = await PropertyDAO.updateProperty(propertyId, body);
     res.status(200).json(updated);
   } catch (err) {
     const error = err as Error;

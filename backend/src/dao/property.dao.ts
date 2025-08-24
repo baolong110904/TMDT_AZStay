@@ -148,6 +148,8 @@ export class PropertyDAO {
       latitude?: number;
       max_guest?: number;
       min_price?: number;
+      checkin_date?: Date;
+      checkout_date?: Date;
       is_available?: boolean;
     }>
   ) {

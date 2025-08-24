@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
 
 type Auction = {
@@ -12,6 +12,7 @@ type Auction = {
   status: "upcoming" | "active" | "ended";
   final_price?: number | null;
   winner_id?: string | null;
+  user?: { name?: string; full_name?: string; email?: string } | null;
   property?: any;
 };
 
@@ -23,9 +24,11 @@ type Bid = {
   bid_time?: string;
   user?: { full_name?: string; email?: string };
 };
-
+// Removed bids UI and logic on this page; bidding/testing is handled on the specific auction monitor page
+// (/edit-room/[propertyId]/auction/[auctionId]).
 export default function AuctionPage() {
   const params = useParams();
+  const router = useRouter();
   const propertyId = (params as any)?.propertyId as string;
 
   const [loading, setLoading] = useState(false);
@@ -39,28 +42,37 @@ export default function AuctionPage() {
   // Active auction for this property
   const [activeAuction, setActiveAuction] = useState<Auction | null>(null);
 
-  // Bids
-  const [bids, setBids] = useState<Bid[]>([]);
-  const [bidsLoading, setBidsLoading] = useState(false);
-
-  // Try bid (for testing)
-  const [bidAmount, setBidAmount] = useState<string>("");
-  const [stayStart, setStayStart] = useState<string>(defaultStart());
-  const [stayEnd, setStayEnd] = useState<string>(defaultEnd());
-  const [placing, setPlacing] = useState(false);
+  // Bids/test bid removed from this page
   const [ending, setEnding] = useState(false);
 
   useEffect(() => {
     refreshActive();
   }, [propertyId]);
 
-  useEffect(() => {
-    if (!activeAuction?.auction_id) {
-      setBids([]);
-      return;
-    }
-    fetchBids(activeAuction.auction_id);
-  }, [activeAuction?.auction_id]);
+  // No bids fetching on this page; use the per-auction monitor page instead
+
+  // Runtime status by time window only
+  const runtimeStatus: 'active' | 'upcoming' | 'ended' | 'unknown' = useMemo(() => {
+    if (!activeAuction) return 'unknown';
+    // If backend already marked ended, trust that first
+    if (activeAuction.status === 'ended') return 'ended';
+    const now = Date.now();
+    const st = new Date(activeAuction.start_time).getTime();
+    const et = new Date(activeAuction.end_time).getTime();
+    if (now < st) return 'upcoming';
+    if (now >= st && now <= et) return 'active';
+    return 'ended';
+  }, [activeAuction]);
+  const canEnd = useMemo(() => {
+    if (!activeAuction) return false;
+    // Allow finalizing only after the scheduled end time and if not already marked ended
+    if (activeAuction.status === 'ended') return false;
+    const now = Date.now();
+    const et = new Date(activeAuction.end_time).getTime();
+    return now > et;
+  }, [activeAuction]);
+
+  // Removed available stay window, bids list, and minAllowedBid logic
 
   async function refreshActive() {
     try {
@@ -69,24 +81,31 @@ export default function AuctionPage() {
       const res = await api.get("auction/active");
       const list: Auction[] = res.data?.data ?? res.data ?? [];
       const a = (list || []).find((x) => String(x.property_id) === String(propertyId)) || null;
-      setActiveAuction(a);
+      if (a) {
+        setActiveAuction(a);
+      } else {
+        // Fallback: use last created (stored locally) so host can see scheduled auction
+        try {
+          const raw = typeof window !== 'undefined' ? localStorage.getItem(`lastAuction:${propertyId}`) : null;
+          if (raw) {
+            const cached = JSON.parse(raw) as Auction;
+            // only show if not yet ended
+            if (new Date(cached.end_time).getTime() > Date.now()) {
+              setActiveAuction(cached);
+            } else {
+              setActiveAuction(null);
+            }
+          } else {
+            setActiveAuction(null);
+          }
+        } catch {
+          setActiveAuction(null);
+        }
+      }
     } catch (e: any) {
       setError(e?.response?.data?.message || e.message || "Failed to load auctions");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function fetchBids(auctionId: string) {
-    try {
-      setBidsLoading(true);
-      const res = await api.get(`auction/${auctionId}/bids`);
-      const data: Bid[] = res.data?.data ?? res.data ?? [];
-      setBids(data);
-    } catch (e) {
-      // ignore for now
-    } finally {
-      setBidsLoading(false);
     }
   }
 
@@ -95,11 +114,24 @@ export default function AuctionPage() {
     try {
       setCreating(true);
       setError(null);
-      await api.post("auction", {
+      const res = await api.post("auction", {
         property_id: propertyId,
         start_time: new Date(start).toISOString(),
         end_time: new Date(end).toISOString(),
       });
+      const created: Auction = res.data?.data ?? res.data;
+      setActiveAuction(created);
+      // persist so refreshActive can show it even if not yet in /auction/active
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`lastAuction:${propertyId}`, JSON.stringify(created));
+        }
+      } catch {}
+      // Navigate to monitor page for this specific auction
+      if ((created as any)?.auction_id) {
+        router.push(`/edit-room/${propertyId}/auction/${created.auction_id}`);
+        return;
+      }
       await refreshActive();
       window.alert("Auction created");
     } catch (e: any) {
@@ -109,32 +141,22 @@ export default function AuctionPage() {
     }
   }
 
-  async function placeBid(auctionId: string) {
-    try {
-      setPlacing(true);
-      setError(null);
-      await api.post(`auction/${auctionId}/bid`, {
-        bid_amount: Number(bidAmount),
-        stay_start: new Date(stayStart).toISOString(),
-        stay_end: new Date(stayEnd).toISOString(),
-      });
-      await fetchBids(auctionId);
-      await refreshActive();
-      setBidAmount("");
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e.message || "Failed to place bid");
-    } finally {
-      setPlacing(false);
-    }
+  // Removed placeBid logic; use the per-auction monitor page to place bids
+
+  function openMonitor() {
+    if (!activeAuction?.auction_id) return;
+    router.push(`/edit-room/${propertyId}/auction/${activeAuction.auction_id}`);
   }
 
   async function endAuction(auctionId: string) {
     try {
       setEnding(true);
       setError(null);
-      await api.patch(`auction/${auctionId}/end`, {});
-      await refreshActive();
-      window.alert("Auction ended");
+  const res = await api.patch(`auction/${auctionId}/end`, {});
+  const updated: Auction = res.data?.data ?? res.data;
+  // Keep showing the just-ended auction with winner info
+  setActiveAuction(updated);
+  window.alert("Auction ended");
     } catch (e: any) {
       setError(e?.response?.data?.message || e.message || "Failed to end auction");
     } finally {
@@ -191,7 +213,15 @@ export default function AuctionPage() {
           {!hasActive ? (
             <div className="mt-3 text-gray-600 text-sm">No active auction for this listing. Create one above.</div>
           ) : (
-            <div className="mt-3 rounded-2xl border border-gray-200 p-4 shadow-sm">
+            <div
+              className="mt-3 rounded-2xl border border-gray-200 p-4 shadow-sm cursor-pointer hover:ring-1 hover:ring-gray-200 focus:outline-none"
+              role="button"
+              tabIndex={0}
+              onClick={openMonitor}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") openMonitor();
+              }}
+            >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="text-gray-800 font-medium">Auction ID</div>
@@ -203,68 +233,46 @@ export default function AuctionPage() {
                 </div>
                 <div>
                   <div className="text-gray-800 font-medium">Current price</div>
-                  <div className="text-gray-900 text-lg">{activeAuction!.final_price ? `₫${Number(activeAuction!.final_price).toLocaleString()}` : "—"}</div>
+                  <div className="text-gray-900 text-lg">{activeAuction!.final_price != null ? `₫${Number(activeAuction!.final_price).toLocaleString()}` : "—"}</div>
                 </div>
-                <div className="flex gap-2">
+                <div>
+                  <div className="text-gray-800 font-medium">Status</div>
+                  <div className="text-gray-600 text-sm capitalize">{runtimeStatus}</div>
+                </div>
+                <div className="flex gap-2 items-center">
                   <button
-                    onClick={() => endAuction(activeAuction!.auction_id)}
-                    disabled={ending}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      endAuction(activeAuction!.auction_id);
+                    }}
+                    disabled={ending || !canEnd}
                     className={`rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-300 ${
-                      ending
+                      ending || !canEnd
                         ? "bg-indigo-300 cursor-not-allowed"
                         : "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:brightness-110"
                     }`}
                   >
-                    {ending ? "Ending…" : "End auction"}
+                    {ending ? "Ending…" : "Finalize auction"}
                   </button>
+                  {!canEnd && activeAuction?.status !== 'ended' && (
+                    <span className="text-xs text-gray-500">You can finalize after the end time.</span>
+                  )}
                 </div>
               </div>
 
-              {/* Bids */}
-              <div className="mt-6">
-                <div className="text-sm font-semibold text-gray-800">Bids</div>
-                {bidsLoading ? (
-                  <div className="mt-2 text-gray-600 text-sm">Loading bids…</div>
-                ) : bids.length === 0 ? (
-                  <div className="mt-2 text-gray-600 text-sm">No bids yet.</div>
-                ) : (
-                  <ul className="mt-2 divide-y divide-gray-100">
-                    {bids.map((b) => (
-                      <li key={b.bid_id} className="py-2 flex items-center justify-between text-sm">
-                        <div className="text-gray-700">
-                          <span className="font-medium">{b.user?.full_name || b.bidder_id}</span>
-                          <span className="text-gray-400"> · </span>
-                          <span>{fmt(b.bid_time)}</span>
-                        </div>
-                        <div className="text-gray-900 font-semibold">₫{Number(b.bid_amount).toLocaleString()}</div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              {runtimeStatus === 'ended' && (
+                <div className="mt-4 rounded-xl bg-green-50 border border-green-200 p-3">
+                  <div className="text-green-800 text-sm font-semibold">Auction ended</div>
+                  <div className="mt-1 text-sm text-green-900">
+                    Final price: {activeAuction!.final_price != null ? `₫${Number(activeAuction!.final_price).toLocaleString()}` : '—'}
+                  </div>
+                  <div className="text-sm text-green-900">
+                    Winner: {activeAuction!.user?.full_name || activeAuction!.user?.name || activeAuction!.user?.email || activeAuction!.winner_id || '—'}
+                  </div>
+                </div>
+              )}
 
-              {/* Try bid */}
-              <div className="mt-6">
-                <div className="text-sm font-semibold text-gray-800">Place a test bid</div>
-                <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <LabeledInput label="Amount" value={bidAmount} onChange={setBidAmount} placeholder="1000000" />
-                  <LabeledInput label="Stay start" type="datetime-local" value={stayStart} onChange={setStayStart} />
-                  <LabeledInput label="Stay end" type="datetime-local" value={stayEnd} onChange={setStayEnd} />
-                </div>
-                <div className="mt-3">
-                  <button
-                    onClick={() => placeBid(activeAuction!.auction_id)}
-                    disabled={placing || !bidAmount}
-                    className={`rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-300 ${
-                      placing || !bidAmount
-                        ? "bg-indigo-300 cursor-not-allowed"
-                        : "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:brightness-110"
-                    }`}
-                  >
-                    {placing ? "Placing…" : "Place bid"}
-                  </button>
-                </div>
-              </div>
+              {/* Bids and test bidding are handled on the per-auction monitor page */}
             </div>
           )}
         </section>
