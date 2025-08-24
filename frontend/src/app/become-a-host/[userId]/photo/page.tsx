@@ -19,6 +19,10 @@ export default function PhotoPage() {
   const [uploaded, setUploaded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [menuOpenIndex, setMenuOpenIndex] = useState<number | null>(null);
+  const TRANSPARENT_GIF = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+  const previewsRef = useRef<string[]>([]);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const onAddPhotosClick = () => {
     // open file picker from modal only
@@ -36,12 +40,17 @@ export default function PhotoPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // Track latest previews, and revoke object URLs only once on unmount
   useEffect(() => {
-    // cleanup object URLs on unmount
-    return () => {
-      previews.forEach((url) => URL.revokeObjectURL(url));
-    };
+    previewsRef.current = previews;
   }, [previews]);
+  useEffect(() => {
+    return () => {
+      try {
+        previewsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      } catch {}
+    };
+  }, []);
 
   const onFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -57,6 +66,20 @@ export default function PhotoPage() {
   const nextPreviews = previews.filter((_, i) => i !== index);
   setFiles(nextFiles);
   setPreviews(nextPreviews);
+  setMenuOpenIndex((open) => (open === index ? null : open));
+  };
+
+  const setAsCover = (index: number) => {
+    if (index === 0) return;
+    const nextPreviews = [...previews];
+    const nextFiles = [...files];
+    const [p] = nextPreviews.splice(index, 1);
+    const [f] = nextFiles.splice(index, 1);
+    nextPreviews.unshift(p);
+    nextFiles.unshift(f);
+    setPreviews(nextPreviews);
+    setFiles(nextFiles);
+    setMenuOpenIndex(null);
   };
 
   // drag state
@@ -78,15 +101,24 @@ export default function PhotoPage() {
     if (incoming.length) addFiles(incoming);
   };
 
-  // shared upload function used by modal Upload and Next button
-  const uploadFilesAndMaybeCloseModal = useCallback(async (closeModal = false) => {
+  // Uploader helper: if persist=true, upload to server; otherwise just confirm selection locally
+  const uploadFilesAndMaybeCloseModal = useCallback(async (opts: { closeModal?: boolean; persist?: boolean } = {}) => {
+    const { closeModal = false, persist = false } = opts;
     setError(null);
-    if (!propertyId) {
-      setError("Missing property_id. Please go back and create a property first.");
-      return false;
-    }
     if (files.length < 5) {
       setError("Please upload at least 5 photos.");
+      return false;
+    }
+
+    if (!persist) {
+      // Local confirm only
+      setUploaded(true);
+      if (closeModal) setShowModal(false);
+      return true;
+    }
+
+    if (!propertyId) {
+      setError("Missing property_id. Please go back and create a property first.");
       return false;
     }
 
@@ -100,7 +132,6 @@ export default function PhotoPage() {
       await api.post("/properties/upload-images", form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      // success — show review UI using local previews (order preserved)
       setUploaded(true);
       if (closeModal) setShowModal(false);
       return true;
@@ -114,26 +145,57 @@ export default function PhotoPage() {
   }, [files, propertyId, userId]);
 
   const handleUpload = useCallback(async () => {
-    // delegate to shared uploader so modal's Upload button still works
-    await uploadFilesAndMaybeCloseModal(true);
+    // In modal: confirm selection locally; do not persist to server here
+    await uploadFilesAndMaybeCloseModal({ closeModal: true, persist: false });
   }, [uploadFilesAndMaybeCloseModal]);
 
   // drag & drop reorder for review thumbnails
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const onDragStart = (index: number) => (e: React.DragEvent) => {
+    const target = e.target as HTMLElement;
+    if (target && target.closest('[data-nodrag="true"]')) {
+      e.preventDefault();
+      return;
+    }
     setDragIndex(index);
     e.dataTransfer.effectAllowed = "move";
     try {
       // some browsers require setData for drag to work
       e.dataTransfer.setData("text/plain", String(index));
+      // use a transparent drag image to prevent the original element from disappearing
+      if (typeof document !== 'undefined') {
+        const img = document.createElement('img');
+        img.src = TRANSPARENT_GIF;
+        e.dataTransfer.setDragImage(img, 0, 0);
+      }
     } catch (err) {}
   };
+
+  // Close menu on outside click (pointerdown capture) and Escape
+  useEffect(() => {
+    const onPointerDown = (e: PointerEvent) => {
+      const el = menuRef.current;
+      if (!el) return;
+      const target = e.target as Node | null;
+      if (target && el.contains(target)) return; // click inside menu region
+      setMenuOpenIndex(null);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpenIndex(null);
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, []);
 
   // register this page's save handler with the host flow so Layout's Next can trigger it
   const { setOnNext, setCanProceed, setNav } = useHostFlow() as any;
   useEffect(() => {
     const handler = async () => {
-      const ok = await uploadFilesAndMaybeCloseModal(true);
+  const ok = await uploadFilesAndMaybeCloseModal({ closeModal: true, persist: true });
       if (!ok) {
         alert('Failed to save photos');
         return;
@@ -172,16 +234,45 @@ export default function PhotoPage() {
   };
   const onDrop = (index: number) => (e: React.DragEvent) => {
     e.preventDefault();
-    if (dragIndex === null) return;
+    const data = e.dataTransfer.getData("text/plain");
+    const parsed = Number.parseInt(data, 10);
+    const from = Number.isFinite(parsed) ? parsed : dragIndex;
+    if (from === null || Number.isNaN(from)) return;
+    if (from === index) return;
     const next = [...previews];
     const fileNext = [...files];
-    const [movedPreview] = next.splice(dragIndex, 1);
-    const [movedFile] = fileNext.splice(dragIndex, 1);
-    next.splice(index, 0, movedPreview);
-    fileNext.splice(index, 0, movedFile);
+    const [movedPreview] = next.splice(from, 1);
+    const [movedFile] = fileNext.splice(from, 1);
+    const to = index > from ? index - 1 : index;
+    next.splice(to, 0, movedPreview);
+    fileNext.splice(to, 0, movedFile);
     setPreviews(next);
     setFiles(fileNext);
     setDragIndex(null);
+  setMenuOpenIndex(null);
+  };
+
+  // Allow dropping on the cover area to set an image as cover (move to index 0)
+  const onCoverDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+  const onCoverDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData("text/plain");
+    const parsed = Number.parseInt(data, 10);
+    const from = Number.isFinite(parsed) ? parsed : dragIndex;
+    if (from === null || from === 0 || Number.isNaN(from)) return;
+    const next = [...previews];
+    const fileNext = [...files];
+    const [movedPreview] = next.splice(from, 1);
+    const [movedFile] = fileNext.splice(from, 1);
+    next.unshift(movedPreview);
+    fileNext.unshift(movedFile);
+    setPreviews(next);
+    setFiles(fileNext);
+    setDragIndex(null);
+  setMenuOpenIndex(null);
   };
 
   return (
@@ -231,10 +322,18 @@ export default function PhotoPage() {
                   {/* thumbnails grid */}
                   {previews.length > 0 && (
                     <div className="mt-6 grid grid-cols-3 gap-4 max-h-96 overflow-auto">
-                      {previews.map((src, idx) => (
-                        <div key={idx} className="relative rounded-lg overflow-hidden" draggable onDragStart={onDragStart(idx)} onDragOver={onDragOver(idx)} onDrop={onDrop(idx)}>
-                          <img src={src} alt={`preview ${idx + 1}`} className="w-full h-36 object-cover rounded-md" />
-                          <button onClick={() => removeImage(idx)} className="absolute top-2 right-2 bg-black/70 text-white rounded-full p-1">🗑</button>
+            {previews.map((src, idx) => (
+                        <div
+                          key={src} // Ensure all mapped lists use key={src}
+                          className="relative rounded-lg overflow-hidden"
+                          draggable
+                          onDragStart={onDragStart(idx)}
+                          onDragOver={onDragOver(idx)}
+                          onDrop={onDrop(idx)}
+                          onDragEnd={() => setDragIndex(null)}
+                        >
+                          <img src={src} alt={`preview ${idx + 1}`} className="w-full h-36 object-cover rounded-md" draggable={false} />
+                          <button data-nodrag="true" onClick={() => removeImage(idx)} className="absolute top-2 right-2 bg-black/70 text-white rounded-full p-1">🗑</button>
                         </div>
                       ))}
                     </div>
@@ -246,7 +345,6 @@ export default function PhotoPage() {
                 <div className="flex items-center justify-between p-4">
                   <button onClick={() => setShowModal(false)} className="px-4 py-2">Done</button>
                   <div>
-                    <button onClick={() => { setFiles([]); previews.forEach(u=>URL.revokeObjectURL(u)); setPreviews([]); }} className="mr-3 px-4 py-2">Clear</button>
                     <button disabled={files.length < 5 || isUploading} onClick={handleUpload} className={`px-4 py-2 rounded ${files.length < 5 || isUploading ? 'bg-gray-300 text-gray-600' : 'bg-black text-white'}`}>
                       {isUploading ? 'Uploading...' : 'Upload'}
                     </button>
@@ -264,24 +362,108 @@ export default function PhotoPage() {
       {/* After upload: review & reorder */}
       {uploaded && previews.length > 0 && (
         <div className="-mt-10">
-          <h2 className="text-xl font-semibold mb-2">Ta-da! How does this look?</h2>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Ta-da! How does this look?</h2>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center justify-center w-9 h-9 rounded-full mt-2 mr-8 border-gray-500 shadow bg-white text-gray-700 hover:bg-gray-50"
+              title="Add photos"
+            >
+              ＋
+            </button>
+          </div>
           <div className="text-sm text-gray-500 mb-4">Drag to reorder</div>
 
           <div className="bg-white rounded-lg p-4">
             {/* cover */}
-            <div className="relative rounded-lg overflow-hidden mb-4">
-              <img src={previews[0]} alt="cover" className="w-full h-80 object-cover rounded-md" />
+            <div className="relative rounded-lg overflow-hidden mb-4"
+                 onDragOver={onCoverDragOver}
+                 onDrop={onCoverDrop}
+            >
+              <img src={previews[0]} alt="cover" className="w-full h-80 object-cover rounded-md" draggable={false} />
               <div className="absolute top-4 left-4 bg-white text-sm px-2 py-1 rounded shadow z-10">Cover Photo</div>
             </div>
 
-            {/* thumbnails */}
+            {/* thumbnails (exclude cover to avoid duplicate DOM node) */}
             <div className="grid grid-cols-3 gap-4">
-              {previews.map((src, idx) => (
-                <div key={idx} draggable onDragStart={onDragStart(idx)} onDragOver={onDragOver(idx)} onDrop={onDrop(idx)} className="relative">
-                  <img src={src} className="w-full h-36 object-cover rounded-md" />
-                  <div className="absolute top-2 right-2 bg-white rounded-full p-1">⋯</div>
+              {previews.slice(1).map((src, idx) => {
+                const realIndex = idx + 1;
+                return (
+                  <div
+                    key={src}
+                    onDragOver={onDragOver(realIndex)}
+                    onDrop={onDrop(realIndex)}
+                    className="relative group"
+                  >
+                    <img src={src} className="w-full h-36 object-cover rounded-md" draggable={false} />
+
+                  {/* drag handle */}
+                  <button
+                    type="button"
+                    title="Drag to reorder"
+                    draggable
+                    onDragStart={onDragStart(realIndex)}
+                    className="absolute bottom-2 left-2 rounded-md bg-white/90 border shadow px-2 py-1 text-xs text-gray-700 hover:bg-white cursor-grab active:cursor-grabbing"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    ↕ Drag
+                  </button>
+
+                  {/* menu trigger + dropdown */}
+                  <div className="absolute top-2 right-2" ref={menuOpenIndex === realIndex ? menuRef : null}>
+                    <button
+                      type="button"
+                      aria-haspopup="menu"
+                      aria-expanded={menuOpenIndex === realIndex}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpenIndex((open) => (open === realIndex ? null : realIndex));
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      data-nodrag="true"
+                      className="bg-white rounded-full p-1 shadow border text-gray-700 hover:bg-gray-50"
+                    >
+                      ⋯
+                    </button>
+                    {menuOpenIndex === realIndex && (
+                      <div
+                        role="menu"
+                        className="absolute mt-2 right-0 z-20 bg-white border rounded-md shadow-lg overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                          onClick={() => setAsCover(realIndex)}
+                        >
+                          Set as cover
+                        </button>
+                        <button
+                          className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                          onClick={() => removeImage(realIndex)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ))}
+              );})}
+
+              {/* Add-tile: same size as thumbnails, click or drop to add more images */}
+              <button
+                type="button"
+                className="w-full h-36 rounded-md border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-gray-100"
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const incoming = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+                  if (incoming.length) addFiles(incoming);
+                }}
+              >
+                <span className="text-2xl">＋</span>
+              </button>
             </div>
 
             {/* Navigation handled by layout's Next (registered via setOnNext) */}
