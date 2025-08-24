@@ -21,7 +21,7 @@ export const createPaymentSession = async (req: AuthRequest, res: Response) => {
   try {
     const { bidId, amount } = req.body;
     const userId = req.user.sub;
-    const vnp_return_Url = "http://localhost:3000/callback"; 
+    const vnp_return_Url = process.env.VNP_RETURN_URL!; 
 
     if (!bidId || !amount) {
       return res.status(400).json({ message: "Missing bidId or amount" });

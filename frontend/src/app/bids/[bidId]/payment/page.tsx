@@ -48,7 +48,7 @@ export default function PaymentPage() {
       depositVND: deposit,
       depositUSD: deposit / 24000, // assume 24k exchange rate
     };
-  }, [bidInfo]);
+  }, [bidInfo, getNights]);
 
   useEffect(() => {
     if (!bidId) return;
@@ -212,7 +212,6 @@ export default function PaymentPage() {
               >
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/paypal.svg" alt="PayPal" className="h-5 w-auto" />
                     <div className="font-medium">PayPal</div>
                   </div>
@@ -229,7 +228,7 @@ export default function PaymentPage() {
           {/* Step 2: Review & terms */}
           <section className="rounded-2xl border border-gray-500/40 bg-white p-5 shadow-md">
             <h2 className="text-lg font-semibold mb-2">2. Review your request</h2>
-            <p className="text-sm text-gray-600">By continuing, you agree to the booking terms and the host's refund policy.</p>
+            <p className="text-sm text-gray-600">By continuing, you agree to the booking terms and the host&apos;s refund policy.</p>
           </section>
         </div>
 
