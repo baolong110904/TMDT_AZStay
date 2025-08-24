@@ -84,7 +84,9 @@ export const deleteProperty = async (req: Request, res: Response) => {
     return res.status(204).send();
   } catch (err) {
     const error = err as Error;
-    return res.status(400).json({ message: "Failed to delete property", error: error.message });
+    return res
+      .status(400)
+      .json({ message: "Failed to delete property", error: error.message });
   }
 };
 
@@ -130,7 +132,9 @@ export const createProperty = async (req: Request, res: Response) => {
         },
       });
 
-      return res.status(201).json({ message: "Draft property created", property: createdProperty });
+      return res
+        .status(201)
+        .json({ message: "Draft property created", property: createdProperty });
     }
 
     // 0. Validate required fields for full create
@@ -175,7 +179,7 @@ export const createProperty = async (req: Request, res: Response) => {
     if (!user_data) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     // 3. Auto-upgrade role if needed
     if (user_data.role_id === 2 || user_data.role_id === 3) {
       await AdminDAO.updateUserRole(user_id, 4);
@@ -216,7 +220,7 @@ export const createProperty = async (req: Request, res: Response) => {
       } catch (e) {}
     }
   }
-}
+};
 // Lấy ra thông tin property + ảnh của property đó dựa trên user id
 export const getPropertyByUserId = async (req: Request, res: Response) => {
   try {
@@ -233,7 +237,11 @@ export const getPropertyByUserId = async (req: Request, res: Response) => {
   const fromQuery = req.query?.user_id as string | undefined;
   const fromBody = req.body && (req.body.user_id as string | undefined);
 
-  const fromToken = (req as any).user && ((req as any).user.user_id || (req as any).user.userId || (req as any).user.id);
+  const fromToken =
+    (req as any).user &&
+    ((req as any).user.user_id ||
+      (req as any).user.userId ||
+      (req as any).user.id);
   const user_id = fromQuery ?? fromBody ?? fromToken;
 
   try {
@@ -243,9 +251,109 @@ export const getPropertyByUserId = async (req: Request, res: Response) => {
 
     const data = await PropertyDAO.getPropertyByUserId(user_id);
 
-    return res.status(200).json({ message: "Finding property based on user_id successfully", data: data || [] });
+    return res.status(200).json({
+      message: "Finding property based on user_id successfully",
+      data: data || [],
+    });
   } catch (error: any) {
     console.error("Error finding property by user_id", error);
-    res.status(500).json({ message: "Failed to find property by using user_id", error: String(error?.message || error), stack: error?.stack });
+    res.status(500).json({
+      message: "Failed to find property by using user_id",
+      error: String(error?.message || error),
+      stack: error?.stack,
+    });
   }
+};
+
+export const addPropertyFavorites = async (req: Request, res: Response) => {
+  const { user_id, property_id } = req.body;
+  try {
+    if (!user_id || !property_id) {
+      return res.status(400).json({
+        message:
+          "Missing one of those required fields: `user_id`, `property_id`",
+      });
+    }
+    console.log("User id:", user_id);
+    console.log("Property id:", property_id);
+    const user_data = await getUserById(user_id);
+    const property_data = await PropertyDAO.getPropertyById(property_id);
+    if (!user_data || !property_data) {
+      return res
+        .status(401)
+        .json({ mesage: "User or property does not exist" });
+    }
+    const result = await PropertyDAO.addToFavorites(
+      user_data.user_id,
+      property_data.property_id
+    );
+    return res.status(200).json({
+      message: "Added to favorite successfully.",
+      data: { result },
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to add to favorite using user_id and property_id",
+      error: String(error?.message || error),
+      stack: error?.stack,
+    });
+  }
+};
+
+export const removePropertyFavorites = async (req: Request, res: Response) => {
+  const { user_id, property_id } = req.body;
+  try {
+    if (!user_id || !property_id) {
+      return res.status(400).json({
+        message:
+          "Missing one of those required fields: `user_id`, `property_id`",
+      });
+    }
+    console.log("User id:", user_id);
+    console.log("Property id:", property_id);
+    const user_data = await getUserById(user_id);
+    const property_data = await PropertyDAO.getPropertyById(property_id);
+    if (!user_data || !property_data) {
+      return res
+        .status(401)
+        .json({ mesage: "User or property does not exist" });
+    }
+    const result = await PropertyDAO.removeFromFavorites(
+      user_data.user_id,
+      property_data.property_id
+    );
+    return res.status(200).json({
+      message: "Remove from favorite successfully.",
+      data: { result },
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to remove from favorite using user_id and property_id",
+      error: String(error?.message || error),
+      stack: error?.stack,
+    });
+  }
+};
+
+export const getFavoritesProperties = async (req: Request, res: Response) => {
+  const { user_id } = req.body;
+  try {
+    if (!user_id) {
+      return res.status(400).json({
+        message: "Missing required field: `user_id`",
+      });
+    }
+    console.log("User id:", user_id);
+    const user_data = await getUserById(user_id);
+    if (!user_data) {
+      return res.status(401).json({ mesage: "User does not exist" });
+    }
+    const result = await PropertyDAO.getFavorites(user_data.user_id);
+    return res.status(200).json({
+      message: "Fetch favorites successfully",
+      data: { result },
+    });
+  } catch (error) {}
 };

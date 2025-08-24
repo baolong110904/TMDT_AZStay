@@ -154,6 +154,8 @@ export class AdminDAO {
         auction_id: true,
       },
       where: {
+        start_time: { lte: new Date() },
+        end_time: { gte: new Date() },
         status: "active",
       },
     });

@@ -165,4 +165,35 @@ export class PropertyDAO {
       where: { property_id },
     });
   }
+
+  static addToFavorites = async (user_id: string, property_id: string) => {
+    return prisma.userfavorite.create({
+      data: {
+        user_id: user_id,
+        property_id: property_id,
+      },
+    });
+  };
+  static async removeFromFavorites(user_id: string, property_id: string) {
+    return prisma.userfavorite.delete({
+      where: {
+        user_id_property_id: {
+          user_id,
+          property_id,
+        },
+      },
+    });
+  }
+  static async getFavorites(user_id: string) {
+    return prisma.property.findMany({
+      where: {
+        userfavorite: {
+          some: { user_id },
+        },
+      },
+      include: {
+        userfavorite: true
+      },
+    });
+  }
 }
