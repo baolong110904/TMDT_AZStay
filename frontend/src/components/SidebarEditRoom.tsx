@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import api from '@/lib/axios';
+import SettingSidebar from './SidebarSettingRoom';
 
 type Props = {
   basePath: string;
@@ -16,10 +17,53 @@ export default function SidebarEditRoom({ basePath, currentSection = "", propert
   const router = useRouter();
   const activeSection = currentSection;
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [localProperty, setLocalProperty] = useState<any>(property ?? null);
   const [loadingProperty, setLoadingProperty] = useState(false);
   const [propertyError, setPropertyError] = useState<string | null>(null);
+  const [showSetting, setShowSetting] = useState(false);
+
+  // Resolve userId from URL > localStorage('userId' or JSON 'user'.user_id) > referrer > property
+  const resolveUserId = (): string => {
+    // 1) URL query
+    const qUserId = searchParams?.get('userId');
+    if (qUserId) return qUserId;
+
+    // 2) localStorage
+    if (typeof window !== 'undefined') {
+      const lsUserId = localStorage.getItem('userId');
+      if (lsUserId) return lsUserId;
+      // Try JSON user object
+      const rawUser = localStorage.getItem('user');
+      if (rawUser) {
+        try {
+          const parsed = JSON.parse(rawUser);
+          const cand = parsed?.user_id || parsed?.id || parsed?.userId || parsed?.uid;
+          if (cand && typeof cand === 'string') return cand;
+        } catch {}
+      }
+    }
+
+    // 3) referrer
+    if (typeof document !== 'undefined' && document.referrer) {
+      try {
+        const ref = document.referrer;
+        const qIdx = ref.indexOf('?');
+        if (qIdx !== -1) {
+          const params = new URLSearchParams(ref.substring(qIdx));
+          const refUserId = params.get('userId');
+          if (refUserId) return refUserId;
+        }
+      } catch {}
+    }
+
+    // 4) fallback to property owner fields if present
+    const propUser = (localProperty as any)?.user_id || (localProperty as any)?.owner_id || (localProperty as any)?.host_id;
+    if (propUser && typeof propUser === 'string') return propUser;
+
+    return '';
+  };
 
   useEffect(() => {
     if (property) return; // already provided
@@ -45,30 +89,20 @@ export default function SidebarEditRoom({ basePath, currentSection = "", propert
     fetchProperty(inferred);
   }, [pathname, property]);
 
-  const handleBack = () => {
-    // 1) try localStorage
-    const lsUser = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
-    let userId = lsUser ?? '';
+  // Close settings only when route changes between sections
+  useEffect(() => {
+    setShowSetting(false);
+  }, [pathname]);
 
-    // 2) if not found, try parsing document.referrer (the page we came from)
-    if (!userId && typeof document !== 'undefined' && document.referrer) {
-      try {
-        const ref = document.referrer;
-        const qIdx = ref.indexOf('?');
-        if (qIdx !== -1) {
-          const params = new URLSearchParams(ref.substring(qIdx));
-          userId = params.get('userId') ?? '';
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
+  const handleBack = () => {
+    const userId = resolveUserId();
 
     const pid = localProperty?.property_id ?? property?.property_id ?? '';
 
     if (userId) {
-      const base = `/hosting/listings?userId=${encodeURIComponent(String(userId))}`;
-      const url = pid ? `${base}&property_id=${encodeURIComponent(String(pid))}` : base;
+      const dest = `/hosting/listings?userId=${encodeURIComponent(String(userId))}`;
+      // Preserve property_id only when going back from editor, not after deletion
+      const url = pid ? `${dest}&property_id=${encodeURIComponent(String(pid))}` : dest;
       router.push(url);
       return;
     }
@@ -84,7 +118,18 @@ export default function SidebarEditRoom({ basePath, currentSection = "", propert
   };
 
   if (loadingProperty) {
-    return <aside className="bg-white rounded p-4 sticky top-6 h-[90vh]">Loading...</aside>;
+    return (
+      <aside className="bg-white rounded p-4 sticky top-6 h-[90vh]">
+        <div className="h-full flex items-center justify-center text-gray-600">
+          <span className="inline-flex items-center gap-1">
+            Loading
+            <span className="inline-block w-3 text-center animate-pulse">.</span>
+            <span className="inline-block w-3 text-center animate-pulse [animation-delay:150ms]">.</span>
+            <span className="inline-block w-3 text-center animate-pulse [animation-delay:300ms]">.</span>
+          </span>
+        </div>
+      </aside>
+    );
   }
 
   if (propertyError) {
@@ -113,11 +158,28 @@ export default function SidebarEditRoom({ basePath, currentSection = "", propert
 
             <div className="mt-3 flex items-center gap-3">
               <div className="bg-white rounded-full shadow px-1 py-1 flex items-center gap-2">
-                <Link href={`${basePath}/title`} className={`px-3 py-1 rounded-full text-sm transition-colors duration-150 ${activeSection === "title" ? "bg-white text-black shadow-md" : "text-gray-600 hover:bg-gray-50 hover:shadow-sm"}`}>Your space</Link>
+                <Link
+                  href={`${basePath}/title`}
+                  onClick={() => setShowSetting(false)}
+                  className={`px-3 py-1 rounded-full text-sm transition-colors duration-150 ${activeSection === "title" ? "bg-white text-black shadow-md" : "text-gray-600 hover:bg-gray-50 hover:shadow-sm"}`}
+                >
+                  Your space
+                </Link>
                 <div className="w-px h-5 bg-gray-200 rounded" />
-                <Link href={`${basePath}/arrival-guide`} className={`px-3 py-1 rounded-full text-sm transition-colors duration-150 ${activeSection === "arrival-guide" ? "bg-white text-black shadow-md" : "text-gray-600 hover:bg-gray-50 hover:shadow-sm"}`}>Arrival guide</Link>
+                <Link
+                  href={`${basePath}/arrival-guide`}
+                  onClick={() => setShowSetting(false)}
+                  className={`px-3 py-1 rounded-full text-sm transition-colors duration-150 ${activeSection === "arrival-guide" ? "bg-white text-black shadow-md" : "text-gray-600 hover:bg-gray-50 hover:shadow-sm"}`}
+                >
+                  Arrival guide
+                </Link>
               </div>
-              <button aria-label="Settings" title="Settings" className="p-2 rounded-full text-gray-600 hover:bg-gray-50 transition">
+              <button
+                aria-label="Settings"
+                title="Settings"
+                className="p-2 rounded-full text-gray-600 hover:bg-gray-50 transition"
+                onClick={() => setShowSetting(true)}
+              >
                 <Cog6ToothIcon className="w-5 h-5" />
               </button>
             </div>
@@ -125,6 +187,21 @@ export default function SidebarEditRoom({ basePath, currentSection = "", propert
         </div>
       </div>
 
+      {showSetting ? (
+        <SettingSidebar
+          property={localProperty}
+          onClose={() => setShowSetting(false)}
+          onDeleted={() => {
+            setShowSetting(false);
+            // After deletion, navigate to listings with only userId (no property_id)
+            const userId = resolveUserId();
+            const dest = userId
+              ? `/hosting/listings?userId=${encodeURIComponent(String(userId))}`
+              : `/hosting/listings`;
+            router.push(dest);
+          }}
+        />
+      ) : (
       <div className="mt-3 overflow-auto h-[calc(80vh-120px)] pr-2">
         <div className="mb-4">
           <Link
@@ -217,18 +294,10 @@ export default function SidebarEditRoom({ basePath, currentSection = "", propert
             </div>
             <div className="text-gray-500 text-sm">{localProperty?.address ?? '—'}</div>
           </Link>
-          <Link href={`${basePath}/about-host`} className={`block rounded-xl p-3 bg-white shadow-sm border border-gray-100 hover:shadow-md mx-auto max-w-[300px] ${activeSection === 'about-host' ? 'ring-2 ring-gray-200 border-transparent' : ''}`}>
-            <div className="text-sm font-bold">About the host</div>
-            <div className="mt-3 flex items-center">
-              <div className="w-12 h-12 rounded-full bg-gray-200 mr-3" />
-              <div className="text-gray-500">
-                <div className="font-medium">{localProperty?.owner_name ?? localProperty?.user?.full_name ?? 'Bảo Long'}</div>
-                <div className="text-sm text-gray-500">Started hosting in {localProperty?.owner_since ?? '2025'}</div>
-              </div>
-            </div>
-          </Link>
+      {/* About the host section removed as requested */}
         </div>
       </div>
+    )}
     </aside>
   );
 }

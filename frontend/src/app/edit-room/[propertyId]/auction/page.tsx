@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
 
@@ -45,9 +45,42 @@ export default function AuctionPage() {
   // Bids/test bid removed from this page
   const [ending, setEnding] = useState(false);
 
+  const refreshActive = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await api.get("auction/active");
+      const list: Auction[] = res.data?.data ?? res.data ?? [];
+      const a = (list || []).find((x) => String(x.property_id) === String(propertyId)) || null;
+      if (a) {
+        setActiveAuction(a);
+      } else {
+        try {
+          const raw = typeof window !== 'undefined' ? localStorage.getItem(`lastAuction:${propertyId}`) : null;
+          if (raw) {
+            const cached = JSON.parse(raw) as Auction;
+            if (new Date(cached.end_time).getTime() > Date.now()) {
+              setActiveAuction(cached);
+            } else {
+              setActiveAuction(null);
+            }
+          } else {
+            setActiveAuction(null);
+          }
+        } catch {
+          setActiveAuction(null);
+        }
+      }
+    } catch (e: any) {
+      setError(e?.response?.data?.message || e.message || "Failed to load auctions");
+    } finally {
+      setLoading(false);
+    }
+  }, [propertyId]);
+
   useEffect(() => {
     refreshActive();
-  }, [propertyId]);
+  }, [propertyId, refreshActive]);
 
   // No bids fetching on this page; use the per-auction monitor page instead
 
@@ -74,40 +107,7 @@ export default function AuctionPage() {
 
   // Removed available stay window, bids list, and minAllowedBid logic
 
-  async function refreshActive() {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await api.get("auction/active");
-      const list: Auction[] = res.data?.data ?? res.data ?? [];
-      const a = (list || []).find((x) => String(x.property_id) === String(propertyId)) || null;
-      if (a) {
-        setActiveAuction(a);
-      } else {
-        // Fallback: use last created (stored locally) so host can see scheduled auction
-        try {
-          const raw = typeof window !== 'undefined' ? localStorage.getItem(`lastAuction:${propertyId}`) : null;
-          if (raw) {
-            const cached = JSON.parse(raw) as Auction;
-            // only show if not yet ended
-            if (new Date(cached.end_time).getTime() > Date.now()) {
-              setActiveAuction(cached);
-            } else {
-              setActiveAuction(null);
-            }
-          } else {
-            setActiveAuction(null);
-          }
-        } catch {
-          setActiveAuction(null);
-        }
-      }
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e.message || "Failed to load auctions");
-    } finally {
-      setLoading(false);
-    }
-  }
+  
 
   async function createAuction() {
     if (!propertyId) return;

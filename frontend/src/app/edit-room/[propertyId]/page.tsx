@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import api from "@/lib/axios";
 
@@ -39,13 +39,7 @@ export default function EditRoomPage() {
   const [bids, setBids] = useState<any[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!propertyId) return;
-    fetchProperty();
-    fetchAuctionsForProperty();
-  }, [propertyId]);
-
-  const fetchProperty = async () => {
+  const fetchProperty = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.get(`properties/${propertyId}`);
@@ -65,7 +59,21 @@ export default function EditRoomPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [propertyId]);
+
+  const fetchAuctionsForProperty = useCallback(async () => {
+    try {
+      const res = await api.get("auction/active");
+      const active: Auction[] = (res.data?.data ?? res.data ?? []).filter((a: any) => a.property_id === propertyId);
+      const winsRes = await api.get("auction/my-wins");
+      const wins: Auction[] = (winsRes.data?.data ?? winsRes.data ?? []).filter((a: any) => a.property_id === propertyId);
+      const map = new Map<string, Auction>();
+      active.concat(wins).forEach((a: Auction) => map.set(a.auction_id, a));
+      setAuctions(Array.from(map.values()));
+    } catch (err: any) {
+      console.error("Failed to fetch auctions", err);
+    }
+  }, [propertyId]);
 
   const handleChange = (k: string, v: any) => setForm((s: any) => ({ ...s, [k]: v }));
 
@@ -106,19 +114,11 @@ export default function EditRoomPage() {
     }
   };
 
-  const fetchAuctionsForProperty = async () => {
-    try {
-      const res = await api.get("auction/active");
-      const active: Auction[] = (res.data?.data ?? res.data ?? []).filter((a: any) => a.property_id === propertyId);
-      const winsRes = await api.get("auction/my-wins");
-      const wins: Auction[] = (winsRes.data?.data ?? winsRes.data ?? []).filter((a: any) => a.property_id === propertyId);
-      const map = new Map<string, Auction>();
-      active.concat(wins).forEach((a: Auction) => map.set(a.auction_id, a));
-      setAuctions(Array.from(map.values()));
-    } catch (err: any) {
-      console.error("Failed to fetch auctions", err);
-    }
-  };
+  useEffect(() => {
+    if (!propertyId) return;
+    fetchProperty();
+    fetchAuctionsForProperty();
+  }, [propertyId, fetchProperty, fetchAuctionsForProperty]);
 
   const viewBids = async (auctionId: string) => {
     try {

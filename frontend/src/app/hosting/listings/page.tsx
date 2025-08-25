@@ -60,7 +60,17 @@ export default function HostingListingsPage() {
 		<>
 			<Header />
 			<div className="max-w-7xl mx-auto py-12 px-6">
-			<h1 className="text-3xl font-bold mb-6">Your listings</h1>
+			<div className="flex items-center justify-between mb-6">
+				<h1 className="text-3xl font-bold">Your listings</h1>
+				<button
+					aria-label="Create listing"
+					title="Create listing"
+					onClick={() => router.push('/become-a-host')}
+					className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shadow hover:bg-gray-800 active:scale-95 transition"
+				>
+					+
+				</button>
+			</div>
 
 			{loading && <div>Loading...</div>}
 			{error && <div className="text-red-500">{error}</div>}

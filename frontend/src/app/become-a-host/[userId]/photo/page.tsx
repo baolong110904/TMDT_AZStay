@@ -214,7 +214,7 @@ export default function PhotoPage() {
       } catch {}
     };
     // we intentionally depend on files/previews so the latest data is used when Next is clicked
-  }, [setOnNext, files, previews, propertyId, userId, router]);
+  }, [setOnNext, files, previews, propertyId, userId, router, uploadFilesAndMaybeCloseModal]);
 
   // update host flow nav and whether Next can be clicked
   useEffect(() => {
@@ -396,7 +396,7 @@ export default function PhotoPage() {
                     onDrop={onDrop(realIndex)}
                     className="relative group"
                   >
-                    <img src={src} className="w-full h-36 object-cover rounded-md" draggable={false} />
+                    <img src={src} alt={`preview ${realIndex + 1}`} className="w-full h-36 object-cover rounded-md" draggable={false} />
 
                   {/* drag handle */}
                   <button

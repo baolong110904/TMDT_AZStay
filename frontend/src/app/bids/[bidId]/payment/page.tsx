@@ -28,16 +28,13 @@ export default function PaymentPage() {
   const formatUSD = (amount: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
-  const getNights = () => {
-    const start = bidInfo?.stay_start ? fromVietnamTime(bidInfo.stay_start) : null;
-    const end = bidInfo?.stay_end ? fromVietnamTime(bidInfo.stay_end) : null;
-    if (!start || !end) return 1;
-    return Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-  };
-
   // Derived values
   const { nights, pricePerNight, totalVND, depositVND, depositUSD } = useMemo(() => {
-    const n = getNights();
+    const start = bidInfo?.stay_start ? fromVietnamTime(bidInfo.stay_start) : null;
+    const end = bidInfo?.stay_end ? fromVietnamTime(bidInfo.stay_end) : null;
+    const n = (!start || !end)
+      ? 1
+      : Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
     const price = Number(bidInfo?.auction?.final_price || 0);
     const total = price * n;
     const deposit = total * 0.05;
@@ -48,7 +45,7 @@ export default function PaymentPage() {
       depositVND: deposit,
       depositUSD: deposit / 24000, // assume 24k exchange rate
     };
-  }, [bidInfo, getNights]);
+  }, [bidInfo]);
 
   useEffect(() => {
     if (!bidId) return;
@@ -190,7 +187,6 @@ export default function PaymentPage() {
               >
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/vnpay.svg" alt="VNPay" className="h-5 w-auto" />
                     <div className="font-medium">VNPay</div>
                   </div>
@@ -240,7 +236,6 @@ export default function PaymentPage() {
                 <div className="flex items-center gap-3 mb-4">
                   {/* image */}
                   <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={propertyImage} alt="Property" className="h-full w-full object-cover" />
                   </div>
                   <div className="min-w-0">
