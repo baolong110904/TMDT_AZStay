@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import api from "@/lib/axios";
+import { useRouter } from "next/navigation";
 
 export default function SignupForm() {
   const [email, setEmail] = useState("");
@@ -14,6 +15,7 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +75,7 @@ export default function SignupForm() {
         );
         setSuccess("Account created successfully! An email has been sent. Redirecting to Home...");
         setTimeout(() => {
-          window.location.href = "/home";
+          router.push("/home");
         }, 2000);
       } else {
         throw new Error("Invalid response from server");

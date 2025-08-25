@@ -167,6 +167,17 @@ export class PropertyDAO {
   }
 
   static addToFavorites = async (user_id: string, property_id: string) => {
+    const exists = await prisma.userfavorite.findUnique({
+      where: {
+        user_id_property_id: {
+          user_id,
+          property_id,
+        },
+      },
+    });
+    if (exists) {
+      return false;
+    }
     return prisma.userfavorite.create({
       data: {
         user_id: user_id,
@@ -175,6 +186,14 @@ export class PropertyDAO {
     });
   };
   static async removeFromFavorites(user_id: string, property_id: string) {
+    const exist = await prisma.userfavorite.findUnique({
+      where: {
+        user_id_property_id: {
+          user_id,
+          property_id,
+        },
+      },
+    });
     return prisma.userfavorite.delete({
       where: {
         user_id_property_id: {
@@ -184,6 +203,7 @@ export class PropertyDAO {
       },
     });
   }
+
   static async getFavorites(user_id: string) {
     return prisma.property.findMany({
       where: {
@@ -192,8 +212,32 @@ export class PropertyDAO {
         },
       },
       include: {
-        userfavorite: true
+        // userfavorite: true,
+        propertyimage: true,
       },
     });
+  }
+
+  static async getFavoriteStatus(
+    user_id: string,
+    propertyIds: string | string[]
+  ) {
+    if (Array.isArray(propertyIds)) {
+      // multiple property ids
+      return await prisma.userfavorite.findMany({
+        where: {
+          user_id,
+          property_id: { in: propertyIds },
+        },
+      });
+    } else {
+      // single property id
+      return await prisma.userfavorite.findFirst({
+        where: {
+          user_id,
+          property_id: propertyIds,
+        },
+      });
+    }
   }
 }

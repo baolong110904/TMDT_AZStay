@@ -1,30 +1,92 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link"; // ✅ Thêm import Link
-import { Heart } from "lucide-react";
+import Link from "next/link";
+import { Heart, Router } from "lucide-react";
 import clsx from "clsx";
 import { Listing } from "@/components/Props/MainPageListingProps";
+import api from "@/lib/axios";
+import { useRouter } from "next/router";
 
 const PAGE_SIZE = 20;
 
-export default function SearchHomeListings({ list }: { list: Listing[] }) {
-  const [favorites, setFavorites] = useState<Set<number>>(new Set());
+export default function SearchHomeListings({
+  list,
+  token,
+  user_id,
+}: {
+  list: Listing[];
+  token: string | null;
+  user_id: string | null;
+}) {
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
 
-  const toggleFavorite = (idx: number, e: React.MouseEvent) => {
-    e.preventDefault(); // ✅ Ngăn click vào link
+  if (!token || !user_id) {
+    const user_data = localStorage.getItem("user");
+    token = localStorage.getItem("token");
+    if (user_data && token) {
+      const uid = JSON.parse(user_data);
+      user_id = uid.user_id;
+      console.log("HERE IS USER_ID:", user_id);
+      console.log("HERE IS TOKEN:", token);
+    }
+  }
+  // 🔹 Hàm fetch favorites
+  const fetchFavoritesStatus = async () => {
+    try {
+      if (!user_id || !token || list.length === 0) return;
+      const property_ids = list.map((m) => m.property_id);
+      const res = await api.post(
+        "/properties/get-fav-status",
+        { user_id, property_id: property_ids },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const favList: string[] =
+        res.data?.data?.map((f: any) => f.property_id) || [];
+      setFavorites(new Set(favList));
+    } catch (error) {
+      console.error("Error loading properties:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchFavoritesStatus();
+  }, [list, user_id, token]);
+
+  // 🔹 Toggle favorites
+  const toggleFavorite = async (
+    property_id: string | null,
+    e: React.MouseEvent
+  ) => {
+    e.preventDefault();
     e.stopPropagation();
-    setFavorites((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(idx)) {
-        newSet.delete(idx);
+    if (!property_id || !user_id || !token) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      if (favorites.has(property_id)) {
+        await api.post(
+          "/properties/remove-fav",
+          { user_id, property_id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       } else {
-        newSet.add(idx);
+        await api.post(
+          "/properties/add-fav",
+          { user_id, property_id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       }
-      return newSet;
-    });
+      // ✅ Sau khi add/remove thì reload lại favorites
+      fetchFavoritesStatus();
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
   };
 
   const scrollToTop = () => {
@@ -54,11 +116,7 @@ export default function SearchHomeListings({ list }: { list: Listing[] }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-6 justify-items-center">
         {paginatedList.map((item, idx) => (
-          <Link
-            key={idx}
-            href={item.url || `${item.url}`} // ✅ Link sang trang Room
-            className="w-full"
-          >
+          <Link key={idx} href={item.url || `${item.url}`} className="w-full">
             <div className="rounded-2xl h-[400px] hover:shadow-md hover:scale-101 transition bg-white cursor-pointer">
               <div className="relative h-[60%]">
                 <Image
@@ -68,14 +126,16 @@ export default function SearchHomeListings({ list }: { list: Listing[] }) {
                   className="object-cover rounded-2xl"
                 />
                 <button
-                  onClick={(e) => toggleFavorite(idx, e)}
+                  onClick={(e) => toggleFavorite(item.property_id, e)}
                   className="absolute top-2 right-2 bg-white rounded-full p-1 hover:scale-105 transition"
                 >
                   <Heart
                     size={22}
                     className={clsx("transition", {
-                      "text-red-500 fill-red-500": favorites.has(idx),
-                      "text-gray-400": !favorites.has(idx),
+                      "text-red-500 fill-red-500": favorites.has(
+                        item.property_id ?? ""
+                      ),
+                      "text-gray-400": !favorites.has(item.property_id ?? ""),
                     })}
                   />
                 </button>
@@ -88,14 +148,18 @@ export default function SearchHomeListings({ list }: { list: Listing[] }) {
                   </h3>
                   <p className="text-sm text-gray-700 mb-1">
                     {item.rating && item.reviewsCount ? (
-                      <>⭐ {item.rating} · {item.reviewsCount} reviews</>
+                      <>
+                        ⭐ {item.rating} · {item.reviewsCount} reviews
+                      </>
                     ) : (
                       <span className="text-gray-400">No reviews</span>
                     )}
                   </p>
                   <p className="text-base font-semibold text-red-600 mb-2">
                     {item.price && item.price !== "N/A"
-                      ? `${Number(item.price).toLocaleString("vi-VN")} đ / night`
+                      ? `${Number(item.price).toLocaleString(
+                          "vi-VN"
+                        )} đ / night`
                       : "No price"}
                   </p>
                 </div>

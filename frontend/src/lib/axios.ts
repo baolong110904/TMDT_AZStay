@@ -11,7 +11,6 @@ const api = axios.create({
 
 // Interceptor để attach token vào request
 api.interceptors.request.use((config) => {
-  // Thử lấy token từ localStorage
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

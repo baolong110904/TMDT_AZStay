@@ -1,4 +1,5 @@
 export interface Listing {
+  property_id: string | null,
   title: string | null;
   price: string | null;
   image: string | null;

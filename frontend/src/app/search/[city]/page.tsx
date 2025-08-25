@@ -40,8 +40,9 @@ export default function SearchPage() {
 
         const { items } = res.data;
 
-        const mapped: Listing[] = items.map((p: any, index: number) => {
+        const mapped: Listing[] = items.map((p: any) => {
           return {
+            property_id: p.property_id,
             title: p.title,
             price: p.min_price ? p.min_price.toString() : "N/A",
             image: p.propertyimage?.[0]?.image_url || "/placeholder.jpg",
@@ -138,7 +139,11 @@ export default function SearchPage() {
         ) : filteredListings.length === 0 ? (
           <p className="text-center">No listings found</p>
         ) : (
-          <SearchHomeListings list={filteredListings} />
+          <SearchHomeListings 
+            list={filteredListings}
+            user_id={null}
+            token={null}
+          />
         )}
       </div>
 
