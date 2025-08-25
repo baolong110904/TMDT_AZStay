@@ -265,8 +265,8 @@ export default function SidebarEditRoom({ basePath, currentSection = "", propert
             <div className="text-sm font-bold">Pricing</div>
             <div className="text-gray-500 mt-2">
               {`₫${Number(localProperty?.min_price ?? 0).toLocaleString()} per night`}<br/>
-              {localProperty?.weekend_price ? `₫${Number(localProperty.weekend_price).toLocaleString()} weekend price` : '₫739,867 weekend price'}<br/>
-              {localProperty?.weekly_discount ? `${localProperty.weekly_discount}% weekly discount` : '5% weekly discount'}
+              {/* {localProperty?.weekend_price ? `₫${Number(localProperty.weekend_price).toLocaleString()} weekend price` : '₫739,867 weekend price'}<br/>
+              {localProperty?.weekly_discount ? `${localProperty.weekly_discount}% weekly discount` : '5% weekly discount'} */}
             </div>
           </Link>
           <Link href={`${basePath}/available-date`} className={`block rounded-xl p-3 bg-white shadow-sm border border-gray-100 hover:shadow-md mx-auto max-w-[300px] ${activeSection === 'available-date' ? 'ring-2 ring-gray-200 border-transparent' : ''}`}>

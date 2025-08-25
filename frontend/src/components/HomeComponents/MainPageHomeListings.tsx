@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Heart } from "lucide-react";
@@ -27,12 +27,29 @@ export default function Listings({
   latitude,
   longitude,
 }: Props) {
+  // Base listings for resolvedLocation
   const [listings, setListings] = useState<Listing[]>([]);
-  const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [resolvedLocation, setResolvedLocation] = useState<string>(city);
   const [error, setError] = useState<string | null>(null);
+  // Additional sections per location (fixed cities only)
+  const [sectionListings, setSectionListings] = useState<Record<string, Listing[]>>({});
+  const fixedCities = useMemo(() => ["Ha Noi", "Can Tho", "Vung Tau", "Da Nang"], []);
   const router = useRouter();
+  const headerPhrases = useMemo(
+    () => [
+      "Popular homes in",
+      "Available rentals in",
+      "Places to stay in",
+      "Check out homes in",
+      "Homes in",
+    ],
+    []
+  );
+
+  // Track which fixed cities have been fetched to avoid abort loops
+  const fetchedCitiesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -68,6 +85,8 @@ export default function Listings({
         console.log("Mapped listings:", mapped);
 
         setListings(mapped);
+        // also store into section listing for the resolved location (temp as current city for now)
+        setSectionListings((prev) => ({ ...prev, [city]: mapped }));
 
         const locationCounts: Record<string, number> = {};
         mapped.forEach((listing) => {
@@ -93,13 +112,58 @@ export default function Listings({
     fetchListings();
   }, [city, checkin, checkout, guests, latitude, longitude]);
 
-  const toggleFavorite = (idx: number) => {
+  useEffect(() => {
+    if (!resolvedLocation) return;
+    setSectionListings((prev) => ({ ...prev, [resolvedLocation]: listings }));
+  }, [resolvedLocation, listings]);
+
+  // Fetch listings for each city in parallel
+  useEffect(() => {
+    // reset fetched cache when core inputs change
+    fetchedCitiesRef.current.clear();
+
+    const targets = fixedCities.filter((c) => c.toLowerCase() !== (resolvedLocation || "").toLowerCase());
+    if (targets.length === 0) return;
+
+    const controller = new AbortController();
+    const run = async () => {
+      await Promise.all(
+        targets.map(async (c) => {
+          if (fetchedCitiesRef.current.has(c)) return;
+          try {
+            const res = await api.get("/properties", {
+              params: { city: c, checkin, checkout, guests },
+              signal: controller.signal as any,
+            });
+            const mapped: Listing[] = (res.data?.items || []).map((p: any) => ({
+              title: p.title,
+              price: p.min_price ? p.min_price.toString() : "N/A",
+              image: p.propertyimage?.[0]?.image_url || "/placeholder.jpg",
+              url: `/room/${p.property_id ?? ""}`,
+              rating: p.rating?.toString() || undefined,
+              reviewsCount: p.reviewsCount?.toString() || undefined,
+              locationHint: p.province || p.country || c,
+            }));
+            setSectionListings((prev) => ({ ...prev, [c]: mapped }));
+            fetchedCitiesRef.current.add(c);
+          } catch (e) {
+            console.warn(`Failed to load listings for ${c}:`, e);
+            setSectionListings((prev) => ({ ...prev, [c]: [] }));
+          }
+        })
+      );
+    };
+    run();
+    return () => controller.abort();
+  }, [fixedCities, resolvedLocation, checkin, checkout, guests]);
+
+  const toggleFavorite = (key: string) => {
     setFavorites((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(idx)) {
-        newSet.delete(idx);
+      if (newSet.has(key)) {
+        newSet.delete(key);
       } else {
-        newSet.add(idx);
+        newSet.add(key);
       }
       return newSet;
     });
@@ -107,23 +171,85 @@ export default function Listings({
 
   const displayedListings = listings.slice(0, 7);
 
-  if (loading) return <p className="text-center my-8">Loading listings...</p>;
+  if (loading)
+    return (
+      <p className="text-center my-8 text-gray-700 flex items-center justify-center gap-1" aria-live="polite"> 
+        <span className="ml-1 inline-flex">
+          <span className="w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:0ms] mx-0.5"></span>
+          <span className="w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:150ms] mx-0.5"></span>
+          <span className="w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:300ms] mx-0.5"></span>
+        </span>
+      </p>
+    );
   if (error) return <p className="text-center text-red-500 my-8">{error}</p>;
 
   return (
     <div className="py-4 px-4">
-      <div className="mx-auto">
-        <h2 className="text-4xl font-bold mb-4">
-          Available Rentals in {resolvedLocation}
-        </h2>
-      </div>
+      <Section
+        header={`${headerPhrases[0]} ${resolvedLocation} ›`}
+        onHeaderClick={() =>
+          router.push(`/search/${encodeURIComponent(resolvedLocation)}?checkin=${checkin}&checkout=${checkout}&guests=${guests}`)
+        }
+        items={displayedListings}
+        favorites={favorites}
+        onToggleFavorite={toggleFavorite}
+        onCardClick={(url) => router.push(url || "/")}
+      />
 
+      {/* Other city sections */}
+      {fixedCities
+        .filter((loc) => loc.toLowerCase() !== (resolvedLocation || "").toLowerCase())
+        .map((loc, i) => (
+        <Section
+          key={`fixed-${loc}`}
+          header={`${headerPhrases[(i + 1) % headerPhrases.length]} ${loc} ›`}
+          onHeaderClick={() =>
+            router.push(`/search/${encodeURIComponent(loc)}?checkin=${checkin}&checkout=${checkout}&guests=${guests}`)
+          }
+          items={(sectionListings[loc] || []).slice(0, 7)}
+          favorites={favorites}
+          onToggleFavorite={toggleFavorite}
+          onCardClick={(url) => router.push(url || "/")}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Section component: header + horizontal scroller of cards
+function Section({
+  header,
+  onHeaderClick,
+  items,
+  favorites,
+  onToggleFavorite,
+  onCardClick,
+}: {
+  header: string;
+  onHeaderClick: () => void;
+  items: Listing[];
+  favorites: Set<string>;
+  onToggleFavorite: (key: string) => void;
+  onCardClick: (url?: string) => void;
+}) {
+  return (
+    <div className="py-6">
+      <div className="mx-auto flex items-baseline justify-between">
+        <button
+          onClick={onHeaderClick}
+          className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-left transform transition-transform duration-150 hover:scale-105"
+        >
+          {header}
+        </button>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-7 gap-3 justify-items-center">
-        {displayedListings.map((item, idx) => (
+        {items.map((item, idx) => {
+          const favKey = item.url || `${item.title}|${item.image}|${idx}`;
+          return (
           <div
-            key={idx}
+            key={`${item.url}-${idx}`}
             className="w-full cursor-pointer"
-            onClick={() => router.push(item.url || "/")}
+            onClick={() => onCardClick(item.url || undefined)}
           >
             <div className="rounded-2xl h-[400px] hover:shadow-md hover:scale-105 transition bg-white">
               <div className="relative h-[60%]">
@@ -135,16 +261,16 @@ export default function Listings({
                 />
                 <button
                   onClick={(e) => {
-                    e.stopPropagation(); // tránh click heart cũng redirect
-                    toggleFavorite(idx);
+                    e.stopPropagation();
+                    onToggleFavorite(favKey);
                   }}
                   className="absolute top-2 right-2 bg-white rounded-full p-1 hover:scale-105 transition"
                 >
                   <Heart
                     size={22}
                     className={clsx("transition", {
-                      "text-red-500 fill-red-500": favorites.has(idx),
-                      "text-gray-400": !favorites.has(idx),
+                      "text-red-500 fill-red-500": favorites.has(favKey),
+                      "text-gray-400": !favorites.has(favKey),
                     })}
                   />
                 </button>
@@ -171,23 +297,12 @@ export default function Listings({
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
+        {items.length === 0 && (
+          <div className="text-gray-500 px-2">No listings found.</div>
+        )}
       </div>
-
-      {listings.length > 7 && (
-        <div className="text-center mt-6">
-          <button
-            onClick={() =>
-              router.push(
-                `/search/${encodeURIComponent(resolvedLocation)}?checkin=${checkin}&checkout=${checkout}&guests=${guests}`
-              )
-            }
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-          >
-            Show all
-          </button>
-        </div>
-      )}
     </div>
   );
 }

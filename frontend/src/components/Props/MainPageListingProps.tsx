@@ -6,4 +6,6 @@ export interface Listing {
   rating: string | null;
   reviewsCount: string | null;
   locationHint?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }

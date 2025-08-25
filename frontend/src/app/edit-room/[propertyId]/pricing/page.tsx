@@ -69,7 +69,7 @@ export default function PricingPage() {
     <div className="min-h-[90vh] bg-white">
       <div className="mx-auto max-w-4xl px-6 py-10">
         <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Pricing</h1>
-        <p className="mt-2 text-gray-600">Set the base price per month for your listing.</p>
+        <p className="mt-2 text-gray-600">Set the base price per night for your listing.</p>
 
         {error && <div className="mt-4 text-sm text-red-600">{error}</div>}
         {loading && (
