@@ -59,4 +59,9 @@ router.post('/get-fav-status',
             authorizeRoles(Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
             PropertyController.getFavoritesStatus);
 
+router.post('/get-recommended/:user_id', 
+            verifyToken, 
+            authorizeRoles(Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
+            PropertyController.getRecommended);
+
 export default router;

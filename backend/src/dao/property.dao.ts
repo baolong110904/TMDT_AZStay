@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import prisma from "../prisma/client.prisma";
 import { geocodeAddress } from "../services/geocoding.service";
+import { getRecommended } from "../controllers/property.controllers";
 
 export class PropertyDAO {
   // Tạo property mới (có geocoding + max_guest)
@@ -212,7 +213,6 @@ export class PropertyDAO {
         },
       },
       include: {
-        // userfavorite: true,
         propertyimage: true,
       },
     });
@@ -239,5 +239,26 @@ export class PropertyDAO {
         },
       });
     }
+  }
+
+  static async getRecommended(user_id: string) {
+    const recs = await prisma.user_recommendations.findMany({
+      where: { user_id },
+      orderBy: { rank: "asc" },
+      select: { property_id: true, rank: true, score: true },
+    });
+
+    const propertyIds = recs.map((r) => r.property_id);
+
+    if (propertyIds.length === 0) return [];
+    const properties = await prisma.property.findMany({
+      where: {
+        property_id: { in: propertyIds },
+      },
+      include: {
+        propertyimage: true,
+      },
+    });
+    return properties;
   }
 }

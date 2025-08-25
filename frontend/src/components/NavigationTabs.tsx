@@ -18,7 +18,10 @@ interface NavigationTabsProps {
   setActiveTab: (tab: string) => void;
 }
 
-export default function NavigationTabs({ activeTab, setActiveTab }: NavigationTabsProps) {
+export default function NavigationTabs({
+  activeTab,
+  setActiveTab,
+}: NavigationTabsProps) {
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const underlineRef = useRef<HTMLSpanElement>(null);
   const router = useRouter();
@@ -28,8 +31,10 @@ export default function NavigationTabs({ activeTab, setActiveTab }: NavigationTa
   useEffect(() => {
     // Read user and id from localStorage
     try {
-      const lsUserId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
-      const storedUser = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+      const lsUserId =
+        typeof window !== "undefined" ? localStorage.getItem("userId") : null;
+      const storedUser =
+        typeof window !== "undefined" ? localStorage.getItem("user") : null;
       let uid = lsUserId || "";
       let role: number | null = null;
       if (storedUser) {
@@ -55,17 +60,19 @@ export default function NavigationTabs({ activeTab, setActiveTab }: NavigationTa
       { name: "Favorites", icon: <MdFavorite size={20} />, href: "/favorites" },
     ];
     const isHost = roleId === 3 || roleId === 4;
-    const hostingHref = userId
-      ? `/hosting/listings?userId=${encodeURIComponent(String(userId))}`
-      : "/hosting/listings";
-    base.push(
-      isHost
-        ? { name: "Hosting", icon: <TbBalloon size={20} />, href: hostingHref }
-        : { name: "Upcoming", icon: <TbBalloon size={20} />, href: "/upcoming" }
-    );
+    if (isHost) {
+      const hostingHref = userId
+        ? `/hosting/listings?userId=${encodeURIComponent(String(userId))}`
+        : "/hosting/listings";
+      base.push({
+        name: "Hosting",
+        icon: <TbBalloon size={20} />,
+        href: hostingHref,
+      });
+    }
     return base;
   }, [roleId, userId]);
-  
+
   useEffect(() => {
     const activeEl = tabRefs.current[activeTab];
     const underline = underlineRef.current;
@@ -79,7 +86,7 @@ export default function NavigationTabs({ activeTab, setActiveTab }: NavigationTa
   const handleTabClick = (tab: Tab) => {
     setActiveTab(tab.name);
     router.push(tab.href);
-  }
+  };
 
   return (
     <div className="hidden md:flex relative items-center justify-center gap-6 text-sm font-medium text-gray-600">
@@ -92,7 +99,7 @@ export default function NavigationTabs({ activeTab, setActiveTab }: NavigationTa
           onClick={() => handleTabClick(tab)}
           aria-current={activeTab === tab.name ? "page" : undefined}
           className={clsx(
-            "flex items-center gap-2 px-3 py-2 transition-colors duration-200",
+            "cursor-pointer flex items-center gap-2 px-3 py-2 transition-colors duration-200",
             {
               "text-blue-900 font-semibold": activeTab === tab.name,
               "hover:text-blue-700": activeTab !== tab.name,

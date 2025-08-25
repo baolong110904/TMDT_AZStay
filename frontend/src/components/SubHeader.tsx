@@ -100,8 +100,16 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-white shadow-sm transition-all duration-500 ease-in-out">
       <div className="max-w-7xl mx-auto flex items-center justify-between p-2 md:px-8">
         {/* Logo */}
-        <div className="relative h-12 w-40 flex-shrink-0">
-          <Image src="/logo2.png" alt="Logo" fill className="object-contain object-left" />
+        <div
+          className="cursor-pointer relative h-12 w-40 flex-shrink-0"
+          onClick={() => router.push("/home")}
+        >
+          <Image
+            src="/logo2.png"
+            alt="Logo"
+            fill
+            className="object-contain object-left"
+          />
         </div>
         <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         <div className="hidden md:flex items-center gap-4">
@@ -114,7 +122,7 @@ export default function Header() {
             </button>
           )}
           {/* Avatar only if logged in */}
-          {user &&
+          {user && (
             <div
               onClick={handleProfileClick}
               style={{
@@ -135,11 +143,14 @@ export default function Header() {
             >
               {user.name?.charAt(0) || "U"}
             </div>
-          }
+          )}
           {/* Globe icon only if not logged in */}
-          {!user &&
-            <GlobeAltIcon className="h-5 text-gray-500 hover:text-blue-700 cursor-pointer transition" aria-label="Change language" />
-          }
+          {!user && (
+            <GlobeAltIcon
+              className="h-5 text-gray-500 hover:text-blue-700 cursor-pointer transition"
+              aria-label="Change language"
+            />
+          )}
           {/* Dropdown trigger */}
           <div className="relative" ref={dropdownRef}>
             <button
@@ -163,20 +174,29 @@ export default function Header() {
           </div>
         </div>
         <div className="md:hidden flex items-center gap-3">
-          {!user &&
-            <GlobeAltIcon className="h-5 text-gray-500 cursor-pointer" aria-label="Change language" />
-          }
+          {!user && (
+            <GlobeAltIcon
+              className="h-5 text-gray-500 cursor-pointer"
+              aria-label="Change language"
+            />
+          )}
           <button
             className="flex items-center border border-gray-300 p-2 rounded-full hover:shadow-md transition"
             onClick={() => setIsMobileSearchOpen(true)}
             aria-label="Open search menu"
           >
             <Bars3Icon className="h-5 text-gray-500" aria-hidden="true" />
-            <UserCircleIcon className="h-8 text-gray-500 ml-2" aria-hidden="true" />
+            <UserCircleIcon
+              className="h-8 text-gray-500 ml-2"
+              aria-hidden="true"
+            />
           </button>
         </div>
       </div>
-      <MobileSearchDrawer isOpen={isMobileSearchOpen} setIsOpen={setIsMobileSearchOpen} />
+      <MobileSearchDrawer
+        isOpen={isMobileSearchOpen}
+        setIsOpen={setIsMobileSearchOpen}
+      />
     </header>
   );
 }

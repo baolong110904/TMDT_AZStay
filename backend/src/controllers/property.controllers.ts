@@ -380,7 +380,9 @@ export const getFavoritesStatus = async (req: Request, res: Response) => {
     }
 
     // Normalize property_id: always use array form
-    const propertyIds = Array.isArray(property_id) ? property_id : [property_id];
+    const propertyIds = Array.isArray(property_id)
+      ? property_id
+      : [property_id];
 
     console.log("User id:", user_id);
     console.log("Property ids:", propertyIds);
@@ -415,5 +417,32 @@ export const getFavoritesStatus = async (req: Request, res: Response) => {
       error: String(error?.message || error),
       stack: error?.stack,
     });
+  }
+};
+
+export const getRecommended = async (req: Request, res: Response) => {
+  const { user_id } = req.params;
+
+  try {
+    if (!user_id) {
+      return res.status(400).json({ Message: "Missing required field: user_id" });
+    }
+
+    const result = await PropertyDAO.getRecommended(user_id);
+
+    if (!result || result.length === 0) {
+      return res.status(200).json({
+        Message: `No recommendations for user: ${user_id}`,
+        data: []
+      });
+    }
+
+    return res.status(200).json({
+      Message: "Fetch recommended successfully",
+      data: result
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ Message: "Internal server error", error });
   }
 };

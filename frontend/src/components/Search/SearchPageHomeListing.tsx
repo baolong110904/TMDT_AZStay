@@ -7,7 +7,7 @@ import { Heart, Router } from "lucide-react";
 import clsx from "clsx";
 import { Listing } from "@/components/Props/MainPageListingProps";
 import api from "@/lib/axios";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 const PAGE_SIZE = 20;
 
@@ -132,7 +132,7 @@ export default function SearchHomeListings({
                 >
                   <Heart
                     size={22}
-                    className={clsx("transition", {
+                    className={clsx("cursor-pointer transition", {
                       "text-red-500 fill-red-500": favorites.has(
                         item.property_id ?? ""
                       ),

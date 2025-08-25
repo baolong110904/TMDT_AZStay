@@ -255,7 +255,6 @@ export default function Listings({
   );
 }
 
-// Section component: header + horizontal scroller of cards
 function Section({
   header,
   onHeaderClick,
@@ -282,11 +281,11 @@ function Section({
         </button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-7 gap-3 justify-items-center">
-        {displayedListings.map((item) => (
+        {items.map((item) => (
           <div
             key={item.property_id}
             className="w-full cursor-pointer"
-            onClick={() => onCardClick(item.url || undefined)}
+            onClick={() => onCardClick(item.url || "/")}
           >
             <div className="rounded-2xl h-[400px] hover:shadow-md hover:scale-105 transition bg-white">
               <div className="relative h-[60%]">
@@ -299,13 +298,13 @@ function Section({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleFavorite(item.property_id!);
+                    onToggleFavorite(item.property_id!);
                   }}
                   className="absolute top-2 right-2 bg-white rounded-full p-1 hover:scale-105 transition"
                 >
                   <Heart
                     size={22}
-                    className={clsx("transition", {
+                    className={clsx("cursor-pointer transition", {
                       "text-red-500 fill-red-500": favorites.has(
                         item.property_id!
                       ),
@@ -322,40 +321,29 @@ function Section({
                   </h3>
                   <p className="text-sm text-gray-700 mb-1">
                     {item.rating && item.reviewsCount ? (
-                      <>
-                        ⭐ {item.rating} · {item.reviewsCount} reviews
-                      </>
+                      <>⭐ {item.rating} · {item.reviewsCount} reviews</>
                     ) : (
                       <span className="text-gray-400">No reviews</span>
                     )}
                   </p>
                   <p className="text-base font-semibold text-red-600 mb-2">
                     {item.price && item.price !== "N/A"
-                      ? `${Number(item.price).toLocaleString(
-                          "vi-VN"
-                        )} đ / night`
+                      ? `${Number(item.price).toLocaleString("vi-VN")} đ / night`
                       : "No price"}
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          );
-        })}
+        ))}
         {items.length === 0 && (
           <div className="text-gray-500 px-2">No listings found.</div>
         )}
       </div>
-      {listings.length > 7 && (
+      {items.length > 7 && (
         <div className="text-center mt-6">
           <button
-            onClick={() =>
-              router.push(
-                `/search/${encodeURIComponent(
-                  resolvedLocation
-                )}?checkin=${checkin}&checkout=${checkout}&guests=${guests}`
-              )
-            }
+            onClick={onHeaderClick}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
           >
             Show all
