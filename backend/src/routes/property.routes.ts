@@ -6,7 +6,6 @@ import { authorizeRoles, Roles, verifyToken } from "../middlewares/auth.middlewa
 import {upload} from "../middlewares/upload.middlewares";
 const router = express.Router();
 
-// router.post("/create-property", verifyToken, authorizeRoles(Roles.PROPERTY_OWNER_AND_CUSTOMER), upload.array('images'), PropertyController.createProperty);
 router.get("/", PropertyController.getAllProperties);
 // get property by user_id (place before dynamic :propertyId route)
 router.get('/get-property-by-user-id',
@@ -29,7 +28,6 @@ router.post('/upload-images',
             upload.array('images'),
             UploadPropertyImagesController.uploadPropertyImagesController);
 
-
 // property images: list and delete
 router.get('/:propertyId/images',
             verifyToken,
@@ -45,14 +43,20 @@ router.post('/add-fav',
             verifyToken, 
             authorizeRoles(Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
             PropertyController.addPropertyFavorites);
-router.post('/remove-fav', 
+
+router.post('/remove-fav',
             verifyToken, 
             authorizeRoles(Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
             PropertyController.removePropertyFavorites);
 
-router.get('/get-fav', 
+router.post('/get-fav-list', 
             verifyToken, 
             authorizeRoles(Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
             PropertyController.getFavoritesProperties);
+
+router.post('/get-fav-status', 
+            verifyToken, 
+            authorizeRoles(Roles.CUSTOMER, Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
+            PropertyController.getFavoritesStatus);
 
 export default router;

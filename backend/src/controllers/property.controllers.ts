@@ -4,7 +4,7 @@ import { PropertyDAO } from "../dao/property.dao";
 import { uploadPropertyImages } from "../dao/images.dao";
 import { getUserById } from "../dao/user.dao";
 import { AdminDAO } from "../dao/admin.dao";
-import { RawQueryArgs } from "@prisma/client/runtime/library";
+import prisma from "../prisma/client.prisma";
 
 // Lấy tất cả property
 export const getAllProperties = async (req: Request, res: Response) => {
@@ -351,9 +351,69 @@ export const getFavoritesProperties = async (req: Request, res: Response) => {
       return res.status(401).json({ mesage: "User does not exist" });
     }
     const result = await PropertyDAO.getFavorites(user_data.user_id);
+    if (!result) {
+      return res.status(401).json({ message: "There is no favorites status" });
+    }
     return res.status(200).json({
-      message: "Fetch favorites successfully",
+      message: "Fetch favorites status successfully",
       data: { result },
     });
-  } catch (error) {}
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({
+      message: `Error fetching favorites property using user_id and property_id: ${error}`,
+      error: String(error?.message || error),
+      stack: error?.stack,
+    });
+  }
+};
+
+export const getFavoritesStatus = async (req: Request, res: Response) => {
+  const { user_id, property_id } = req.body;
+
+  try {
+    if (!user_id || !property_id) {
+      return res.status(400).json({
+        message:
+          "Missing one of those required fields: `user_id`, `property_id`",
+      });
+    }
+
+    // Normalize property_id: always use array form
+    const propertyIds = Array.isArray(property_id) ? property_id : [property_id];
+
+    console.log("User id:", user_id);
+    console.log("Property ids:", propertyIds);
+
+    const user_data = await getUserById(user_id);
+    if (!user_data) {
+      return res.status(401).json({ message: "User does not exist" });
+    }
+
+    // Fetch all properties first to ensure they exist
+    const properties = await prisma.property.findMany({
+      where: { property_id: { in: propertyIds } },
+    });
+
+    if (properties.length !== propertyIds.length) {
+      return res
+        .status(404)
+        .json({ message: "One or more properties do not exist" });
+    }
+
+    // Fetch favorites
+    const favorites = await PropertyDAO.getFavoriteStatus(user_id, propertyIds);
+
+    return res.status(200).json({
+      message: "Fetch favorites successfully",
+      data: favorites,
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({
+      message: `Error fetching favorite property status: ${error}`,
+      error: String(error?.message || error),
+      stack: error?.stack,
+    });
+  }
 };

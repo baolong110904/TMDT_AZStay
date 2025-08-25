@@ -46,6 +46,7 @@ export default function SearchPage() {
 
     const mapped: Listing[] = items.map((p: any, index: number) => {
           return {
+            property_id: p.property_id,
             title: p.title,
             price: p.min_price ? p.min_price.toString() : "N/A",
             image: p.propertyimage?.[0]?.image_url || "/placeholder.jpg",
@@ -186,7 +187,11 @@ export default function SearchPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="min-h-[60vh]">
-              <SearchHomeListings list={filteredListings} />
+              <SearchHomeListings 
+                list={filteredListings}
+                user_id={null}
+                token={null} 
+              />
             </div>
             <div className="mt-5 sticky top-20 h-[85vh] hidden lg:block">
               <SearchMap points={points} />

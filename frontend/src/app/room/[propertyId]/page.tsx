@@ -11,18 +11,23 @@ import BiddingBox from "@/components/Room/BiddingBox";
 import ReviewsSection from "@/components/Room/ReviewsSection";
 import MapDisplay from "@/components/Room/MapDisplay";
 import api from "@/lib/axios";
+import { useRouter } from "next/navigation";
 
 export default function Room() {
   const params = useParams();
   const propertyId = params?.propertyId as string;
+  const router = useRouter();
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [property, setProperty] = useState<RoomProps | null>(null);
   const [loading, setLoading] = useState(true);
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [coords, setCoords] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [coordsLoading, setCoordsLoading] = useState(false);
-  const [userId, setUserId] = useState<string>(""); 
-  
+  const [userId, setUserId] = useState<string>("");
+
   const fromVietnamTime = (dateStr: string | null | undefined): Date | null => {
     if (!dateStr) return null;
     const d = new Date(dateStr);
@@ -32,8 +37,33 @@ export default function Room() {
   // Reviews
   const [reviewsData, setReviewsData] = useState<any>(null);
 
-  const toggleFavorite = () => {
-    setIsFavorite(prev => !prev);
+  const toggleFavorite = async () => {
+    if (!userId || !propertyId) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      if (isFavorite) {
+        await api.post(
+          "/properties/remove-fav",
+          { user_id: userId, property_id: propertyId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setIsFavorite(false);
+      } else {
+        await api.post(
+          "/properties/add-fav",
+          { user_id: userId, property_id: propertyId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setIsFavorite(true);
+      }
+    } catch (err) {
+      console.error("❌ Failed to toggle favorite:", err);
+    }
   };
 
   // 🆕 Lấy user_id từ localStorage
@@ -59,10 +89,11 @@ export default function Room() {
     const fetchProperty = async () => {
       try {
         const res = await api.get(`/properties/${propertyId}`);
-    
+
         const mappedProperty: RoomProps = {
           ...res.data,
-          imgUrl: res.data.propertyimage?.map((img: any) => img.image_url) || [],
+          imgUrl:
+            res.data.propertyimage?.map((img: any) => img.image_url) || [],
           latitude: Number(res.data.latitude) || undefined,
           longitude: Number(res.data.longitude) || undefined,
           ownerName: res.data.user?.name || "Unknown host",
@@ -72,7 +103,9 @@ export default function Room() {
               ? [res.data.checkin_date, res.data.checkout_date]
               : ["2025-08-12", "2025-08-15"],
           minPrice: Number(res.data.min_price ?? 0),
-          currentPrice: Number(res.data.auction?.[0]?.final_price ?? res.data.min_price ?? 0),
+          currentPrice: Number(
+            res.data.auction?.[0]?.final_price ?? res.data.min_price ?? 0
+          ),
           currentPriceUserId: res.data.auction?.[0]?.winner_id,
           currentPriceTime:
             fromVietnamTime(
@@ -81,78 +114,119 @@ export default function Room() {
               res.data.updated_at
             ) ?? new Date(),
           auctionId: res.data.auction?.[0]?.auction_id,
-          biddingStartTime: fromVietnamTime(res.data.auction?.[0]?.start_time) ?? new Date(),
-          biddingEndTime: fromVietnamTime(res.data.auction?.[0]?.end_time) ?? new Date(),
+          biddingStartTime:
+            fromVietnamTime(res.data.auction?.[0]?.start_time) ?? new Date(),
+          biddingEndTime:
+            fromVietnamTime(res.data.auction?.[0]?.end_time) ?? new Date(),
           biddingStatus: res.data.auction?.[0]?.status,
         };
-    
+
         setProperty(mappedProperty);
       } catch (err) {
         console.error("❌ Failed to fetch property:", err);
       }
     };
 
-  // debug log removed to avoid unnecessary rerenders
+    // debug log removed to avoid unnecessary rerenders
 
-  const fetchReviews = async () => {
-    try {
-      const res = await api.get(`/reviews/${propertyId}`);
-      setReviewsData({
-        overallRating: res.data.rating,
-        totalReviews: res.data.count,
-        reviews: res.data.details.map((d: any) => {
-          const utcDate = fromVietnamTime(d.created_at); // chuyển về đúng UTC trước
-          return {
-            id: d.id,
-            userName: d.user?.name ?? "Guest",
-            avatar: d.user?.avatar_url ?? "/placeholder-avatar.jpg",
-            rating: d.overall_rating,
-            date: utcDate
-              ? utcDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })
-              : "Unknown date",
-            comment: d.comment,
-          };
-        }),
-        ratings: {
-          cleanliness: res.data.cleanliness_avg,
-          accuracy: res.data.accuracy_avg,
-          checkin: res.data.checkin_avg,
-          communication: res.data.communication_avg,
-          location: res.data.location_avg,
-          value: res.data.value_avg,
-        },
-      });
-    } catch (err) {
-      console.error("❌ Failed to fetch reviews:", err);
-    }
-  };
+    const fetchReviews = async () => {
+      try {
+        const res = await api.get(`/reviews/${propertyId}`);
+        setReviewsData({
+          overallRating: res.data.rating,
+          totalReviews: res.data.count,
+          reviews: res.data.details.map((d: any) => {
+            const utcDate = fromVietnamTime(d.created_at); // chuyển về đúng UTC trước
+            return {
+              id: d.id,
+              userName: d.user?.name ?? "Guest",
+              avatar: d.user?.avatar_url ?? "/placeholder-avatar.jpg",
+              rating: d.overall_rating,
+              date: utcDate
+                ? utcDate.toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })
+                : "Unknown date",
+              comment: d.comment,
+            };
+          }),
+          ratings: {
+            cleanliness: res.data.cleanliness_avg,
+            accuracy: res.data.accuracy_avg,
+            checkin: res.data.checkin_avg,
+            communication: res.data.communication_avg,
+            location: res.data.location_avg,
+            value: res.data.value_avg,
+          },
+        });
+      } catch (err) {
+        console.error("❌ Failed to fetch reviews:", err);
+      }
+    };
+
+    const fetchFavStatus = async () => {
+      if (!userId || !propertyId) return;
+      try {
+        const token = localStorage.getItem("token");
+        const res = await api.post(
+          "/properties/get-fav-status",
+          { user_id: userId, property_id: propertyId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        const result = res.data.data;
+        console.log("Result here:", result);
+        if (result) {
+          setIsFavorite(result[0].property_id === propertyId);
+        } else {
+          setIsFavorite(false);
+        }
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          setIsFavorite(false);
+        } else {
+          console.error("❌ Failed to fetch favorite status:", error);
+        }
+      }
+    };
+    Promise.all([fetchProperty(), fetchReviews(), fetchFavStatus()]).finally(
+      () => {
+        setLoading(false);
+      }
+    );
+  }, [propertyId, userId]);
   
-
-    Promise.all([fetchProperty(), fetchReviews()]).finally(() => {
-      setLoading(false);
-    });
-  }, [propertyId]);
-
   // fetch coords fallback
   useEffect(() => {
     const address = property?.address || "";
     if (!address) return;
-    if (typeof property?.latitude === "number" && typeof property?.longitude === "number") {
+    if (
+      typeof property?.latitude === "number" &&
+      typeof property?.longitude === "number"
+    ) {
       setCoords(null);
       setCoordsLoading(false);
       return;
     }
     setCoordsLoading(true);
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
-      .then(res => res.json())
-      .then(data => {
+    fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        address
+      )}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
         if (data && data.length > 0) {
-          setCoords({ latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) });
+          setCoords({
+            latitude: parseFloat(data[0].lat),
+            longitude: parseFloat(data[0].lon),
+          });
         } else {
           setCoords(null);
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Failed to fetch coordinates:", err);
         setCoords(null);
       })
@@ -160,11 +234,19 @@ export default function Room() {
   }, [property?.address, property?.latitude, property?.longitude]);
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading...
+      </div>
+    );
   }
 
   if (!property) {
-    return <div className="flex justify-center items-center h-screen">Property not found</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Property not found
+      </div>
+    );
   }
 
   return (
@@ -174,7 +256,12 @@ export default function Room() {
       <div className="px-60 py-6">
         <div className="text-3xl font-semibold flex items-center justify-between">
           <h1>{property.title}</h1>
-          <HeartButton isFavorite={isFavorite} size={40} onToggle={toggleFavorite} />
+          <HeartButton
+            property_id={propertyId}
+            isFavorite={isFavorite}
+            size={40}
+            onToggle={toggleFavorite}
+          />
         </div>
         <div className="pt-6">
           <ImagePreview imgUrls={property.imgUrl || []} />
@@ -186,8 +273,14 @@ export default function Room() {
           <div className="py-5 space-y-4">
             <p className="font-bold text-2xl">{property.address}</p>
             <div className="flex items-center gap-4">
-              <img src={property.ownerImgUrl} alt={property.ownerName} className="w-12 h-12 rounded-full object-cover" />
-              <p className="font-medium text-lg">Hosted by {property.ownerName}</p>
+              <img
+                src={property.ownerImgUrl}
+                alt={property.ownerName}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+              <p className="font-medium text-lg">
+                Hosted by {property.ownerName}
+              </p>
             </div>
             <p className="font-semibold">About this place</p>
             <p>{property.description}</p>
@@ -227,12 +320,23 @@ export default function Room() {
       <div className="w-2/3 h-px bg-gray-300 opacity-50 my-10 mx-auto"></div>
 
       <div className="px-60 py-0">
-        {property.latitude != null && property.longitude != null && !isNaN(property.latitude) && !isNaN(property.longitude) ? (
-          <MapDisplay latitude={property.latitude} longitude={property.longitude} address={property.address} />
+        {property.latitude != null &&
+        property.longitude != null &&
+        !isNaN(property.latitude) &&
+        !isNaN(property.longitude) ? (
+          <MapDisplay
+            latitude={property.latitude}
+            longitude={property.longitude}
+            address={property.address}
+          />
         ) : coordsLoading ? (
           <div>Loading map…</div>
         ) : coords ? (
-          <MapDisplay latitude={coords.latitude} longitude={coords.longitude} address={property.address} />
+          <MapDisplay
+            latitude={coords.latitude}
+            longitude={coords.longitude}
+            address={property.address}
+          />
         ) : (
           <div>Không tìm thấy vị trí trên bản đồ.</div>
         )}

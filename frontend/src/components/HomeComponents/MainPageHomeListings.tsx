@@ -29,7 +29,7 @@ export default function Listings({
 }: Props) {
   // Base listings for resolvedLocation
   const [listings, setListings] = useState<Listing[]>([]);
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [favorites, setFavorites] = useState<Set<string>>(new Set()); // use property_id instead of idx
   const [loading, setLoading] = useState(true);
   const [resolvedLocation, setResolvedLocation] = useState<string>(city);
   const [error, setError] = useState<string | null>(null);
@@ -57,37 +57,27 @@ export default function Listings({
       setError(null);
       try {
         const res = await api.get("/properties", {
-          params: {
-            city,
-            checkin,
-            checkout,
-            guests,
-          },
+          params: { city, checkin, checkout, guests },
         });
 
         const { items } = res.data;
-        console.log("API items:", items);
 
-        const mapped: Listing[] = items.map((p: any, index: number) => {
-          console.log(`Item ${index} first image:`, p.propertyimage?.[0]?.image_url);
-
-          return {
-            title: p.title,
-            price: p.min_price ? p.min_price.toString() : "N/A",
-            image: p.propertyimage?.[0]?.image_url || "/placeholder.jpg",
-            url: `/room/${p.property_id ?? ""}`, // sửa thành /room/
-            rating: p.rating?.toString() || undefined,
-            reviewsCount: p.reviewsCount?.toString() || undefined,
-            locationHint: p.province || p.country || city,
-          };
-        });
-
-        console.log("Mapped listings:", mapped);
+        const mapped: Listing[] = items.map((p: any) => ({
+          property_id: p.property_id,
+          title: p.title,
+          price: p.min_price ? p.min_price.toString() : "N/A",
+          image: p.propertyimage?.[0]?.image_url || "/placeholder.jpg",
+          url: `/room/${p.property_id ?? ""}`,
+          rating: p.rating?.toString() || undefined,
+          reviewsCount: p.reviewsCount?.toString() || undefined,
+          locationHint: p.province || p.country || city,
+        }));
 
         setListings(mapped);
         // also store into section listing for the resolved location (temp as current city for now)
         setSectionListings((prev) => ({ ...prev, [city]: mapped }));
 
+        // pick most frequent location
         const locationCounts: Record<string, number> = {};
         mapped.forEach((listing) => {
           const hint = listing.locationHint?.trim();
@@ -98,8 +88,29 @@ export default function Listings({
         const mostFrequentLocation = Object.entries(locationCounts)
           .sort((a, b) => b[1] - a[1])
           .at(0)?.[0];
-        if (mostFrequentLocation) {
-          setResolvedLocation(mostFrequentLocation);
+        if (mostFrequentLocation) setResolvedLocation(mostFrequentLocation);
+
+        // now fetch favorites if logged in
+        const token = localStorage.getItem("token");
+        const user_data = localStorage.getItem("user");
+
+        if (token && user_data && mapped.length > 0) {
+          const user_id = JSON.parse(user_data).user_id;
+
+          // collect property_ids from the mapped listings
+          const propertyIds = mapped.map((p) => p.property_id);
+
+          const favRes = await api.post(
+            "/properties/get-fav-status",
+            { user_id, property_id: propertyIds }, // <-- always send array
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          // backend returns favorites (array of userfavorite)
+          const favList: string[] =
+            favRes.data.data?.map((f: any) => f.property_id) || [];
+
+          setFavorites(new Set(favList));
         }
       } catch (err) {
         console.error("Error loading properties:", err);
@@ -111,6 +122,45 @@ export default function Listings({
 
     fetchListings();
   }, [city, checkin, checkout, guests, latitude, longitude]);
+
+
+  const toggleFavorite = async (property_id: string) => {
+    const token = localStorage.getItem("token");
+    const user_data = localStorage.getItem("user");
+
+    if (!token || !user_data) {
+      router.push("/login");
+      return;
+    }
+
+    const user_id = JSON.parse(user_data).user_id;
+
+    try {
+      if (favorites.has(property_id)) {
+        // remove favorite
+        await api.post(
+          "/properties/remove-fav",
+          { user_id, property_id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setFavorites((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(property_id);
+          return newSet;
+        });
+      } else {
+        // add favorite
+        await api.post(
+          "/properties/add-fav",
+          { user_id, property_id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setFavorites((prev) => new Set(prev).add(property_id));
+      }
+    } catch (err) {
+      console.error("❌ Failed to toggle favorite:", err);
+    }
+  };
 
   useEffect(() => {
     if (!resolvedLocation) return;
@@ -157,17 +207,6 @@ export default function Listings({
     return () => controller.abort();
   }, [fixedCities, resolvedLocation, checkin, checkout, guests]);
 
-  const toggleFavorite = (key: string) => {
-    setFavorites((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(key)) {
-        newSet.delete(key);
-      } else {
-        newSet.add(key);
-      }
-      return newSet;
-    });
-  };
 
   const displayedListings = listings.slice(0, 7);
 
@@ -243,11 +282,9 @@ function Section({
         </button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-7 gap-3 justify-items-center">
-        {items.map((item, idx) => {
-          const favKey = item.url || `${item.title}|${item.image}|${idx}`;
-          return (
+        {displayedListings.map((item) => (
           <div
-            key={`${item.url}-${idx}`}
+            key={item.property_id}
             className="w-full cursor-pointer"
             onClick={() => onCardClick(item.url || undefined)}
           >
@@ -262,15 +299,17 @@ function Section({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onToggleFavorite(favKey);
+                    toggleFavorite(item.property_id!);
                   }}
                   className="absolute top-2 right-2 bg-white rounded-full p-1 hover:scale-105 transition"
                 >
                   <Heart
                     size={22}
                     className={clsx("transition", {
-                      "text-red-500 fill-red-500": favorites.has(favKey),
-                      "text-gray-400": !favorites.has(favKey),
+                      "text-red-500 fill-red-500": favorites.has(
+                        item.property_id!
+                      ),
+                      "text-gray-400": !favorites.has(item.property_id!),
                     })}
                   />
                 </button>
@@ -283,14 +322,18 @@ function Section({
                   </h3>
                   <p className="text-sm text-gray-700 mb-1">
                     {item.rating && item.reviewsCount ? (
-                      <>⭐ {item.rating} · {item.reviewsCount} reviews</>
+                      <>
+                        ⭐ {item.rating} · {item.reviewsCount} reviews
+                      </>
                     ) : (
                       <span className="text-gray-400">No reviews</span>
                     )}
                   </p>
                   <p className="text-base font-semibold text-red-600 mb-2">
                     {item.price && item.price !== "N/A"
-                      ? `${Number(item.price).toLocaleString("vi-VN")} đ / night`
+                      ? `${Number(item.price).toLocaleString(
+                          "vi-VN"
+                        )} đ / night`
                       : "No price"}
                   </p>
                 </div>
@@ -303,6 +346,22 @@ function Section({
           <div className="text-gray-500 px-2">No listings found.</div>
         )}
       </div>
+      {listings.length > 7 && (
+        <div className="text-center mt-6">
+          <button
+            onClick={() =>
+              router.push(
+                `/search/${encodeURIComponent(
+                  resolvedLocation
+                )}?checkin=${checkin}&checkout=${checkout}&guests=${guests}`
+              )
+            }
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+          >
+            Show all
+          </button>
+        </div>
+      )}
     </div>
   );
 }

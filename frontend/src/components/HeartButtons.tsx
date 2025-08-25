@@ -1,9 +1,10 @@
 import { Heart } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 // import { motion, AnimatePresence } from "framer-motion"; // for later improvement
 
 interface HeartButtonProps{
+  property_id: string,
   isFavorite: boolean;
   onToggle: () => void;
   size?: number;
@@ -11,6 +12,10 @@ interface HeartButtonProps{
 
 
 export function HeartButton(props: HeartButtonProps) {
+  useEffect(() => {
+
+  }, [])
+  
   return (
     <div  >
       <Heart
