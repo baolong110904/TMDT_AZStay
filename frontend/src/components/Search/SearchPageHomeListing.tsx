@@ -114,11 +114,12 @@ export default function SearchHomeListings({
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-6 justify-items-center">
+  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 justify-items-center">
         {paginatedList.map((item, idx) => (
           <Link key={idx} href={item.url || `${item.url}`} className="w-full">
             <div className="rounded-2xl h-[400px] hover:shadow-md hover:scale-101 transition bg-white cursor-pointer">
               <div className="relative h-[60%]">
+
                 <Image
                   src={item.image ?? ""}
                   alt={item.title ?? ""}

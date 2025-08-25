@@ -72,7 +72,14 @@ export default function Home() {
       {/* Listings section */}
       <section className="max-w-screen-3xl mx-auto px-4">
         {loadingCity || !coords ? (
-          <p className="text-center">Determining your city…</p>
+          <p className="text-center text-gray-700 flex items-center justify-center gap-1 py-6" aria-live="polite">
+            Determining your city
+            <span className="ml-1 inline-flex">
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:0ms] mx-0.5"></span>
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:150ms] mx-0.5"></span>
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:300ms] mx-0.5"></span>
+            </span>
+          </p>
         ) : (
           <Listings
             city={city}

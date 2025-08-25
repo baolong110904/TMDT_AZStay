@@ -41,7 +41,10 @@ export default function BiddingBox({
   const [isHighestBidder, setIsHighestBidder] = useState(userId === currentPriceUserId);
   const [auctionEnded, setAuctionEnded] = useState(false);
   const [sealedBidCountdown, setSealedBidCountdown] = useState("");
-  const [sealedBidEnded, setSealedBidEnded] = useState(false);
+  // Track the timestamp of the latest price update to drive sealed-bid countdown
+  const [priceTimestamp, setPriceTimestamp] = useState<Date>(
+    currentPriceTime ? new Date(currentPriceTime) : new Date()
+  );
 
   console.log({currentPriceUserId, userId, currentPriceTime, biddingStartTime, biddingEndTime});
   
@@ -58,7 +61,12 @@ export default function BiddingBox({
       if (data.auctionId === auctionId) {
         setCurrentPrice(data.bid_amount);
         setBidAmount(data.bid_amount + 10000);
-    
+        // reset sealed-bid countdown based on the latest bid time
+        if (data.timestamp) {
+          setPriceTimestamp(new Date(data.timestamp));
+        } else {
+          setPriceTimestamp(new Date());
+        }
         // update highest bidder chính xác
         if (data.bidder_id === userId) {
           setIsHighestBidder(true);
@@ -97,7 +105,8 @@ export default function BiddingBox({
   };
 
   useEffect(() => {
-    const sealedBidEndTime = new Date(currentPriceTime.getTime() + 3 * 60 * 60 * 1000); // +3h
+    // Sealed-bid period lasts 3 hours since last price update
+    const sealedBidEndTime = new Date(priceTimestamp.getTime() + 3 * 60 * 60 * 1000);
     const interval = setInterval(() => {
       const now = new Date();
       const remaining = sealedBidEndTime.getTime() - now.getTime();
@@ -105,7 +114,6 @@ export default function BiddingBox({
       if (remaining <= 0) {
         clearInterval(interval);
         setSealedBidCountdown("Sealed period ended");
-        setSealedBidEnded(true);
         return;
       }
 
@@ -117,7 +125,7 @@ export default function BiddingBox({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [currentPriceTime]);
+  }, [priceTimestamp]);
 
   useEffect(() => {
     setIsHighestBidder(userId === currentPriceUserId);
@@ -161,7 +169,8 @@ export default function BiddingBox({
     >
       <h2 className="text-xl font-semibold">Bidding Info</h2>
 
-      {auctionEnded || sealedBidEnded || (biddingStatus !== 'active') ? (
+      {/* Only mark as ended if time passed or backend explicitly says ended */}
+      {auctionEnded || biddingStatus === 'ended' ? (
         <div className="bg-red-600 text-white p-4 rounded-lg text-center font-bold text-lg">
           🚨 Auction Has Ended
         </div>
