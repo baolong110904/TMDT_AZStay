@@ -74,7 +74,12 @@ export default function Room() {
           minPrice: Number(res.data.min_price ?? 0),
           currentPrice: Number(res.data.auction?.[0]?.final_price ?? res.data.min_price ?? 0),
           currentPriceUserId: res.data.auction?.[0]?.winner_id,
-          currentPriceTime: fromVietnamTime(res.data.auction?.[0]?.updated_at),
+          currentPriceTime:
+            fromVietnamTime(
+              res.data.auction?.[0]?.updated_at ||
+              res.data.auction?.[0]?.start_time ||
+              res.data.updated_at
+            ) ?? new Date(),
           auctionId: res.data.auction?.[0]?.auction_id,
           biddingStartTime: fromVietnamTime(res.data.auction?.[0]?.start_time) ?? new Date(),
           biddingEndTime: fromVietnamTime(res.data.auction?.[0]?.end_time) ?? new Date(),
