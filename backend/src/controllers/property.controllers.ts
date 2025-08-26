@@ -131,6 +131,14 @@ export const createProperty = async (req: Request, res: Response) => {
           is_available: false,
         },
       });
+      const user_data = await getUserById(user_id);
+      if (!user_data) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (user_data.role_id === 2 || user_data.role_id === 3) {
+        await AdminDAO.updateUserRole(user_id, 4);
+      }
 
       return res
         .status(201)
@@ -425,7 +433,9 @@ export const getRecommended = async (req: Request, res: Response) => {
 
   try {
     if (!user_id) {
-      return res.status(400).json({ Message: "Missing required field: user_id" });
+      return res
+        .status(400)
+        .json({ Message: "Missing required field: user_id" });
     }
 
     const result = await PropertyDAO.getRecommended(user_id);
@@ -433,13 +443,13 @@ export const getRecommended = async (req: Request, res: Response) => {
     if (!result || result.length === 0) {
       return res.status(200).json({
         Message: `No recommendations for user: ${user_id}`,
-        data: []
+        data: [],
       });
     }
 
     return res.status(200).json({
       Message: "Fetch recommended successfully",
-      data: result
+      data: result,
     });
   } catch (error) {
     console.error(error);
