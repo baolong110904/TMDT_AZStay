@@ -10,12 +10,12 @@ router.get("/", PropertyController.getAllProperties);
 // get property by user_id (place before dynamic :propertyId route)
 router.get('/get-property-by-user-id',
             verifyToken,
-            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
+            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER, Roles.CUSTOMER),
             PropertyController.getPropertyByUserId);
 
 router.get("/:propertyId", PropertyController.getPropertyById);
-router.patch("/:propertyId", verifyToken, authorizeRoles(Roles.PROPERTY_OWNER_AND_CUSTOMER, Roles.PROPERTY_OWNER),PropertyController.updateProperty);
-router.delete("/:propertyId", verifyToken, authorizeRoles(Roles.PROPERTY_OWNER_AND_CUSTOMER, Roles.PROPERTY_OWNER), PropertyController.deleteProperty);
+router.patch("/:propertyId", verifyToken, authorizeRoles(Roles.PROPERTY_OWNER_AND_CUSTOMER, Roles.PROPERTY_OWNER, Roles.CUSTOMER),PropertyController.updateProperty);
+router.delete("/:propertyId", verifyToken, authorizeRoles(Roles.PROPERTY_OWNER_AND_CUSTOMER, Roles.PROPERTY_OWNER, Roles.CUSTOMER), PropertyController.deleteProperty);
 router.post('/create-property', 
             verifyToken,
             authorizeRoles(Roles.PROPERTY_OWNER, Roles.CUSTOMER, Roles.PROPERTY_OWNER_AND_CUSTOMER), 
@@ -31,12 +31,12 @@ router.post('/upload-images',
 // property images: list and delete
 router.get('/:propertyId/images',
             verifyToken,
-            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
+            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER, Roles.CUSTOMER),
             ImagesController.listPropertyImages);
 
 router.delete('/images/:imageId',
             verifyToken,
-            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER),
+            authorizeRoles(Roles.PROPERTY_OWNER, Roles.PROPERTY_OWNER_AND_CUSTOMER, Roles.CUSTOMER),
             ImagesController.removePropertyImage);
 
 router.post('/add-fav', 
