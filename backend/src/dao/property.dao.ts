@@ -86,9 +86,30 @@ export class PropertyDAO {
     const skip = (page - 1) * limit;
     const where: any = {};
 
-    if (city) where.address = { contains: city, mode: "insensitive" };
-    if (province) where.province = { contains: province, mode: "insensitive" };
-    if (country) where.country = { contains: country, mode: "insensitive" };
+    console.log({city, province, country});
+
+    if (city) {
+      where.OR = [
+        { address: { contains: city, mode: "insensitive" } },
+        { province: { contains: city, mode: "insensitive" } },
+        { country: { contains: city, mode: "insensitive" } },
+      ];
+    }
+
+    if (province) {
+      where.OR = [
+        { address: { contains: province, mode: "insensitive" } },
+        { province: { contains: province, mode: "insensitive" } },
+        { country: { contains: province, mode: "insensitive" } },
+      ];
+    }
+    if (country) {
+      where.OR = [
+        { address: { contains: country, mode: "insensitive" } },
+        { province: { contains: country, mode: "insensitive" } },
+        { country: { contains: country, mode: "insensitive" } },
+      ];
+    }
 
     if (guests) {
       where.max_guest = { gte: guests };
