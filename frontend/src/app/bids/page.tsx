@@ -172,7 +172,7 @@ export default function BidsPage() {
 
                   {/* Actions */}
       <div className="flex-shrink-0 flex items-center gap-2">
-                    {(bidStatus === "ongoing" || bidStatus === "pending") ? (
+                    {(bidStatus === "ongoing") ? (
                       <button
                         onClick={() => router.push(`/bids/${bid.bid_id}/payment`)}
         className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-400 text-white font-medium shadow-md hover:from-blue-700 hover:to-blue-500 transition"
