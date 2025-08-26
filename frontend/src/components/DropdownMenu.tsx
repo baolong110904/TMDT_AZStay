@@ -39,6 +39,10 @@ export default function DropdownMenu({
 
   if (!isOpen) return null;
 
+  // Only allow Bids for roles 2, 3, 4
+  const role = user?.role_id ?? 0;
+  const canSeeBids = role === 2 || role === 3 || role === 4;
+
   return (
     <div className="w-full space-y-2">
       {user && (
@@ -59,14 +63,16 @@ export default function DropdownMenu({
         </>
       )}
 
-      {/* Bids */}
-      <button
-        onClick={() => handleNavigation("/bids")}
-        className="flex items-center w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition"
-      >
-        <Gavel className="h-5 w-5 text-gray-400 mr-3" />
-        Bids
-      </button>
+      {/* Bids (roles 2,3,4 only) */}
+      {canSeeBids && (
+        <button
+          onClick={() => handleNavigation("/bids")}
+          className="flex items-center w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition"
+        >
+          <Gavel className="h-5 w-5 text-gray-400 mr-3" />
+          Bids
+        </button>
+      )}
 
       {(user?.role_id === 4 || user?.role_id === 3) && (
         <button

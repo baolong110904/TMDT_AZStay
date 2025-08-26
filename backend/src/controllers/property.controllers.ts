@@ -80,7 +80,54 @@ export const updateProperty = async (req: Request, res: Response) => {
 export const deleteProperty = async (req: Request, res: Response) => {
   const { propertyId } = req.params;
   try {
-    await PropertyDAO.deleteProperty(propertyId);
+    // Đảm bảo rằng property tồn tại
+    const existing = await prisma.property.findUnique({
+      where: { property_id: propertyId },
+      select: { property_id: true },
+    });
+    if (!existing) {
+      return res.status(404).json({ message: "Property not found" });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 1) Xóa auction và bid
+      const auctions = await tx.auction.findMany({
+        where: { property_id: propertyId },
+        select: { auction_id: true },
+      });
+      const auctionIds = auctions.map((a) => a.auction_id);
+      if (auctionIds.length) {
+        await tx.userbid.deleteMany({ where: { auction_id: { in: auctionIds } } });
+      }
+      await tx.auction.deleteMany({ where: { property_id: propertyId } });
+
+      // 2) Xóa booking
+      const bookings = await tx.booking.findMany({
+        where: { property_id: propertyId },
+        select: { booking_id: true },
+      });
+      const bookingIds = bookings.map((b) => b.booking_id);
+      if (bookingIds.length) {
+        await tx.payment.deleteMany({ where: { booking_id: { in: bookingIds } } });
+      }
+      await tx.booking.deleteMany({ where: { property_id: propertyId } });
+
+      // 3) Xóa external service
+      await tx.externalservice.deleteMany({ where: { property_id: propertyId } });
+
+      // 4) Xóa Favorites
+      await tx.userfavorite.deleteMany({ where: { property_id: propertyId } });
+
+      // 5) Xóa Images
+      await tx.propertyimage.deleteMany({ where: { property_id: propertyId } });
+
+      // 6) Xóa Reviews
+      await tx.review.deleteMany({ where: { property_id: propertyId } });
+
+      // 7) Xóa full property
+      await tx.property.delete({ where: { property_id: propertyId } });
+    });
+
     return res.status(204).send();
   } catch (err) {
     const error = err as Error;
