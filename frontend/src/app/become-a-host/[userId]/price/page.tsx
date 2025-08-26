@@ -104,7 +104,7 @@ export default function PricePage() {
 
       <div className="bg-white rounded-xl shadow p-10">
         <div className="text-center">
-          <div className="text-sm text-gray-500 mb-4">Guest price</div>
+          <div className="text-sm text-gray-500 mb-4">Guest price per night</div>
           <div className="flex items-end justify-center gap-3">
             <div className="text-2xl text-gray-600">₫</div>
             <input

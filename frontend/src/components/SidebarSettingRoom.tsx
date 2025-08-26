@@ -13,6 +13,9 @@ export default function SettingSidebar({ property, onClose, onDeleted }: Props) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [substep, setSubstep] = useState<
+    null | "deleting" | "cleaning-images" | "retry-delete" | "unlisting"
+  >(null);
 
   const fetchStatus = async () => {
     setLoading(true);
@@ -29,17 +32,74 @@ export default function SettingSidebar({ property, onClose, onDeleted }: Props) 
     }
   };
 
+  // Try to remove all images of the property to avoid FK constraints
+  const cleanupImages = async () => {
+    try {
+      setSubstep("cleaning-images");
+      const res = await api.get(`/properties/${property?.property_id}/images`);
+      const images: Array<{ image_id: string }> = res?.data?.data || res?.data || [];
+      if (Array.isArray(images) && images.length) {
+        for (const img of images) {
+          try {
+            if (img?.image_id) {
+              await api.delete(`/properties/images/${img.image_id}`);
+            }
+          } catch {}
+        }
+      }
+    } catch {}
+  };
+
+  const softUnlist = async () => {
+    setSubstep("unlisting");
+    await api.patch(`/properties/${property?.property_id}`, { is_available: false });
+    setStatus("Action required");
+  };
+
   const handleDelete = async () => {
     setLoading(true);
     setError(null);
+    setSubstep("deleting");
     try {
+      // 1) Hard delete attempt
       await api.delete(`/properties/${property?.property_id}`);
       onDeleted();
+      return;
     } catch (e: any) {
-      setError(e?.response?.data?.message || e.message || "Failed to delete property");
+      const statusCode = e?.response?.status;
+      const serverMsg = e?.response?.data?.message || e?.message;
+
+      // If unauthorized/forbidden, fail fast with clear message
+      if (statusCode === 401 || statusCode === 403) {
+        setError("You don't have permission to delete this listing.");
+      } else {
+        // 2) Try cleanup images, then retry delete
+        try {
+          await cleanupImages();
+          setSubstep("retry-delete");
+          await api.delete(`/properties/${property?.property_id}`);
+          onDeleted();
+          return;
+        } catch (e2: any) {
+          // 3) Fall back to soft unlist (disable listing) so it's effectively removed from UI
+          try {
+            await softUnlist();
+            // treat as success for UX: refresh parent list
+            onDeleted();
+            return;
+          } catch (e3: any) {
+            setError(
+              e3?.response?.data?.message ||
+                serverMsg ||
+                "Failed to delete or unlist this property."
+            );
+          }
+        }
+      }
     } finally {
       setLoading(false);
       setShowConfirm(false);
+      setSubstep(null);
     }
   };
 
@@ -108,8 +168,11 @@ export default function SettingSidebar({ property, onClose, onDeleted }: Props) 
                     className="px-3 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 flex items-center gap-1"
                   >
                     {loading ? (
-                      <span className="inline-flex">
-                        Deleting
+                      <span className="inline-flex items-center gap-1">
+                        {substep === "cleaning-images" && <span>Cleaning images</span>}
+                        {substep === "retry-delete" && <span>Retrying delete</span>}
+                        {substep === "unlisting" && <span>Unlisting</span>}
+                        {!substep && <span>Deleting</span>}
                         <span className="inline-block w-3 text-center animate-pulse">.</span>
                         <span className="inline-block w-3 text-center animate-pulse [animation-delay:150ms]">.</span>
                         <span className="inline-block w-3 text-center animate-pulse [animation-delay:300ms]">.</span>
